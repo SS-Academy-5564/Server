@@ -1,0 +1,9 @@
+<Solution>
+  <Project Path="Pulse.API/Pulse.API.csproj" />
+  <Project Path="Pulse.BL/Pulse.BL.csproj" />
+  <Project Path="Pulse.DAL/Pulse.DAL.csproj" />
+  <Project Path="Pulse.Entities/Pulse.Entities.csproj" />
+  <Project Path="Pulse.Tests.Integration/Pulse.Tests.Integration.csproj" />
+  <Project Path="Pulse.Tests.Unit/Pulse.Tests.Unit.csproj" />
+  <Project Path="Pulse.Worker/Pulse.Worker.csproj" />
+</Solution>
