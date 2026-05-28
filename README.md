@@ -8,11 +8,9 @@ Server-side monitoring solution built with .NET 10.
 Pulse.slnx
 ├── Pulse.API               — HTTP endpoints (Controllers, Middleware, Filters)
 ├── Pulse.BL                — Business logic, DTOs, validation
-├── Pulse.DAL               — Database access via Dapper (Queries, Commands, Scripts)
-├── Pulse.Entities          — Database entities and enums
+├── Pulse.DAL               — Database access via Dapper (Queries, Commands, Scripts), entities and enums
 ├── Pulse.Worker            — Background polling worker
-├── Pulse.Tests.Unit        — Unit tests (xUnit)
-└── Pulse.Tests.Integration — Integration tests (xUnit)
+└── Pulse.Tests.Unit        — Unit tests (xUnit)
 ```
 
 ### Dependency Direction
@@ -20,8 +18,7 @@ Pulse.slnx
 ```
 Pulse.API     → Pulse.BL
 Pulse.Worker  → Pulse.BL
-Pulse.BL      → Pulse.DAL, Pulse.Entities
-Pulse.DAL     → Pulse.Entities
+Pulse.BL      → Pulse.DAL
 ```
 
 ## Getting Started
