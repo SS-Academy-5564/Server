@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Pulse.DAL\Pulse.DAL.csproj" />
-    <ProjectReference Include="..\Pulse.Entities\Pulse.Entities.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

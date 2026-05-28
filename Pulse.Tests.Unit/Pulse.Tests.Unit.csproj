@@ -20,7 +20,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Pulse.BL\Pulse.BL.csproj" />
-    <ProjectReference Include="..\Pulse.Entities\Pulse.Entities.csproj" />
   </ItemGroup>
 
 </Project>
