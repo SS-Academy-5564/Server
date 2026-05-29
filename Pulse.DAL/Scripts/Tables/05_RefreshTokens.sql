@@ -1,0 +1,13 @@
+CREATE TABLE RefreshTokens
+(
+    Id        UNIQUEIDENTIFIER  NOT NULL DEFAULT NEWSEQUENTIALID(),
+    UserId    UNIQUEIDENTIFIER  NOT NULL,
+    Token     VARCHAR(100)      NOT NULL,
+    CreatedAt DATETIMEOFFSET    NOT NULL,
+    ExpiresAt DATETIMEOFFSET    NOT NULL,
+    RevokedAt DATETIMEOFFSET    NULL,
+
+    CONSTRAINT PK_RefreshTokens         PRIMARY KEY (Id),
+    CONSTRAINT FK_RefreshTokens_Users   FOREIGN KEY (UserId) REFERENCES Users (Id) ON DELETE CASCADE,
+    CONSTRAINT CHK_RefreshTokens_Expiry CHECK (ExpiresAt > CreatedAt)
+);

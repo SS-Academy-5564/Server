@@ -1,10 +1,10 @@
 CREATE TABLE Users
 (
-    Id           UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID(),
-    Email        VARCHAR(256)     NOT NULL,
-    PasswordHash VARCHAR(256)     NOT NULL,
-    CreatedAt    DATETIME2        NOT NULL,
-    UpdatedAt    DATETIME2        NOT NULL,
- 
+    Id           UNIQUEIDENTIFIER  NOT NULL DEFAULT NEWSEQUENTIALID(),
+    Email        NVARCHAR(256)     NOT NULL,
+    PasswordHash VARCHAR(256)      NOT NULL,
+    CreatedAt    DATETIMEOFFSET    NOT NULL,
+    UpdatedAt    DATETIMEOFFSET    NOT NULL,
+
     CONSTRAINT PK_Users PRIMARY KEY (Id)
 );
