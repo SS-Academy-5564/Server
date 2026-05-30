@@ -5,21 +5,34 @@ namespace Pulse.DAL.Database
 {
     public static class DatabaseInitializer
     {
+        private static readonly string[] MigrationFolders =
+       [
+          ".Scripts.Tables.",
+          ".Scripts.Seed.",
+          ".Scripts.Indexes."
+       ];
+
         public static void RunMigrations(string connectionString)
         {
             EnsureDatabase.For.SqlDatabase(connectionString);
 
-            RunScripts(connectionString, ".tables.");
-            RunScripts(connectionString, ".indexes.");
+            foreach (var folder in MigrationFolders)
+            {
+                RunScripts(connectionString, folder);
+            }
         }
 
-        private static void RunScripts(string connectionString, string filter)
+        private static void RunScripts(
+            string connectionString,
+            string folderFilter)
         {
             var upgrader = DeployChanges.To
                 .SqlDatabase(connectionString)
                 .WithScriptsEmbeddedInAssembly(
                     Assembly.GetExecutingAssembly(),
-                    name => name.ToLower().Contains(filter))
+                    scriptName => scriptName.Contains(
+                        folderFilter,
+                        StringComparison.OrdinalIgnoreCase))
                 .LogToConsole()
                 .Build();
 
@@ -28,9 +41,11 @@ namespace Pulse.DAL.Database
             if (!result.Successful)
             {
                 throw new Exception(
-                    $"Database migration failed ({filter}): {result.Error.Message}",
+                    $"Database migration failed ({folderFilter}): {result.Error}",
                     result.Error);
             }
         }
+    
+
     }
 }

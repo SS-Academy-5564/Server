@@ -5,7 +5,9 @@ using Pulse.Worker;
 var builder = Host.CreateApplicationBuilder(args);
 
 var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException(
+        "Connection string 'DefaultConnection' not found.");
 
 DatabaseInitializer.RunMigrations(connectionString);
 

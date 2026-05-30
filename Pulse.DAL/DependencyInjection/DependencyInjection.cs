@@ -8,6 +8,7 @@ namespace Pulse.DAL.DependencyInjection
     {
         public static IServiceCollection AddDataAccess(this IServiceCollection services, IConfiguration configuration)
         {
+
             services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
             return services;
