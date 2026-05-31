@@ -4,14 +4,9 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException(
-        "Connection string 'DefaultConnection' not found.");
+builder.Services.AddHostedService<DatabaseMigration>();
 
-DatabaseInitializer.RunMigrations(connectionString);
-
-builder.Services.AddDataAccess(builder.Configuration);
+builder.Services.AddDataAccess();
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
