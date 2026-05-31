@@ -16,10 +16,13 @@ namespace Pulse.DAL.Connection
         public IDbConnection CreateConnection()
         {
             var connectionString =
-                _configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException(
-            "Connection string 'DefaultConnection' not found.");
+                _configuration.GetConnectionString("DefaultConnection");
 
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+            }
+             
             return new SqlConnection(connectionString);
         }
     }
