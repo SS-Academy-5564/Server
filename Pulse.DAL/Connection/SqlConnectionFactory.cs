@@ -2,28 +2,27 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
-namespace Pulse.DAL.Connection
+namespace Pulse.DAL.Connection;
+
+public class SqlConnectionFactory : IDbConnectionFactory
 {
-    public class SqlConnectionFactory : IDbConnectionFactory
+    private readonly IConfiguration _configuration;
+
+    public SqlConnectionFactory(IConfiguration configuration)
     {
-        private readonly IConfiguration _configuration;
+        _configuration = configuration;
+    }
 
-        public SqlConnectionFactory(IConfiguration configuration)
+    public IDbConnection CreateConnection()
+    {
+        var connectionString =
+            _configuration.GetConnectionString("DefaultConnection");
+
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
-            _configuration = configuration;
+            throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
         }
-
-        public IDbConnection CreateConnection()
-        {
-            var connectionString =
-                _configuration.GetConnectionString("DefaultConnection");
-
-            if (string.IsNullOrWhiteSpace(connectionString))
-            {
-                throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
-            }
-             
-            return new SqlConnection(connectionString);
-        }
+         
+        return new SqlConnection(connectionString);
     }
 }

@@ -4,8 +4,6 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddHostedService<DatabaseMigration>();
-
 builder.Services.AddDataAccess();
 
 builder.Services.AddControllers();

@@ -1,9 +1,8 @@
 ﻿using System.Data;
 
-namespace Pulse.DAL.Connection
+namespace Pulse.DAL.Connection;
+
+public interface IDbConnectionFactory
 {
-    public interface IDbConnectionFactory
-    {
-        IDbConnection CreateConnection();
-    }
+    IDbConnection CreateConnection();
 }
