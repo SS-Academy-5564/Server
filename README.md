@@ -21,6 +21,21 @@ Pulse.Worker  → Pulse.BL
 Pulse.BL      → Pulse.DAL
 ```
 
+### Database Setup Instructions (Locally)
+
+Define the database connection string in `appsettings.json` (inside both **Pulse.API** and **Pulse.Worker**):
+
+```
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost,1433;Database=Pulse;User ID=your_user_id;Password=your_password;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True"
+  }
+}
+```
+
+Database setup runs automatically before the application starts.
+
+
 ## Getting Started
 
 ```bash
@@ -43,3 +58,5 @@ OpenAPI docs and Scalar UI are available in development mode at `/openapi/v1.jso
 ```bash
 dotnet run --project Pulse.Worker
 ```
+
+
