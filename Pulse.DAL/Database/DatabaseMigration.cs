@@ -23,7 +23,7 @@ public class DatabaseMigration : IHostedLifecycleService
 
         _logger.LogInformation("Running database migrations...");
 
-        var retries = 5;
+        const int retries = 5;
         for (var i = 1; i <= retries; i++)
         {
             try

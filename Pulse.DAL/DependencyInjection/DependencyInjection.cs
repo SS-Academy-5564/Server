@@ -10,7 +10,12 @@ public static class DependencyInjection
     {
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
 
-        //services.AddHostedService<DatabaseMigration>();
+        return services;
+    }
+
+    public static IServiceCollection AddDatabaseMigrations(this IServiceCollection services)
+    {
+        services.AddHostedService<DatabaseMigration>();
 
         return services;
     }

@@ -1,24 +1,24 @@
 ﻿using DbUp;
 using System.Reflection;
+using Pulse.DAL.Common.Constants;
+using Pulse.DAL.Exceptions;
 
 namespace Pulse.DAL.Database;
 
 public static class DatabaseInitializer
 {
-    private static readonly string[] MigrationFolders =
-   [
-      ".Scripts.Tables.",
-      ".Scripts.Seed.",
-      ".Scripts.Indexes."
-   ];
-
-    public static void RunMigrations(string connectionString)
+    public static void RunMigrations(string connectionString, bool seedDevData = false)
     {
         EnsureDatabase.For.SqlDatabase(connectionString);
 
-        foreach (var folder in MigrationFolders)
+        foreach (var folder in MigrationConstants.Folders)
         {
             RunScripts(connectionString, folder);
+        }
+
+        if (seedDevData)
+        {
+            RunScripts(connectionString, MigrationConstants.DevSeedFolder);
         }
     }
 
@@ -40,11 +40,9 @@ public static class DatabaseInitializer
 
         if (!result.Successful)
         {
-            throw new Exception(
-                $"Database migration failed ({folderFilter}): {result.Error}",
+            throw new MigrationFailedException(
+                $"Database migration failed ({folderFilter}). See inner exception for details.",
                 result.Error);
         }
     }
-
-
 }

@@ -33,7 +33,9 @@ Define the database connection string in `appsettings.json` (inside both **Pulse
 }
 ```
 
-Database setup runs automatically before the application starts.
+**Pulse.API** runs DbUp migrations on startup. The database is created if it does not exist.
+
+**Pulse.Worker** does not run migrations; it expects the schema to already be applied. Start the API at least once before the Worker, or ensure the database is already migrated.
 
 
 ## Getting Started
