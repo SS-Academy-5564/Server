@@ -6,11 +6,11 @@ namespace Pulse.DAL.Database;
 public static class DatabaseInitializer
 {
     private static readonly string[] MigrationFolders =
-   [
-      ".Scripts.Tables.",
-      ".Scripts.Seed.",
-      ".Scripts.Indexes."
-   ];
+    [
+       ".Scripts.Tables.",
+       ".Scripts.Indexes.",
+       ".Scripts.Seed."
+    ];
 
     public static void RunMigrations(string connectionString)
     {
