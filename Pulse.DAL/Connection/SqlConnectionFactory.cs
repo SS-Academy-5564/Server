@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
@@ -22,7 +22,7 @@ public class SqlConnectionFactory : IDbConnectionFactory
         {
             throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
         }
-         
+
         return new SqlConnection(connectionString);
     }
 }

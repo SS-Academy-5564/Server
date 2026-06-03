@@ -1,5 +1,5 @@
-﻿using DbUp;
 using System.Reflection;
+using DbUp;
 
 namespace Pulse.DAL.Database;
 
@@ -45,6 +45,4 @@ public static class DatabaseInitializer
                 result.Error);
         }
     }
-
-
 }
