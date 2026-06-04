@@ -1,0 +1,9 @@
+INSERT INTO Roles (Id, Name)
+SELECT v.Id, v.Name
+FROM (VALUES
+    ('A1000000-0000-0000-0000-000000000001', 'User'),
+    ('A1000000-0000-0000-0000-000000000002', 'Viewer')
+) AS v(Id, Name)
+WHERE NOT EXISTS (
+    SELECT 1 FROM Roles r WHERE r.Id = v.Id
+);

@@ -15,12 +15,14 @@ public static class DatabaseMigration
         logger.LogInformation("Running database migrations...");
 
         const int retries = 5;
+        var seedDevData = _configuration.GetValue<bool>("Database:SeedDevData");
+
         for (var i = 1; i <= retries; i++)
         {
             try
             {
-                DatabaseInitializer.RunMigrations(connectionString);
-                logger.LogInformation("Database migrations completed successfully.");
+                DatabaseInitializer.RunMigrations(connectionString, seedDevData);
+                _logger.LogInformation("Database migrations completed successfully.");
                 return;
             }
             catch (Exception ex) when (i < retries)

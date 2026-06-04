@@ -30,9 +30,16 @@ public static class DatabaseInitializer
             .SqlDatabase(connectionString)
             .WithScriptsEmbeddedInAssembly(
                 Assembly.GetExecutingAssembly(),
-                scriptName => scriptName.Contains(
-                    folderFilter,
-                    StringComparison.OrdinalIgnoreCase))
+                scriptName =>
+                {
+                    if (!scriptName.Contains(folderFilter, StringComparison.OrdinalIgnoreCase))
+                        return false;
+
+                    if (folderFilter == MigrationConstants.DevSeedFolder)
+                        return true;
+
+                    return !scriptName.Contains(MigrationConstants.DevSeedFolder, StringComparison.OrdinalIgnoreCase);
+                })
             .LogToConsole()
             .Build();
 
