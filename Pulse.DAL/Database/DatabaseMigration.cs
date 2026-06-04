@@ -23,12 +23,14 @@ public class DatabaseMigration : IHostedLifecycleService
 
         _logger.LogInformation("Running database migrations...");
 
+        var seedDevData = _configuration.GetValue<bool>("Database:SeedDevData");
+
         var retries = 5;
         for (var i = 1; i <= retries; i++)
         {
             try
             {
-                DatabaseInitializer.RunMigrations(connectionString);
+                DatabaseInitializer.RunMigrations(connectionString, seedDevData);
                 _logger.LogInformation("Database migrations completed successfully.");
                 return;
             }

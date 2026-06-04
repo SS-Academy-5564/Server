@@ -5,20 +5,18 @@ namespace Pulse.DAL.Database;
 
 public static class DatabaseInitializer
 {
-    private static readonly string[] MigrationFolders =
-   [
-      ".Scripts.Tables.",
-      ".Scripts.Seed.",
-      ".Scripts.Indexes."
-   ];
-
-    public static void RunMigrations(string connectionString)
+    public static void RunMigrations(string connectionString, bool seedDevData = false)
     {
         EnsureDatabase.For.SqlDatabase(connectionString);
 
-        foreach (var folder in MigrationFolders)
+        foreach (var folder in MigrationConstants.MigrationFolders)
         {
             RunScripts(connectionString, folder);
+        }
+
+        if (seedDevData)
+        {
+            RunScripts(connectionString, MigrationConstants.DevSeedFolder);
         }
     }
 
@@ -30,9 +28,16 @@ public static class DatabaseInitializer
             .SqlDatabase(connectionString)
             .WithScriptsEmbeddedInAssembly(
                 Assembly.GetExecutingAssembly(),
-                scriptName => scriptName.Contains(
-                    folderFilter,
-                    StringComparison.OrdinalIgnoreCase))
+                scriptName =>
+                {
+                    if (!scriptName.Contains(folderFilter, StringComparison.OrdinalIgnoreCase))
+                        return false;
+
+                    if (folderFilter == MigrationConstants.DevSeedFolder)
+                        return true;
+
+                    return !scriptName.Contains(MigrationConstants.DevSeedFolder, StringComparison.OrdinalIgnoreCase);
+                })
             .LogToConsole()
             .Build();
 
