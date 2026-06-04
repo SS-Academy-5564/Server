@@ -9,5 +9,5 @@ internal static class MigrationConstants
         ".Scripts.Seed.",
     ];
 
-    public const string DevSeedFolder = ".Scripts.Seed.Dev.";
+    public const string DevSeedFolder = ".Scripts.Dev.Seed.";
 }
