@@ -20,7 +20,9 @@ var migrationLogger = app.Services
     .GetRequiredService<ILoggerFactory>()
     .CreateLogger("DatabaseMigration");
 
-await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger);
+var seedDevData = builder.Configuration.GetValue<bool>("Database:SeedDevData");
+
+await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, seedDevData);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

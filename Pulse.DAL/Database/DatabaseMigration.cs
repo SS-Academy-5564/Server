@@ -1,15 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Pulse.DAL.Database;
 
 public static class DatabaseMigration
 {
-    public static IConfiguration Configuration { get; set; } = null!;
-
     public static async Task RunWithRetryAsync(
         string connectionString,
         ILogger logger,
+        bool seedDevData = false,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
@@ -18,8 +16,6 @@ public static class DatabaseMigration
         logger.LogInformation("Running database migrations...");
 
         const int retries = 5;
-        var seedDevData = Configuration.GetValue<bool>("Database:SeedDevData");
-
         for (var i = 1; i <= retries; i++)
         {
             try
