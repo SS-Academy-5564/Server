@@ -62,3 +62,16 @@ dotnet run --project Pulse.Worker
 ```
 
 
+## Code Formatting
+
+Verify locally:
+
+```bash
+dotnet format Pulse.slnx --verify-no-changes --severity error
+```
+
+Fix violations:
+
+```bash
+dotnet format Pulse.slnx --severity error
+```
