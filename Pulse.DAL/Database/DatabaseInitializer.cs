@@ -1,5 +1,7 @@
 using System.Reflection;
 using DbUp;
+using Pulse.DAL.Common.Constants;
+using Pulse.DAL.Exceptions;
 
 namespace Pulse.DAL.Database;
 
@@ -9,7 +11,7 @@ public static class DatabaseInitializer
     {
         EnsureDatabase.For.SqlDatabase(connectionString);
 
-        foreach (var folder in MigrationConstants.MigrationFolders)
+        foreach (var folder in MigrationConstants.Folders)
         {
             RunScripts(connectionString, folder);
         }
@@ -45,8 +47,8 @@ public static class DatabaseInitializer
 
         if (!result.Successful)
         {
-            throw new Exception(
-                $"Database migration failed ({folderFilter}): {result.Error}",
+            throw new MigrationFailedException(
+                $"Database migration failed ({folderFilter}). See inner exception for details.",
                 result.Error);
         }
     }

@@ -10,7 +10,19 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+    throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+
 var app = builder.Build();
+
+var migrationLogger = app.Services
+    .GetRequiredService<ILoggerFactory>()
+    .CreateLogger("DatabaseMigration");
+
+var seedDevData = builder.Configuration.GetValue<bool>("Database:SeedDevData");
+
+await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, seedDevData);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
