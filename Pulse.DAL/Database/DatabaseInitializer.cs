@@ -1,5 +1,5 @@
-using DbUp;
 using System.Reflection;
+using DbUp;
 using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Exceptions;
 

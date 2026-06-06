@@ -1,4 +1,4 @@
-﻿namespace Pulse.DAL.Common.Constants;
+namespace Pulse.DAL.Common.Constants;
 
 internal static class MigrationConstants
 {

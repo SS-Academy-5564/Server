@@ -1,4 +1,4 @@
-﻿namespace Pulse.DAL.Exceptions;
+namespace Pulse.DAL.Exceptions;
 
 public sealed class MigrationFailedException : Exception
 {
