@@ -1,4 +1,4 @@
-﻿namespace Pulse.Tests.Unit;
+namespace Pulse.Tests.Unit;
 
 public class UnitTest1
 {
