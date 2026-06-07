@@ -8,11 +8,11 @@ Pulse is a server-side monitoring platform built with .NET 10.
 
 ```text
 Pulse.slnx
-├── Pulse.API
-├── Pulse.BL
-├── Pulse.DAL
-├── Pulse.Worker
-└── Pulse.Tests.Unit
+├── Pulse.API         
+├── Pulse.BL           
+├── Pulse.DAL          
+├── Pulse.Worker       
+└── Pulse.Tests.Unit   
 ```
 
 ### Getting Started
@@ -111,8 +111,20 @@ Rules:
 * Keep SQL inside DAL
 * Read connection strings from configuration only
 
-## Configuration
+## Database Migrations
 
+* Database migrations are implemented as SQL scripts in Pulse.DAL/Scripts
+* Never modify an existing migration script that has already been committed.
+* Migration scripts must be additive and executed in sequence.
+* Preserve the existing numbering style in the repository;
+* Preserve the existing script naming and numbering conventions.
+* Database creation and migration execution are handled by `DatabaseInitializer` and `DatabaseMigration`.
+* Pulse.API executes migrations automatically during application startup before accepting HTTP requests.
+* Pulse.Worker must not execute migrations and assumes the database schema is already up to date.
+* Do not execute migration SQL directly from services, controllers, workers, or application logic.
+* Development seed data belongs in Scripts/Dev/Seed and is executed only when enabled through configuration.
+
+## Configuration
 * Use `appsettings.json`
 * Never commit secrets or credentials
 
