@@ -12,6 +12,8 @@ builder.Services.AddDataAccess()
 
 builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly, includeInternalTypes: true);
 
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
@@ -19,7 +21,9 @@ builder.Services.AddLoginRateLimiter(builder.Configuration);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
+{
     throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+}
 
 var app = builder.Build();
 
@@ -48,3 +52,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program
+{
+}
