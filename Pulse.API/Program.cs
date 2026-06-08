@@ -1,3 +1,4 @@
+using Pulse.API.Extensions;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
@@ -5,10 +6,9 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDataAccess();
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddLoginRateLimiter(builder.Configuration);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -30,6 +30,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthorization();
 
