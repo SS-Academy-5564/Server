@@ -1,6 +1,7 @@
 using FluentValidation;
 using Pulse.API.Extensions;
 using Pulse.BL;
+using FluentValidation;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
