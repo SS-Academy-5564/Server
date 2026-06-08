@@ -10,19 +10,20 @@ public static class ServiceCollectionExtensions
         public IServiceCollection AddLoginRateLimiter(IConfiguration configuration)
         {
             var rateLimiterSection = configuration.GetSection("RateLimit.Login");
+            var permitLimit = rateLimiterSection.GetValue<int>("PermitLimit");
+            var windowMinutes = rateLimiterSection.GetValue<int>("Window");
 
             services.AddRateLimiter(options =>
             {
                 options.AddPolicy(RateLimitPolicies.Login, context =>
                 {
-                    var partitionKey = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
 
                     return RateLimitPartition.GetFixedWindowLimiter(
-                        partitionKey: partitionKey,
+                        partitionKey: context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
-                            PermitLimit = rateLimiterSection.GetValue<int>("PermitLimit"),
-                            Window = TimeSpan.FromMinutes(rateLimiterSection.GetValue<int>("Window")),
+                            PermitLimit = permitLimit,
+                            Window = TimeSpan.FromMinutes(windowMinutes),
                             QueueLimit = 0,
                         }
                     );
@@ -42,10 +43,16 @@ public static class ServiceCollectionExtensions
 
                     if (onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                     {
-                        httpContext.Response.Headers.RetryAfter = retryAfter.TotalMinutes.ToString();
+                        httpContext.Response.Headers.RetryAfter = retryAfter.TotalSeconds.ToString();
                     }
+                    httpContext.Response.Headers.RetryAfter =
+                        ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString();
 
-                    await httpContext.Response.WriteAsync("Too many requests", cancellationToken);
+                    await httpContext.Response.WriteAsJsonAsync(new
+                    {
+                        Error = "Too many requests",
+                        RetryAfter = retryAfter.TotalSeconds
+                    }, cancellationToken);
                 };
             });
             return services;
