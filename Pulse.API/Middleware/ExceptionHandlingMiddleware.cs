@@ -2,7 +2,6 @@ using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.BL.Common.Errors;
-using System.Text.Json;
 
 namespace Pulse.API.Middleware;
 
