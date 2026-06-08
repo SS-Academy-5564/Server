@@ -1,3 +1,4 @@
+using FluentValidation;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
@@ -6,13 +7,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDataAccess();
 
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
+{
     throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+}
 
 var app = builder.Build();
 
@@ -36,3 +41,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program
+{
+}
