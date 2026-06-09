@@ -6,25 +6,25 @@ namespace Pulse.API.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    private const int DefaultMaxAttempts = 20;
-    private const int DefaultPeriodMinutes = 15;
     extension(IServiceCollection services)
     {
         public IServiceCollection AddLoginRateLimiter(IConfiguration configuration)
         {
             var rateLimiterSection = configuration.GetSection("RateLimit:Login");
 
-            int maxAttempts = rateLimiterSection.GetValue("MaxAttempts", DefaultMaxAttempts);
-            int periodMinutes = rateLimiterSection.GetValue("PeriodMinutes", DefaultPeriodMinutes);
+            var maxAttempts = rateLimiterSection.GetValue<int>("MaxAttempts");
+            var periodMinutes = rateLimiterSection.GetValue<int>("PeriodMinutes");
 
             if (maxAttempts <= 0)
             {
-                throw new InvalidOperationException("Configuration 'RateLimit.Login:MaxAttempts' is missing or invalid. It must be greater than zero.");
+                throw new InvalidOperationException(
+                    "RateLimit:Login:MaxAttempts is missing or invalid. It must be greater than zero.");
             }
 
             if (periodMinutes <= 0)
             {
-                throw new InvalidOperationException("Configuration 'RateLimit.Login:PeriodMinutes' is missing or invalid. It must be greater than zero.");
+                throw new InvalidOperationException(
+                    "RateLimit:Login:PeriodMinutes is missing or invalid. It must be greater than zero.");
             }
 
             services.AddRateLimiter(options =>
