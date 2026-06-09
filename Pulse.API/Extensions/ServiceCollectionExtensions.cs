@@ -12,10 +12,20 @@ public static class ServiceCollectionExtensions
     {
         public IServiceCollection AddLoginRateLimiter(IConfiguration configuration)
         {
-            var rateLimiterSection = configuration.GetSection("RateLimit.Login");
+            var rateLimiterSection = configuration.GetSection("RateLimit:Login");
 
-            int maxAttempts = rateLimiterSection.GetValue<int?>("MaxAttempts") ?? DefaultMaxAttempts;
-            int periodMinutes = rateLimiterSection.GetValue<int?>("PeriodMinutes") ?? DefaultPeriodMinutes;
+            int maxAttempts = rateLimiterSection.GetValue("MaxAttempts", DefaultMaxAttempts);
+            int periodMinutes = rateLimiterSection.GetValue("PeriodMinutes", DefaultPeriodMinutes);
+
+            if (maxAttempts <= 0)
+            {
+                throw new InvalidOperationException("Configuration 'RateLimit.Login:MaxAttempts' is missing or invalid. It must be greater than zero.");
+            }
+
+            if (periodMinutes <= 0)
+            {
+                throw new InvalidOperationException("Configuration 'RateLimit.Login:PeriodMinutes' is missing or invalid. It must be greater than zero.");
+            }
 
             services.AddRateLimiter(options =>
             {
