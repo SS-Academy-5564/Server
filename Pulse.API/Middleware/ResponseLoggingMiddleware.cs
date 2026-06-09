@@ -1,6 +1,6 @@
 namespace Pulse.API.Middleware;
 
-public class ResponseLoggingMiddleware(RequestDelegate next,ILogger<ResponseLoggingMiddleware> logger)
+public class ResponseLoggingMiddleware(RequestDelegate next, ILogger<ResponseLoggingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
     {
