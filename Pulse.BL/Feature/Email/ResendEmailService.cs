@@ -45,6 +45,7 @@ public class ResendEmailService : IEmailService
         }
 
         string recipients = string.Join(", ", dto.To);
+
         try
         {
             _logger.LogInformation(
