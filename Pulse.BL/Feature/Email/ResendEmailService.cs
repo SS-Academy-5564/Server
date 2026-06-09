@@ -40,10 +40,7 @@ public class ResendEmailService : IEmailService
 
         if (dto.ReplyTo is not null)
         {
-            foreach (string replyTo in dto.ReplyTo)
-            {
-                message.ReplyTo?.Add(replyTo);
-            }
+            message.ReplyTo = EmailAddressList.From(dto.ReplyTo);
         }
 
         try
