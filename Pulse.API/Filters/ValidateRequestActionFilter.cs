@@ -20,7 +20,7 @@ public class ValidateRequestActionFilter : IAsyncActionFilter
         var parameters = context.ActionDescriptor.Parameters
             .Select(parameter => parameter as ControllerParameterDescriptor)
             .Where(parameter => parameter is not null &&
-                                parameter.ParameterInfo.HasCustomAttribute<ValidateAttribute>());
+                                parameter.ParameterInfo.IsDefined(typeof(ValidateAttribute), false));
 
         foreach (var parameter in parameters)
         {
