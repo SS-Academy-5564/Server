@@ -1,11 +1,75 @@
 using FluentResults;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Resend;
 
 namespace Pulse.BL.Feature.Email;
 
 public class ResendEmailService : IEmailService
 {
-    public Task<Result> SendEmailAsync(SendEmailDto dto, CancellationToken cancellationToken = default)
+    private readonly IResend _resend;
+    private readonly EmailOptions _options;
+    private readonly ILogger<ResendEmailService> _logger;
+
+    public ResendEmailService(
+        IResend resend,
+        IOptions<EmailOptions> options,
+        ILogger<ResendEmailService> logger)
     {
-        throw new NotImplementedException();
+        _resend = resend;
+        _options = options.Value;
+        _logger = logger;
+    }
+
+    public async Task<Result> SendEmailAsync(
+        SendEmailDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var message = new EmailMessage
+        {
+            From = $"{_options.FromName} <{_options.FromAddress}>",
+            Subject = dto.Subject,
+            HtmlBody = dto.HtmlBody,
+            TextBody = dto.PlainTextBody
+        };
+
+        foreach (string recipient in dto.To)
+        {
+            message.To.Add(recipient);
+        }
+
+        if (dto.ReplyTo is not null)
+        {
+            foreach (string replyTo in dto.ReplyTo)
+            {
+                message.ReplyTo?.Add(replyTo);
+            }
+        }
+
+        try
+        {
+            _logger.LogInformation(
+                "Sending email via Resend. Recipients: {Recipients}, Subject: {Subject}",
+                string.Join(", ", dto.To),
+                dto.Subject);
+
+            await _resend.EmailSendAsync(message, cancellationToken);
+
+            _logger.LogInformation(
+                "Email sent successfully via Resend. Recipients: {Recipients}",
+                string.Join(", ", dto.To));
+
+            return Result.Ok();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Failed to send email via Resend. Recipients: {Recipients}, Subject: {Subject}",
+                string.Join(", ", dto.To),
+                dto.Subject);
+
+            return Result.Fail($"Failed to send email: {ex.Message}");
+        }
     }
 }
