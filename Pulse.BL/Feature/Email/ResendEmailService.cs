@@ -69,7 +69,7 @@ public class ResendEmailService : IEmailService
                 string.Join(", ", dto.To),
                 dto.Subject);
 
-            return Result.Fail($"Failed to send email: {ex.Message}");
+            return Result.Fail("Failed to send email via Resend.");
         }
     }
 }
