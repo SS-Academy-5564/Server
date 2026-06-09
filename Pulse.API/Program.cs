@@ -1,4 +1,5 @@
 using Pulse.API.Extensions;
+using Pulse.API.Middleware;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
@@ -30,6 +31,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+app.UseResponseLogging();
 app.UseRouting();
 app.UseRateLimiter();
 

@@ -26,8 +26,8 @@ public static class ServiceCollectionExtensions
                         factory: _ => new TokenBucketRateLimiterOptions()
                         {
                             TokenLimit = maxAttempts,
-                            TokensPerPeriod = maxAttempts,
-                            ReplenishmentPeriod = TimeSpan.FromMinutes(periodMinutes),
+                            TokensPerPeriod = 1,
+                            ReplenishmentPeriod = TimeSpan.FromSeconds(periodMinutes * 60 / maxAttempts),
                             QueueLimit = 0,
                             AutoReplenishment = true
                         }
@@ -37,14 +37,6 @@ public static class ServiceCollectionExtensions
                 options.OnRejected = async (onRejectedContext, cancellationToken) =>
                 {
                     var httpContext = onRejectedContext.HttpContext;
-                    var ipAddress = GetClientIdentifier(httpContext);
-                    var path = httpContext.Request.Path;
-                    var logger = httpContext.RequestServices
-                        .GetRequiredService<ILoggerFactory>()
-                        .CreateLogger(nameof(RateLimitPolicies.Login));
-
-                    logger.LogWarning("Rate limit exceeded for IP: {IP} on Path: {Path}", ipAddress, path);
-
                     httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
                     double retryAfterSeconds = 0;
