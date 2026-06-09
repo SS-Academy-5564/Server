@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Threading.RateLimiting;
 using Pulse.API.Constants;
 
@@ -5,13 +6,16 @@ namespace Pulse.API.Extensions;
 
 public static class ServiceCollectionExtensions
 {
+    private const int DefaultMaxAttempts = 20;
+    private const int DefaultPeriodMinutes = 15;
     extension(IServiceCollection services)
     {
         public IServiceCollection AddLoginRateLimiter(IConfiguration configuration)
         {
             var rateLimiterSection = configuration.GetSection("RateLimit.Login");
-            var maxAttempts = rateLimiterSection.GetValue<int>("MaxAttempts");
-            var periodMinutes = rateLimiterSection.GetValue<int>("PeriodMinutes");
+
+            int maxAttempts = rateLimiterSection.GetValue<int?>("MaxAttempts") ?? DefaultMaxAttempts;
+            int periodMinutes = rateLimiterSection.GetValue<int?>("PeriodMinutes") ?? DefaultPeriodMinutes;
 
             services.AddRateLimiter(options =>
             {
@@ -47,7 +51,7 @@ public static class ServiceCollectionExtensions
                     if (onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                     {
                         retryAfterSeconds = Math.Ceiling(retryAfter.TotalSeconds);
-                        httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString("0");
+                        httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
                     }
 
                     await httpContext.Response.WriteAsJsonAsync(new
