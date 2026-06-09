@@ -13,7 +13,7 @@ public class DummyEmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task<Result> SendEmailAsync(
+    public Task<Result> SendEmailAsync(
         SendEmailDto email,
         CancellationToken cancellationToken = default)
     {
@@ -23,6 +23,6 @@ public class DummyEmailService : IEmailService
             "Dummy email sent. EmailData: {EmailData}",
             emailJson);
 
-        return Result.Ok();
+        return Task.FromResult(Result.Ok());
     }
 }

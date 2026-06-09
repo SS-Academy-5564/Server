@@ -16,6 +16,8 @@ public static class EmailServiceCollectionExtensions
             .Bind(configuration.GetRequiredSection(EmailOptions.SectionName))
             .ValidateOnStart();
 
+        var emailOptions = configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>()!;
+
         services.AddSingleton<IValidateOptions<EmailOptions>, EmailOptionsValidator>();
 
         string? emailProvider = configuration.GetValue<string>("Email:Provider");
@@ -28,15 +30,10 @@ public static class EmailServiceCollectionExtensions
         {
             services.AddHttpClient<ResendClient>();
 
-            services.Configure<ResendClientOptions>(options => { options.ApiToken = configuration["Email:ApiKey"]!; });
+            services.Configure<ResendClientOptions>(options => { options.ApiToken = emailOptions.ApiKey; });
 
             services.AddTransient<IResend, ResendClient>();
             services.AddScoped<IEmailService, ResendEmailService>();
-        }
-        else
-        {
-            throw new InvalidOperationException(
-                $"Unsupported email provider '{emailProvider}'.");
         }
 
         return services;

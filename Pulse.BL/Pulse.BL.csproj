@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <PackageReference Include="FluentResults" Version="4.0.0" />
-    <PackageReference Include="FluentValidation" Version="12.1.1" />
     <PackageReference Include="Resend" Version="0.5.1" />
   </ItemGroup>
 

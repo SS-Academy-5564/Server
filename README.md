@@ -81,7 +81,7 @@ Then configure the application:
 **API key** — do not commit the key to the repository. Store it in User Secrets or environment variables:
 
 ```bash
-dotnet user-secrets set "Email:Provider" "dummy" --project Pulse.API
+dotnet user-secrets set "Email:Provider" "resend" --project Pulse.API
 dotnet user-secrets set "Email:ApiKey" "re_xxxx" --project Pulse.API
 ```
 
