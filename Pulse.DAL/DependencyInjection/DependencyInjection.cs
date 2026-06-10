@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Pulse.DAL.Connection;
 
@@ -8,6 +9,7 @@ public static class DependencyInjection
     public static IServiceCollection AddDataAccess(this IServiceCollection services)
     {
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
+        services.AddFromAssembly(Assembly.GetExecutingAssembly());
 
         return services;
     }
