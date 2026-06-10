@@ -11,14 +11,13 @@ public class EmailOptionsValidator : IValidateOptions<EmailOptions>
 
         var errors = new List<string>();
 
-        if (string.IsNullOrWhiteSpace(options.Provider))
+        if (options.Provider == EmailProvider.None)
         {
             errors.Add("Email:Provider is required.");
         }
-        else if (!string.Equals(options.Provider, "dummy", StringComparison.OrdinalIgnoreCase) &&
-                 !string.Equals(options.Provider, "resend", StringComparison.OrdinalIgnoreCase))
+        else if (!Enum.IsDefined(options.Provider))
         {
-            errors.Add("Email:Provider must be either 'dummy' or 'resend'.");
+            errors.Add("Email:Provider must be a valid provider.");
         }
 
         if (string.IsNullOrWhiteSpace(options.FromAddress))
@@ -35,10 +34,10 @@ public class EmailOptionsValidator : IValidateOptions<EmailOptions>
             errors.Add("Email:FromName is required.");
         }
 
-        if (string.Equals(options.Provider, "resend", StringComparison.OrdinalIgnoreCase) &&
+        if (options.Provider == EmailProvider.Resend &&
             string.IsNullOrWhiteSpace(options.ApiKey))
         {
-            errors.Add("Email:ApiKey is required when Email:Provider is 'resend'.");
+            errors.Add("Email:ApiKey is required when Email:Provider is 'Resend'.");
         }
 
         return errors.Count > 0

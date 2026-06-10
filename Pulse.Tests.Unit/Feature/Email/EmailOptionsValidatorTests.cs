@@ -14,7 +14,7 @@ public class EmailOptionsValidatorTests
         // Arrange
         var options = new EmailOptions
         {
-            Provider = "dummy",
+            Provider = EmailProvider.Dummy,
             FromAddress = "noreply@pulse.com",
             FromName = "Pulse"
         };
@@ -32,7 +32,7 @@ public class EmailOptionsValidatorTests
         // Arrange
         var options = new EmailOptions
         {
-            Provider = "resend",
+            Provider = EmailProvider.Resend,
             ApiKey = "re_test_key",
             FromAddress = "noreply@pulse.com",
             FromName = "Pulse"
@@ -69,7 +69,7 @@ public class EmailOptionsValidatorTests
         // Arrange
         var options = new EmailOptions
         {
-            Provider = "smtp",
+            Provider = (EmailProvider)999,
             FromAddress = "noreply@pulse.com",
             FromName = "Pulse"
         };
@@ -79,7 +79,7 @@ public class EmailOptionsValidatorTests
 
         // Assert
         result.Failed.Should().BeTrue();
-        result.FailureMessage.Should().Contain("Email:Provider must be either 'dummy' or 'resend'.");
+        result.FailureMessage.Should().Contain("Email:Provider must be a valid provider.");
     }
 
     [Theory]
@@ -90,7 +90,7 @@ public class EmailOptionsValidatorTests
         // Arrange
         var options = new EmailOptions
         {
-            Provider = "dummy",
+            Provider = EmailProvider.Dummy,
             FromAddress = fromAddress,
             FromName = "Pulse"
         };
@@ -108,7 +108,7 @@ public class EmailOptionsValidatorTests
         // Arrange
         var options = new EmailOptions
         {
-            Provider = "dummy",
+            Provider = EmailProvider.Dummy,
             FromAddress = "noreply@pulse.com",
             FromName = ""
         };
@@ -127,7 +127,7 @@ public class EmailOptionsValidatorTests
         // Arrange
         var options = new EmailOptions
         {
-            Provider = "resend",
+            Provider = EmailProvider.Resend,
             FromAddress = "noreply@pulse.com",
             FromName = "Pulse"
         };
@@ -137,6 +137,6 @@ public class EmailOptionsValidatorTests
 
         // Assert
         result.Failed.Should().BeTrue();
-        result.FailureMessage.Should().Contain("Email:ApiKey is required when Email:Provider is 'resend'.");
+        result.FailureMessage.Should().Contain("Email:ApiKey is required when Email:Provider is 'Resend'.");
     }
 }

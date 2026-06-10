@@ -43,19 +43,17 @@ public class ResendEmailService : IEmailService
             message.ReplyTo = EmailAddressList.From(dto.ReplyTo);
         }
 
+        string recipients = string.Join(", ", dto.To);
         try
         {
             _logger.LogInformation(
                 "Sending email via Resend. Recipients: {Recipients}, Subject: {Subject}",
-                string.Join(", ", dto.To),
+                recipients,
                 dto.Subject);
-
             await _resend.EmailSendAsync(message, cancellationToken);
-
             _logger.LogInformation(
                 "Email sent successfully via Resend. Recipients: {Recipients}",
-                string.Join(", ", dto.To));
-
+                recipients);
             return Result.Ok();
         }
         catch (Exception ex)
@@ -63,9 +61,8 @@ public class ResendEmailService : IEmailService
             _logger.LogError(
                 ex,
                 "Failed to send email via Resend. Recipients: {Recipients}, Subject: {Subject}",
-                string.Join(", ", dto.To),
+                recipients,
                 dto.Subject);
-
             return Result.Fail("Failed to send email via Resend.");
         }
     }

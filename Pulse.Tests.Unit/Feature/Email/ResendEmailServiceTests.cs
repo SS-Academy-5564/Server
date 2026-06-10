@@ -11,7 +11,7 @@ public class ResendEmailServiceTests
 {
     private static readonly EmailOptions DefaultOptions = new()
     {
-        Provider = "resend",
+        Provider = EmailProvider.Resend,
         ApiKey = "re_test_key",
         FromAddress = "noreply@pulse.com",
         FromName = "Pulse"

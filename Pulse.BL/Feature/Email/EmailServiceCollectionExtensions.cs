@@ -16,24 +16,33 @@ public static class EmailServiceCollectionExtensions
             .Bind(configuration.GetRequiredSection(EmailOptions.SectionName))
             .ValidateOnStart();
 
-        var emailOptions = configuration.GetSection(EmailOptions.SectionName).Get<EmailOptions>()!;
+        EmailOptions emailOptions = configuration
+            .GetSection(EmailOptions.SectionName)
+            .Get<EmailOptions>()!;
 
         services.AddSingleton<IValidateOptions<EmailOptions>, EmailOptionsValidator>();
 
-        string? emailProvider = configuration.GetValue<string>("Email:Provider");
-
-        if (string.Equals(emailProvider, "dummy", StringComparison.OrdinalIgnoreCase))
+        switch (emailOptions.Provider)
         {
-            services.AddScoped<IEmailService, DummyEmailService>();
-        }
-        else if (string.Equals(emailProvider, "resend", StringComparison.OrdinalIgnoreCase))
-        {
-            services.AddHttpClient<ResendClient>();
+            case EmailProvider.Dummy:
+                services.AddScoped<IEmailService, DummyEmailService>();
+                break;
 
-            services.Configure<ResendClientOptions>(options => { options.ApiToken = emailOptions.ApiKey; });
+            case EmailProvider.Resend:
+                services.AddHttpClient<ResendClient>();
 
-            services.AddTransient<IResend, ResendClient>();
-            services.AddScoped<IEmailService, ResendEmailService>();
+                services.Configure<ResendClientOptions>(options =>
+                {
+                    options.ApiToken = emailOptions.ApiKey;
+                });
+
+                services.AddTransient<IResend, ResendClient>();
+                services.AddScoped<IEmailService, ResendEmailService>();
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"Unsupported email provider '{emailOptions.Provider}'.");
         }
 
         return services;
