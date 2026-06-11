@@ -1,7 +1,7 @@
 using Pulse.BL.Common.Security;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Users;
-using Pulse.DAL.Queries.Roles;
+using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.Registration;
@@ -14,48 +14,38 @@ public class RegistrationHandler : IRegistrationHandler
 
     // remove later
     private readonly IMemberCommands _memberCommands;
-    private readonly IRoleQueries _roleQueries;
 
 
     public RegistrationHandler(
         IUserCommands userCommands,
         IUserQueries userQueries,
         IPasswordHasher passwordHasher,
-        IMemberCommands memberCommands,
-        IRoleQueries roleQueries)
+        IMemberCommands memberCommands)
     {
         _userCommands = userCommands;
         _userQueries = userQueries;
         _passwordHasher = passwordHasher;
         _memberCommands = memberCommands;
-        _roleQueries = roleQueries;
     }
-    public async Task Register(RegistrationRequest request)
+    public async Task Register(RegistrationCommand command, CancellationToken ct)
     {
-        var userExists = await _userQueries.EmailExistsAsync(request.Email);
+        var userExists = await _userQueries.EmailExistsAsync(command.Email, ct);
 
-        if (!userExists)
+        if (userExists)
         {
             //return fail here
             return;
         }
 
-        var passwordHash = _passwordHasher.HashPassword(request.Password);
+        var passwordHash = _passwordHasher.HashPassword(command.Password);
 
         var userId = await _userCommands.CreateAsync(new CreateUserInput
         {
-            Email = request.Email,
+            Email = command.Email,
             PasswordHash = passwordHash
-        });
+        }, ct);
 
         if (userId == Guid.Empty)
-        {
-            // return failure
-            return;
-        }
-
-        var userRole = await _roleQueries.GetRoleByNameAsync("User");
-        if (userRole is null)
         {
             // return failure
             return;
@@ -64,9 +54,9 @@ public class RegistrationHandler : IRegistrationHandler
         await _memberCommands.CreateMemberAsync(new CreateMemberInput
         {
             UserId = userId,
-            OrganizationId = Guid.Parse("B1000000-0000-0000-0000-000000000001"),
-            RoleId = userRole.Id
-        });
+            OrganizationId = SeededIds.Organizations.Default,
+            RoleId = SeededIds.Roles.User
+        }, ct);
 
         // return success
     }

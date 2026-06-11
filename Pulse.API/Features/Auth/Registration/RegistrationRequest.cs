@@ -1,5 +1,4 @@
-
-namespace Pulse.BL.Features.Auth.Registration;
+namespace Pulse.API.Features.Auth.Registration;
 
 public class RegistrationRequest
 {

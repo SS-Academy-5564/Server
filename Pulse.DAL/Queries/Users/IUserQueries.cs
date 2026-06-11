@@ -4,5 +4,5 @@ namespace Pulse.DAL.Queries.Users;
 
 public interface IUserQueries : IQueries
 {
-    Task<bool> EmailExistsAsync(string email);
+    Task<bool> EmailExistsAsync(string email, CancellationToken ct);
 }
