@@ -6,7 +6,7 @@ using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.Registration;
 
-public class RegisterUserService : IRegisterUserService
+public class RegistrationHandler : IRegistrationHandler
 {
     private readonly IUserCommands _userCommands;
     private readonly IUserQueries _userQueries;
@@ -17,7 +17,7 @@ public class RegisterUserService : IRegisterUserService
     private readonly IRoleQueries _roleQueries;
 
 
-    public RegisterUserService(
+    public RegistrationHandler(
         IUserCommands userCommands,
         IUserQueries userQueries,
         IPasswordHasher passwordHasher,
@@ -30,7 +30,7 @@ public class RegisterUserService : IRegisterUserService
         _memberCommands = memberCommands;
         _roleQueries = roleQueries;
     }
-    public async Task Register(RegisterUserRequest request)
+    public async Task Register(RegistrationRequest request)
     {
         var userExists = await _userQueries.EmailExistsAsync(request.Email);
 

@@ -20,6 +20,6 @@ public class MemberCommands : IMemberCommands
         await connection.ExecuteAsync(
             "INSERT INTO Members (UserId, OrganizationId, RoleId, JoinedAt, UpdatedAt) " +
             "VALUES (@UserId, @OrganizationId, @RoleId, @Now, @Now)",
-            new {UserId = input.UserId, OrganizationId = input.OrganizationId, RoleId = input.RoleId, Now = DateTimeOffset.UtcNow})
+            new {UserId = input.UserId, OrganizationId = input.OrganizationId, RoleId = input.RoleId, Now = DateTimeOffset.UtcNow});
     }
 }
