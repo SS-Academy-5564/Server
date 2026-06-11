@@ -111,6 +111,29 @@ OpenAPI docs and Scalar UI are available in development mode at `/openapi/v1.jso
 dotnet run --project Pulse.Worker
 ```
 
+### Run with Docker
+
+`docker-compose.yml` starts **Pulse.API** together with a SQL Server 2022 instance. The API runs migrations on startup, so no manual database setup is needed.
+
+```bash
+docker compose up --build
+```
+
+The API will be available at `http://localhost:8080`. OpenAPI and Scalar UI are served at `/openapi/v1.json` and `/scalar/v1` (development mode is enabled by default in the compose file).
+
+The SA password is set to `YourStrong@Passw0rd` in both the `sqlserver` and `api` services — change it in `docker-compose.yml` before running if needed.
+
+To configure email, pass the relevant environment variables to the `api` service:
+
+```yaml
+environment:
+  - Email__Provider=resend
+  - Email__ApiKey=re_xxxx
+  - Email__FromAddress=noreply@yourdomain.com
+```
+
+The Worker service is included in the compose setup and starts automatically after the API.
+
 
 ## Code Formatting
 
