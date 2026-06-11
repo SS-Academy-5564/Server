@@ -1,10 +1,12 @@
+using Pulse.BL;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDataAccess();
+builder.Services.AddDataAccess()
+    .AddBusinessLogic(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
