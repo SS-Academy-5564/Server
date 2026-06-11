@@ -1,6 +1,7 @@
 
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Pulse.DAL.Common.Repository;
 
 namespace Pulse.DAL.DependencyInjection
 {
@@ -10,9 +11,9 @@ namespace Pulse.DAL.DependencyInjection
         {
             var registrations = assembly.GetTypes()
                 .Where(t => t.IsClass && !t.IsAbstract
-                    && (t.Name.EndsWith("Commands") || t.Name.EndsWith("Queries")))
+                    && (typeof(ICommands).IsAssignableFrom(t) || typeof(IQueries).IsAssignableFrom(t)))
                 .SelectMany(t => t.GetInterfaces()
-                .Where(i => i.Assembly == assembly)
+                .Where(i => i.Assembly == assembly && i != typeof(ICommands) && i != typeof(IQueries))
                 .Select(i => (Interface: i, Implementation: t)));
 
             foreach (var (iface, impl) in registrations)
