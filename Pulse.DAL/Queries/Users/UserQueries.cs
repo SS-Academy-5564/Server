@@ -13,12 +13,14 @@ public class UserQueries : IUserQueries
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<bool> EmailExistsAsync(string email)
+    public async Task<bool> EmailExistsAsync(string email, CancellationToken ct)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         return await connection.ExecuteScalarAsync<bool>(
-            "SELECT CAST(1 AS BIT) FROM Users WHERE Email = @Email",
-            new { Email = email });
+            new CommandDefinition(
+                "SELECT CAST(1 AS BIT) FROM Users WHERE Email = @Email",
+                new { Email = email },
+                cancellationToken: ct));
     }
 }

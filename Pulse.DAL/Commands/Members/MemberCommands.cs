@@ -13,13 +13,15 @@ public class MemberCommands : IMemberCommands
         _connectionFactory = connectionFactory;
     }
 
-    public async Task CreateMemberAsync(CreateMemberInput input)
+    public async Task CreateMemberAsync(CreateMemberInput input, CancellationToken ct)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         await connection.ExecuteAsync(
-            "INSERT INTO Members (UserId, OrganizationId, RoleId, JoinedAt, UpdatedAt) " +
-            "VALUES (@UserId, @OrganizationId, @RoleId, @Now, @Now)",
-            new {UserId = input.UserId, OrganizationId = input.OrganizationId, RoleId = input.RoleId, Now = DateTimeOffset.UtcNow});
+            new CommandDefinition(
+                "INSERT INTO Members (UserId, OrganizationId, RoleId, JoinedAt, UpdatedAt) " +
+                "VALUES (@UserId, @OrganizationId, @RoleId, @Now, @Now)",
+                new { UserId = input.UserId, OrganizationId = input.OrganizationId, RoleId = input.RoleId, Now = DateTimeOffset.UtcNow },
+                cancellationToken: ct));
     }
 }

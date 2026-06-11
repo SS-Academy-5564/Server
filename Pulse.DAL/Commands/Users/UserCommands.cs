@@ -14,12 +14,14 @@ public class UserCommands : IUserCommands
     }
 
     // change to Task later, so code will follow command/query segregation principles
-    public async Task<Guid> CreateAsync(CreateUserInput input)
+    public async Task<Guid> CreateAsync(CreateUserInput input, CancellationToken ct)
     {
         using var connection = _connectionFactory.CreateConnection();
 
         return await connection.ExecuteScalarAsync<Guid>(
-            "INSERT INTO Users (Email, PasswordHash, CreatedAt, UpdatedAt) OUTPUT INSERTED.Id VALUES (@Email, @PasswordHash, @Now, @Now)",
-            new { Email = input.Email, PasswordHash = input.PasswordHash, Now = DateTimeOffset.UtcNow });
+            new CommandDefinition(
+                "INSERT INTO Users (Email, PasswordHash, CreatedAt, UpdatedAt) OUTPUT INSERTED.Id VALUES (@Email, @PasswordHash, @Now, @Now)",
+                new { Email = input.Email, PasswordHash = input.PasswordHash, Now = DateTimeOffset.UtcNow },
+                cancellationToken: ct));
     }
 }

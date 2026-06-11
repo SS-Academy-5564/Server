@@ -5,5 +5,5 @@ namespace Pulse.BL.Features.Auth.Registration;
 
 public interface IRegistrationHandler : IAsyncHandler
 {
-    Task Register(RegistrationRequest request);
+    Task Register(RegistrationCommand request, CancellationToken ct);
 }

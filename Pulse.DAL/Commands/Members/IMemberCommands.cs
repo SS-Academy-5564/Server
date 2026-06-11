@@ -4,5 +4,5 @@ namespace Pulse.DAL.Commands.Members;
 
 public interface IMemberCommands : ICommands
 {
-    Task CreateMemberAsync(CreateMemberInput input);
+    Task CreateMemberAsync(CreateMemberInput input, CancellationToken ct);
 }
