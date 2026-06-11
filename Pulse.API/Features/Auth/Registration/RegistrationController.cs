@@ -21,6 +21,8 @@ public class RegistrationController : ControllerBase
         var command = new RegistrationCommand
         {
             Email = request.Email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
             Password = request.Password
         };
         await _handler.Register(command, ct);

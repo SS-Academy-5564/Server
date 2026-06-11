@@ -4,8 +4,8 @@ DECLARE @RoleId UNIQUEIDENTIFIER = 'A1000000-0000-0000-0000-000000000001';
 
 IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = 'email@mail.com')
 BEGIN
-    INSERT INTO Users (Id, Email, PasswordHash, CreatedAt, UpdatedAt) VALUES
-        (@UserId, 'email@mail.com', 'AQAAAAEAACcQAAAAEEKsm5FCTw0+sBpu047y45JQvIyhZppD/J9RJVnNkPQK/T1og4xKgztJ1ixLu3RNMg==', SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET());
+    INSERT INTO Users (Id, Email, FirstName, LastName, PasswordHash, CreatedAt, UpdatedAt) VALUES
+        (@UserId, 'email@mail.com', 'John', 'Doe', 'AQAAAAEAACcQAAAAEEKsm5FCTw0+sBpu047y45JQvIyhZppD/J9RJVnNkPQK/T1og4xKgztJ1ixLu3RNMg==', SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET());
 END
 ELSE
 BEGIN

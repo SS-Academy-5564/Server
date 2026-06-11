@@ -42,6 +42,8 @@ public class RegistrationHandler : IRegistrationHandler
         var userId = await _userCommands.CreateAsync(new CreateUserInput
         {
             Email = command.Email,
+            FirstName = command.FirstName,
+            LastName = command.LastName,
             PasswordHash = passwordHash
         }, ct);
 
