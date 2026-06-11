@@ -1,6 +1,6 @@
 
 namespace Pulse.BL.Features.Auth.Registration;
 
-public class RegisterUserRequestValidator
+public class RegistrationValidator
 {
 }

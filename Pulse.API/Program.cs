@@ -9,14 +9,13 @@ using Scalar.AspNetCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDataAccess();
-builder.Services.AddBusinessLogic();
+builder.Services.AddBusinessLogic(builder.Configuration);
 
 builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly, includeInternalTypes: true);
 
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 builder.Services.AddControllers();
-builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
