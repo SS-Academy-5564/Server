@@ -1,6 +1,5 @@
 using FluentValidation;
 using Pulse.API.Extensions;
-using Pulse.API.Middleware;
 using Pulse.BL;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
@@ -11,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDataAccess()
     .AddBusinessLogic(builder.Configuration);
 
-builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly, includeInternalTypes: true);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
@@ -44,6 +43,7 @@ app.UseResponseLogging();
 app.UseRouting();
 app.UseRateLimiter();
 
+app.UseExceptionHandling();
 app.UseAuthorization();
 
 app.MapControllers();
