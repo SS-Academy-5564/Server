@@ -50,3 +50,5 @@ package.json
 
 # ASP.NET Core user secrets
 appsettings.Development.json
+
+.env

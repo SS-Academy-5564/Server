@@ -115,24 +115,16 @@ dotnet run --project Pulse.Worker
 
 `docker-compose.yml` starts **Pulse.API** together with a SQL Server 2022 instance. The API runs migrations on startup, so no manual database setup is needed.
 
+Copy `.env.example` to `.env` and fill in the values, then start all services:
+
 ```bash
+cp .env.example .env
 docker compose up --build
 ```
 
-The API will be available at `http://localhost:8080`. OpenAPI and Scalar UI are served at `/openapi/v1.json` and `/scalar/v1` (development mode is enabled by default in the compose file).
+The API will be available at `http://localhost:8080`. OpenAPI and Scalar UI are served at `/openapi/v1.json` and `/scalar/v1`. The Worker starts automatically after the API.
 
-The SA password is set to `YourStrong@Passw0rd` in both the `sqlserver` and `api` services — change it in `docker-compose.yml` before running if needed.
-
-To configure email, pass the relevant environment variables to the `api` service:
-
-```yaml
-environment:
-  - Email__Provider=resend
-  - Email__ApiKey=re_xxxx
-  - Email__FromAddress=noreply@yourdomain.com
-```
-
-The Worker service is included in the compose setup and starts automatically after the API.
+All configuration is driven by `.env`. See `.env.example` for available variables.
 
 
 ## Code Formatting
