@@ -1,5 +1,8 @@
 using Pulse.BL;
 using FluentValidation;
+using Pulse.API.Extensions;
+using Pulse.API.Middleware;
+using Pulse.BL;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
@@ -8,12 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDataAccess()
     .AddBusinessLogic(builder.Configuration);
-
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
-
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddLoginRateLimiter(builder.Configuration);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -37,6 +38,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+app.UseResponseLogging();
+app.UseRouting();
+app.UseRateLimiter();
 
 app.UseAuthorization();
 
