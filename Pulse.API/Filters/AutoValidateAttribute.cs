@@ -21,12 +21,13 @@ public sealed class AutoValidateAttribute : ActionFilterAttribute
                 if (!context.ActionArguments.TryGetValue(parameter.Name!, out var value) || value is null)
                     continue;
 
-                var validatorType = typeof(IValidator<>).MakeGenericType(value.GetType());
+                var modelType = parameter.ParameterType;
+                var validatorType = typeof(IValidator<>).MakeGenericType(modelType);
                 if (context.HttpContext.RequestServices.GetService(validatorType) is not IValidator validator)
                     continue;
 
                 var validationContext = new ValidationContext<object>(value);
-                var result = await validator.ValidateAsync(validationContext);
+                var result = await validator.ValidateAsync(validationContext, context.HttpContext.RequestAborted);
 
                 if (!result.IsValid)
                     throw new ValidationException(result.Errors);

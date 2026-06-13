@@ -26,6 +26,10 @@ public class ExceptionHandlingMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
+
+            if (context.Response.HasStarted)
+                throw;
+
             await HandleExceptionAsync(context, ex);
         }
     }
@@ -40,8 +44,8 @@ public class ExceptionHandlingMiddleware
         };
 
         context.Response.StatusCode = status;
+        await context.Response.WriteAsJsonAsync((object)problem);
         context.Response.ContentType = "application/problem+json";
-        await context.Response.WriteAsJsonAsync(problem);
     }
 
     private static (int, ProblemDetails) MapValidation(ValidationException ve)
@@ -56,6 +60,7 @@ public class ExceptionHandlingMiddleware
         var pd = new ValidationProblemDetails(errors)
         {
             Status = 400,
+            Title = "Validation Error",
             Detail = "One or more validation errors occurred"
         };
 
@@ -67,6 +72,7 @@ public class ExceptionHandlingMiddleware
     private static (int, ProblemDetails) MapUnauthorized() => (401, new ProblemDetails
     {
         Status = 401,
+        Title = "Unauthorized",
         Detail = "Unauthorized",
         Extensions = { ["code"] = AppError.Codes.Unauthorized }
     });
@@ -74,6 +80,7 @@ public class ExceptionHandlingMiddleware
     private static (int, ProblemDetails) MapInternal() => (500, new ProblemDetails
     {
         Status = 500,
+        Title = "Internal Server Error",
         Detail = "An unexpected error occurred",
         Extensions = { ["code"] = AppError.Codes.Internal }
     });
