@@ -23,6 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Pulse.API\Pulse.API.csproj" />
     <ProjectReference Include="..\Pulse.BL\Pulse.BL.csproj" />
   </ItemGroup>
 
