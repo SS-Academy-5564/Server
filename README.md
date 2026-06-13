@@ -37,6 +37,56 @@ Define the database connection string in `appsettings.json` (inside both **Pulse
 
 **Pulse.Worker** does not run migrations; it expects the schema to already be applied. Start the API at least once before the Worker, or ensure the database is already migrated.
 
+### Email Configuration (Locally)
+
+Email settings are defined in `appsettings.json` inside **Pulse.API** (see the `Email` section). The sender address and name are configurable via `FromAddress` and `FromName`.
+
+**Local development** — use the `dummy` provider. Emails are not sent; they are logged as JSON instead. No API key is required:
+
+```
+{
+  "Email": {
+    "Provider": "dummy",
+    "FromAddress": "noreply@pulse.com",
+    "FromName": "Pulse"
+  }
+}
+```
+
+**Real sending via Resend** — use the `resend` provider and supply an API key.
+
+Before switching to the `resend` provider, set up a Resend account:
+
+1. Create an account at [resend.com](https://resend.com).
+2. In the Resend dashboard, go to **API Keys** and create a new key.
+3. Set a **Name** for the key (for example, `Pulse Local`).
+4. Set **Permission** to **Sending access**.
+5. Copy the generated API key — it is shown only once.
+
+Then configure the application:
+
+```
+{
+  "Email": {
+    "Provider": "resend",
+    "ApiKey": "",
+    "FromAddress": "noreply@yourdomain.com",
+    "FromName": "Pulse"
+  }
+}
+```
+
+`FromAddress` must use a domain verified in your Resend account.
+
+**API key** — do not commit the key to the repository. Store it in User Secrets or environment variables:
+
+```bash
+dotnet user-secrets set "Email:Provider" "resend" --project Pulse.API
+dotnet user-secrets set "Email:ApiKey" "re_xxxx" --project Pulse.API
+```
+
+Environment variable equivalent: `Email__ApiKey`, `Email__Provider`.
+
 
 ## Getting Started
 
