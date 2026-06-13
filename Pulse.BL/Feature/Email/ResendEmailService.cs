@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Pulse.BL.Common.Errors;
 using Resend;
 
 namespace Pulse.BL.Feature.Email;
@@ -63,7 +64,7 @@ public class ResendEmailService : IEmailService
                 "Failed to send email via Resend. Recipients: {Recipients}, Subject: {Subject}",
                 recipients,
                 dto.Subject);
-            return Result.Fail("Failed to send email via Resend.");
+            return AppErrors.Fail(new InternalError("Failed to send email via Resend."));
         }
     }
 }

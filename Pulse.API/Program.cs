@@ -13,6 +13,7 @@ builder.Services.AddDataAccess()
 builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly, includeInternalTypes: true);
 
 builder.Services.AddControllers();
+builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 

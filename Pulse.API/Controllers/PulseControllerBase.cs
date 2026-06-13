@@ -29,23 +29,41 @@ public abstract class PulseControllerBase : ControllerBase
         var error = errors.FirstOrDefault();
 
         if (error is null)
-            return StatusCode(500, BuildProblemDetails(500, "Unknown error", "INTERNAL_ERROR"));
+            return StatusCode(500, BuildProblemDetails(500, "Internal Server Error", "Unknown error", AppError.Codes.Internal));
 
         return error switch
         {
-            NotFoundError e => NotFound(BuildProblemDetails(404, e.Message, e.Code)),
-            ValidationError e => BadRequest(BuildProblemDetails(400, e.Message, e.Code)),
-            UnauthorizedError e => Unauthorized(BuildProblemDetails(401, e.Message, e.Code)),
-            ForbiddenError e => StatusCode(403, BuildProblemDetails(403, e.Message, e.Code)),
-            ConflictError e => Conflict(BuildProblemDetails(409, e.Message, e.Code)),
-            InternalError e => StatusCode(500, BuildProblemDetails(500, e.Message, e.Code)),
-            _ => StatusCode(500, BuildProblemDetails(500, "Unexpected error", "INTERNAL_ERROR"))
+            ValidationError e => BadRequest(BuildValidationProblemDetails(e)),
+            NotFoundError e => NotFound(BuildProblemDetails(404, "Not Found", e.Message, e.Code)),
+            UnauthorizedError e => Unauthorized(BuildProblemDetails(401, "Unauthorized", e.Message, e.Code)),
+            ForbiddenError e => StatusCode(403, BuildProblemDetails(403, "Forbidden", e.Message, e.Code)),
+            ConflictError e => Conflict(BuildProblemDetails(409, "Conflict", e.Message, e.Code)),
+            InternalError e => StatusCode(500, BuildProblemDetails(500, "Internal Server Error", e.Message, e.Code)),
+            _ => StatusCode(500, BuildProblemDetails(500, "Internal Server Error", "Unexpected error", AppError.Codes.Internal))
         };
     }
 
-    private static ProblemDetails BuildProblemDetails(int status, string detail, string code)
+    private static ValidationProblemDetails BuildValidationProblemDetails(ValidationError error)
     {
-        var pd = new ProblemDetails { Status = status, Detail = detail };
+        var errors = error.FieldErrors is { Count: > 0 }
+            ? new Dictionary<string, string[]>(error.FieldErrors)
+            : new Dictionary<string, string[]> { [string.Empty] = [error.Message] };
+
+        var pd = new ValidationProblemDetails(errors)
+        {
+            Status = 400,
+            Title = "Validation Error",
+            Detail = "One or more validation errors occurred"
+        };
+
+        pd.Extensions["code"] = error.Code;
+
+        return pd;
+    }
+
+    private static ProblemDetails BuildProblemDetails(int status, string title, string detail, string code)
+    {
+        var pd = new ProblemDetails { Status = status, Title = title, Detail = detail };
         pd.Extensions["code"] = code;
         return pd;
     }
