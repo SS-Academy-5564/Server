@@ -1,11 +1,14 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.BL.Common.Errors;
+using System.Text.Json;
 
 namespace Pulse.API.Middleware;
 
 public class ExceptionHandlingMiddleware
 {
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
@@ -44,8 +47,10 @@ public class ExceptionHandlingMiddleware
         };
 
         context.Response.StatusCode = status;
-        await context.Response.WriteAsJsonAsync((object)problem);
         context.Response.ContentType = "application/problem+json";
+
+        var payload = JsonSerializer.Serialize((object)problem, problem.GetType(), JsonOptions);
+        await context.Response.WriteAsync(payload);
     }
 
     private static (int, ProblemDetails) MapValidation(ValidationException ve)
