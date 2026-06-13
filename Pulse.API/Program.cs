@@ -1,3 +1,4 @@
+using FluentValidation;
 using Pulse.API.Extensions;
 using Pulse.API.Middleware;
 using Pulse.BL;
@@ -10,13 +11,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDataAccess()
     .AddBusinessLogic(builder.Configuration);
 
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
+{
     throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+}
 
 var app = builder.Build();
 
@@ -44,3 +49,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program
+{
+}
