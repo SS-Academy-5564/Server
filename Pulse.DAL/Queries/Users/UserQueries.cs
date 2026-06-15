@@ -23,4 +23,19 @@ public class UserQueries : IUserQueries
                 new { Email = email },
                 cancellationToken: ct));
     }
+
+    public async Task<UserAuthRecord?> GetByEmailForAuthAsync(string email, CancellationToken ct)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+
+        return await connection.QuerySingleOrDefaultAsync<UserAuthRecord>(
+            new CommandDefinition(
+                "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, m.RoleId " +
+                "FROM Users u " +
+                "JOIN Members m ON m.UserId = u.Id " +
+                "WHERE u.Email = @Email " +
+                "ORDER BY m.JoinedAt DESC",
+                new { Email = email },
+                cancellationToken: ct));
+    }
 }
