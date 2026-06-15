@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.DAL.Queries.Users;
@@ -31,14 +32,18 @@ public class LoginHandler : ILoginHandler
         var user = await _userQueries.GetByEmailForAuthAsync(command.Email, ct);
         if (user is null)
         {
-            _logger.LogWarning("Login failed for email {Email}: user not found.", command.Email);
+            _logger.LogWarning(
+                "Login failed: user not found. Identifier: {LoginIdentifier}",
+                PiiHasher.HashForLogging(command.Email));
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
         var passwordValid = _passwordHasher.VerifyHashedPassword(user.PasswordHash, command.Password);
         if (!passwordValid)
         {
-            _logger.LogWarning("Login failed for email {Email}: invalid password.", command.Email);
+            _logger.LogWarning(
+                "Login failed: invalid password. Identifier: {LoginIdentifier}",
+                PiiHasher.HashForLogging(command.Email));
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 

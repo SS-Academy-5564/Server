@@ -13,6 +13,7 @@ public static class DependencyInjection
     public static IServiceCollection AddBusinessLogic(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddSingleton(TimeProvider.System);
         services.AddTransient<IPasswordHasher, PasswordHasher>();
         services.AddTransient<IJwtTokenGenerator, JwtTokenGenerator>();
         services
