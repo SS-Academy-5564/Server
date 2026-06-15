@@ -64,7 +64,7 @@ public class ResendEmailService : IEmailService
                 "Failed to send email via Resend. Recipients: {Recipients}, Subject: {Subject}",
                 recipients,
                 dto.Subject);
-            return AppErrors.Fail(new InternalError("Failed to send email via Resend."));
+            return Result.Fail(new InternalError("Failed to send email via Resend."));
         }
     }
 }

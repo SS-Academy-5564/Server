@@ -2,10 +2,14 @@ using FluentResults;
 
 namespace Pulse.BL.Common.Errors;
 
-public abstract record AppError(string Message, string Code) : IError
+public abstract class AppError : Error
 {
-    public List<IError> Reasons { get; } = new();
-    public Dictionary<string, object> Metadata { get; } = new();
+    protected AppError(string message, string code) : base(message)
+    {
+        Code = code;
+    }
+
+    public string Code { get; }
 
     public static class Codes
     {
@@ -18,10 +22,18 @@ public abstract record AppError(string Message, string Code) : IError
     }
 }
 
-public record NotFoundError(string Message) : AppError(Message, Codes.NotFound);
-public record ValidationError(string Message, IReadOnlyDictionary<string, string[]>? FieldErrors = null)
-    : AppError(Message, Codes.Validation);
-public record UnauthorizedError(string Message) : AppError(Message, Codes.Unauthorized);
-public record ForbiddenError(string Message) : AppError(Message, Codes.Forbidden);
-public record ConflictError(string Message) : AppError(Message, Codes.Conflict);
-public record InternalError(string Message) : AppError(Message, Codes.Internal);
+public sealed class NotFoundError(string message) : AppError(message, Codes.NotFound);
+public sealed class ValidationError : AppError
+{
+    public ValidationError(string message, IReadOnlyDictionary<string, string[]>? fieldErrors = null)
+        : base(message, Codes.Validation)
+    {
+        FieldErrors = fieldErrors ?? new Dictionary<string, string[]>();
+    }
+
+    public IReadOnlyDictionary<string, string[]> FieldErrors { get; }
+}
+public sealed class UnauthorizedError(string message) : AppError(message, Codes.Unauthorized);
+public sealed class ForbiddenError(string message) : AppError(message, Codes.Forbidden);
+public sealed class ConflictError(string message) : AppError(message, Codes.Conflict);
+public sealed class InternalError(string message) : AppError(message, Codes.Internal);
