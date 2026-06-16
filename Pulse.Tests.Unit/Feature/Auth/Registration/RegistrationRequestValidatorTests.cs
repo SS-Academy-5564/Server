@@ -141,10 +141,10 @@ public class RegistrationValidatorTests
         string firstName = "John",
         string lastName = "Doe",
         string password = "SecurePass1") => new()
-    {
-        Email = email,
-        FirstName = firstName,
-        LastName = lastName,
-        Password = password
-    };
+        {
+            Email = email,
+            FirstName = firstName,
+            LastName = lastName,
+            Password = password
+        };
 }
