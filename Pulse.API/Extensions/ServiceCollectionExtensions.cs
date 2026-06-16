@@ -1,6 +1,11 @@
 using System.Globalization;
+using System.Text;
 using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Pulse.API.Constants;
+using Pulse.BL.Common.Security.Tokens;
 
 namespace Pulse.API.Extensions;
 
@@ -8,6 +13,38 @@ public static class ServiceCollectionExtensions
 {
     extension(IServiceCollection services)
     {
+        public IServiceCollection AddJwtAuthentication()
+        {
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer();
+
+            services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+                .Configure<IOptions<JwtOptions>>((bearerOptions, jwtOptionsAccessor) =>
+                {
+                    var jwtOptions = jwtOptionsAccessor.Value;
+                    bearerOptions.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtOptions.Issuer,
+
+                        ValidateAudience = true,
+                        ValidAudience = jwtOptions.Audience,
+
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(jwtOptions.SecretKey)),
+
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero,
+                    };
+                });
+
+            return services;
+        }
         public IServiceCollection AddLoginRateLimiter(IConfiguration configuration)
         {
             var rateLimiterSection = configuration.GetSection("RateLimit:Login");

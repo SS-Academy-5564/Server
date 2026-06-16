@@ -8,7 +8,6 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 builder.Services.AddDataAccess();
 builder.Services.AddBusinessLogic(builder.Configuration);
 builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly, includeInternalTypes: true);
@@ -16,6 +15,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
+builder.Services.AddJwtAuthentication();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
