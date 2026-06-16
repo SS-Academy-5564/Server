@@ -1,7 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Pulse.API.Attributes;
 using Pulse.API.Extensions;
 
 namespace Pulse.API.Filters;

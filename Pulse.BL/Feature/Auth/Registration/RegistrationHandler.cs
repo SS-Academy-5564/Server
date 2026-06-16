@@ -1,10 +1,12 @@
+using FluentResults;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Users;
 using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Queries.Users;
 
-namespace Pulse.BL.Features.Auth.Registration;
+namespace Pulse.BL.Feature.Auth.Registration;
 
 public class RegistrationHandler : IRegistrationHandler
 {
@@ -27,15 +29,12 @@ public class RegistrationHandler : IRegistrationHandler
         _passwordHasher = passwordHasher;
         _memberCommands = memberCommands;
     }
-    public async Task Register(RegistrationCommand command, CancellationToken ct)
+    public async Task<Result> Register(RegistrationCommand command, CancellationToken ct)
     {
         var userExists = await _userQueries.EmailExistsAsync(command.Email, ct);
 
         if (userExists)
-        {
-            //return fail here
-            return;
-        }
+            return Result.Fail(new ConflictError("A user with this email already exists."));
 
         var passwordHash = _passwordHasher.HashPassword(command.Password);
 
@@ -48,10 +47,7 @@ public class RegistrationHandler : IRegistrationHandler
         }, ct);
 
         if (userId == Guid.Empty)
-        {
-            // return failure
-            return;
-        }
+            return Result.Fail("Failed to register user.");
 
         await _memberCommands.CreateMemberAsync(new CreateMemberInput
         {
@@ -60,6 +56,6 @@ public class RegistrationHandler : IRegistrationHandler
             RoleId = SeededIds.Roles.User
         }, ct);
 
-        // return success
+        return Result.Ok();
     }
 }

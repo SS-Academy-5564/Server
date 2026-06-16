@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using Pulse.API.Attributes;
-using Pulse.BL.Features.Auth.Registration;
+using Pulse.API.Filters;
+using Pulse.API.Controllers;
+using Pulse.BL.Feature.Auth.Registration;
 
-namespace Pulse.API.Features.Auth.Registration;
+namespace Pulse.API.Feature.Auth.Registration;
 
 [ApiController]
 [Route("api/auth")]
-[AutoValidate]
-public class RegistrationController : ControllerBase
+public class RegistrationController : PulseControllerBase
 {
     private readonly IRegistrationHandler _handler;
     public RegistrationController(IRegistrationHandler handler)
@@ -25,7 +25,7 @@ public class RegistrationController : ControllerBase
             LastName = request.LastName,
             Password = request.Password
         };
-        await _handler.Register(command, ct);
-        return Ok();
+        var result = await _handler.Register(command, ct);
+        return ToActionResult(result);
     }
 }

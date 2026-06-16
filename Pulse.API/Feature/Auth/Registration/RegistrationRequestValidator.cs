@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Pulse.API.Features.Auth.Registration;
+namespace Pulse.API.Feature.Auth.Registration;
 
 public class RegistrationRequestValidator : AbstractValidator<RegistrationRequest>
 {
