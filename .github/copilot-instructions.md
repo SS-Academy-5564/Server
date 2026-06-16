@@ -55,6 +55,39 @@ Rules:
 * Return appropriate HTTP status codes and `ActionResult<T>`
 * Do not contain business logic
 * Do not access DAL directly
+* All controllers must extend `PulseControllerBase`
+* Do not apply `[AutoValidate]` directly to controllers — it is inherited from `PulseControllerBase`
+
+### Request Validation
+
+* All controllers inherit `[AutoValidate]` from `PulseControllerBase` — do not add it manually
+* Mark action parameters that require validation with `[Validate]`
+* Validators are registered automatically — do not register them manually in DI
+* `ValidateRequestActionFilter` resolves validators at runtime and throws `ValidationException` on failure; the global exception handler produces the error response
+* Only parameters marked with `[Validate]` are validated; unannotated parameters are skipped
+
+Example:
+
+```csharp
+public class ExampleController : PulseControllerBase
+{
+    [HttpPost]
+    public async Task<IActionResult> ExamplePost([Validate] ExampleRequest request)
+    {
+        return Ok();
+    }
+}
+```
+
+```csharp
+public class ExampleRequestValidator : AbstractValidator<ExampleRequest>
+{
+    public ExampleRequestValidator()
+    {
+        RuleFor(r => r.ExampleProperty).MinimumLength(10).MaximumLength(100);
+    }
+}
+```
 
 #### Pulse.BL
 
@@ -174,6 +207,8 @@ CreateMonitor_EmptyName_ShouldThrowValidationException()
 * Returning database entities from API
 * Blocking async calls
 * Cross-layer dependencies
+* Applying `[AutoValidate]` directly to a controller class
+* Manually registering FluentValidation validators in DI
 
 ## Copilot Behavior
 
