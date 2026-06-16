@@ -40,7 +40,7 @@ public class RegistrationHandlerTests
     }
 
     [Fact]
-    public async Task Register_CreateAsyncReturnsEmptyGuid_ReturnsFailResult()
+    public async Task Register_CreateAsyncThrows_ExceptionPropagatesAndMemberIsNotCreated()
     {
         _userQueries
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -50,11 +50,11 @@ public class RegistrationHandlerTests
             .Returns("hashed");
         _userCommands
             .Setup(c => c.CreateAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Guid.Empty);
+            .ThrowsAsync(new Exception("DB error"));
 
-        var result = await _handler.Register(ValidCommand(), CancellationToken.None);
+        var act = () => _handler.Register(ValidCommand(), CancellationToken.None);
 
-        result.IsFailed.Should().BeTrue();
+        await act.Should().ThrowAsync<Exception>();
         _memberCommands.Verify(m => m.CreateMemberAsync(It.IsAny<CreateMemberInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

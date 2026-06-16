@@ -14,7 +14,6 @@ public class RegistrationHandler : IRegistrationHandler
     private readonly IUserQueries _userQueries;
     private readonly IPasswordHasher _passwordHasher;
 
-    // remove later
     private readonly IMemberCommands _memberCommands;
 
 
