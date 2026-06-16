@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Pulse.API.Extensions;
 using Pulse.BL;
 using Pulse.DAL.Database;
