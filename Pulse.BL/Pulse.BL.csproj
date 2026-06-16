@@ -12,10 +12,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Pulse.DAL\Pulse.DAL.csproj" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Features\" />
-  </ItemGroup>
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>

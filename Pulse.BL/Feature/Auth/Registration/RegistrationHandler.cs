@@ -46,9 +46,6 @@ public class RegistrationHandler : IRegistrationHandler
             PasswordHash = passwordHash
         }, ct);
 
-        if (userId == Guid.Empty)
-            return Result.Fail("Failed to register user.");
-
         await _memberCommands.CreateMemberAsync(new CreateMemberInput
         {
             UserId = userId,

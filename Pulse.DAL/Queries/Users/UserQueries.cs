@@ -19,7 +19,7 @@ public class UserQueries : IUserQueries
 
         return await connection.ExecuteScalarAsync<bool>(
             new CommandDefinition(
-                "SELECT CAST(1 AS BIT) FROM Users WHERE Email = @Email",
+                "SELECT TOP 1 CAST(1 AS BIT) FROM Users WHERE Email = @Email",
                 new { Email = email },
                 cancellationToken: ct));
     }
