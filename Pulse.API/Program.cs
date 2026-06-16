@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDataAccess()
     .AddBusinessLogic(builder.Configuration);
 
-builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly, includeInternalTypes: true);
+builder.Services.AddValidatorsFromAssembly(typeof(BLAssemblyMarker).Assembly, includeInternalTypes: true);
 
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
