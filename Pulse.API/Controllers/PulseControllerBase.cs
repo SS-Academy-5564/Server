@@ -1,6 +1,6 @@
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
-using Pulse.API.Filters;
+using Pulse.API.Attributes;
 using Pulse.API.Responses;
 
 namespace Pulse.API.Controllers;
