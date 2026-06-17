@@ -1,27 +1,27 @@
-
+using System.Data;
 using Dapper;
-using Pulse.DAL.Connection;
+using Microsoft.Data.SqlClient;
+using Pulse.DAL.Exceptions;
 
 namespace Pulse.DAL.Commands.Users;
 
 public class UserCommands : IUserCommands
 {
-    private readonly IDbConnectionFactory _connectionFactory;
-
-    public UserCommands(IDbConnectionFactory connectionFactory)
+    // change to Task later when we will remove adding user to default organization
+    public async Task<Guid> CreateUserAsync(CreateUserInput input, IDbTransaction transaction, CancellationToken ct)
     {
-        _connectionFactory = connectionFactory;
-    }
-
-    // change to Task later, so code will follow command/query segregation principles
-    public async Task<Guid> CreateAsync(CreateUserInput input, CancellationToken ct)
-    {
-        using var connection = _connectionFactory.CreateConnection();
-
-        return await connection.ExecuteScalarAsync<Guid>(
-            new CommandDefinition(
-                "INSERT INTO Users (Email, FirstName, LastName, PasswordHash, CreatedAt, UpdatedAt) OUTPUT INSERTED.Id VALUES (@Email, @FirstName, @LastName, @PasswordHash, @Now, @Now)",
-                new { Email = input.Email, FirstName = input.FirstName, LastName = input.LastName, PasswordHash = input.PasswordHash, Now = DateTimeOffset.UtcNow },
-                cancellationToken: ct));
+        try
+        {
+            return await transaction.Connection!.ExecuteScalarAsync<Guid>(
+                new CommandDefinition(
+                    "INSERT INTO Users (Email, FirstName, LastName, PasswordHash, CreatedAt, UpdatedAt) OUTPUT INSERTED.Id VALUES (@Email, @FirstName, @LastName, @PasswordHash, @Now, @Now)",
+                    new { Email = input.Email, FirstName = input.FirstName, LastName = input.LastName, PasswordHash = input.PasswordHash, Now = DateTimeOffset.UtcNow },
+                    transaction: transaction,
+                    cancellationToken: ct));
+        }
+        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+        {
+            throw new DuplicateKeyException("Email");
+        }
     }
 }

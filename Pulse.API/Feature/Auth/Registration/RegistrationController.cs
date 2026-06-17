@@ -25,7 +25,7 @@ public class RegistrationController : PulseControllerBase
             LastName = request.LastName,
             Password = request.Password
         };
-        var result = await _handler.Register(command, ct);
+        var result = await _handler.RegisterAsync(command, ct);
         return ToActionResult(result);
     }
 }

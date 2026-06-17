@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Pulse.DAL.Common.Repository;
 using Pulse.DAL.Connection;
 
 namespace Pulse.DAL.DependencyInjection;
@@ -10,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
         services.AddFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
         return services;
     }

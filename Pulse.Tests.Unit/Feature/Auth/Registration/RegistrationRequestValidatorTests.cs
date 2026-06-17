@@ -3,7 +3,7 @@ using Pulse.API.Feature.Auth.Registration;
 
 namespace Pulse.Tests.Unit.Feature.Auth.Registration;
 
-public class RegistrationValidatorTests
+public class RegistrationRequestValidatorTests
 {
     private readonly RegistrationRequestValidator _validator = new();
 

@@ -1,4 +1,3 @@
-
 using Dapper;
 using Pulse.DAL.Connection;
 
