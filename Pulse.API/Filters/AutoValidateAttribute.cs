@@ -15,7 +15,7 @@ public sealed class AutoValidateAttribute : ActionFilterAttribute
         {
             foreach (var parameter in descriptor.MethodInfo.GetParameters())
             {
-                if (!parameter.IsDefined(typeof(ValidateAttribute), inherit: true))
+                if (!parameter.IsDefined(typeof(Pulse.API.Attributes.ValidateAttribute), inherit: true))
                     continue;
 
                 if (!context.ActionArguments.TryGetValue(parameter.Name!, out var value) || value is null)

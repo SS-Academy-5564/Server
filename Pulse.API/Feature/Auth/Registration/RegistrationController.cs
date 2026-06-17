@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Pulse.API.Attributes;
 using Pulse.API.Controllers;
-using Pulse.API.Filters;
 using Pulse.BL.Feature.Auth.Registration;
 
 namespace Pulse.API.Feature.Auth.Registration;

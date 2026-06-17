@@ -14,18 +14,12 @@ public class ValidateRequestActionFilter : IAsyncActionFilter
         _serviceProvider = serviceProvider;
     }
 
-    /// <summary>
-    /// Runs FluentValidation validators for all action parameters marked with <see cref="ValidateAttribute"/>.
-    /// Throws <see cref="ValidationException"/> if any validator reports failures.
-    /// </summary>
-    /// <param name="context">The action execution context providing access to parameters and arguments.</param>
-    /// <param name="next">The delegate to invoke the action when validation passes.</param>
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
         var parameters = context.ActionDescriptor.Parameters
             .Select(parameter => parameter as ControllerParameterDescriptor)
             .Where(parameter => parameter is not null &&
-                                parameter.ParameterInfo.IsDefined(typeof(ValidateAttribute), false));
+                                parameter.ParameterInfo.IsDefined(typeof(Pulse.API.Attributes.ValidateAttribute), false));
 
         foreach (var parameter in parameters)
         {
