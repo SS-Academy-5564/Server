@@ -111,6 +111,21 @@ OpenAPI docs and Scalar UI are available in development mode at `/openapi/v1.jso
 dotnet run --project Pulse.Worker
 ```
 
+### Run with Docker
+
+`docker-compose.yml` starts **Pulse.API** together with a SQL Server 2022 instance. The API runs migrations on startup, so no manual database setup is needed.
+
+Copy `.env.example` to `.env` and fill in the values, then start all services:
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+The API will be available at `http://localhost:8080`. OpenAPI and Scalar UI are served at `/openapi/v1.json` and `/scalar/v1`. The Worker starts automatically after the API.
+
+All configuration is driven by `.env`. See `.env.example` for available variables.
+
 
 ## Code Formatting
 
