@@ -14,7 +14,7 @@ internal sealed class BearerSecuritySchemeTransformer(
         OpenApiDocumentTransformerContext context,
         CancellationToken cancellationToken)
     {
-        var schemes = await authenticationSchemeProvider.GetAllSchemesAsync();
+        IEnumerable<AuthenticationScheme> schemes = await authenticationSchemeProvider.GetAllSchemesAsync();
 
         if (schemes.All(s => s.Name != JwtBearerDefaults.AuthenticationScheme))
             return;
