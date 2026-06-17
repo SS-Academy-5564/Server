@@ -1,6 +1,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Pulse.API.Attributes;
 using Pulse.API.Extensions;
 
 namespace Pulse.API.Filters;
@@ -19,7 +20,7 @@ public class ValidateRequestActionFilter : IAsyncActionFilter
         var parameters = context.ActionDescriptor.Parameters
             .Select(parameter => parameter as ControllerParameterDescriptor)
             .Where(parameter => parameter is not null &&
-                                parameter.ParameterInfo.IsDefined(typeof(Pulse.API.Attributes.ValidateAttribute), false));
+                                parameter.ParameterInfo.IsDefined(typeof(ValidateAttribute), false));
 
         foreach (var parameter in parameters)
         {
