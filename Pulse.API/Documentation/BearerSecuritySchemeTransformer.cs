@@ -33,9 +33,5 @@ internal sealed class BearerSecuritySchemeTransformer(
             In = ParameterLocation.Header,
             Description = "Enter JWT Bearer token here to authorize your requests."
         };
-
-        document.Security ??= new List<OpenApiSecurityRequirement>();
-
-        document.Security.Add(new OpenApiSecurityRequirement { [new OpenApiSecuritySchemeReference(schemeId)] = [] });
     }
 }
