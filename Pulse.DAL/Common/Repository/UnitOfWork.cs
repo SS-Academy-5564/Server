@@ -8,6 +8,7 @@ public class UnitOfWork : IUnitOfWork
     private readonly IDbTransaction _transaction;
     private bool _commited;
 
+    /// <inheritdoc/>
     public IDbTransaction Transaction => _transaction;
 
     public UnitOfWork(IDbConnection connection, IDbTransaction transaction)
@@ -16,6 +17,7 @@ public class UnitOfWork : IUnitOfWork
         _transaction = transaction;
     }
 
+    /// <inheritdoc/>
     public Task CommitAsync(CancellationToken ct = default)
     {
         _transaction.Commit();
@@ -23,6 +25,9 @@ public class UnitOfWork : IUnitOfWork
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection.
+    /// </summary>
     public ValueTask DisposeAsync()
     {
         if (!_commited)

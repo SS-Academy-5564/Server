@@ -32,6 +32,7 @@ public class RegistrationHandler : IRegistrationHandler
         _passwordHasher = passwordHasher;
         _memberCommands = memberCommands;
     }
+    /// <inheritdoc/>
     public async Task<Result> RegisterAsync(RegistrationCommand command, CancellationToken ct)
     {
         var userExists = await _userQueries.EmailExistsAsync(command.Email, ct);

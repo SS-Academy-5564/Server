@@ -5,6 +5,7 @@ namespace Pulse.DAL.Commands.Members;
 
 public class MemberCommands : IMemberCommands
 {
+    /// <inheritdoc/>
     public async Task CreateMemberAsync(CreateMemberInput input, IDbTransaction transaction, CancellationToken ct)
     {
         await transaction.Connection!.ExecuteAsync(

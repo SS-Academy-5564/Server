@@ -11,6 +11,7 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
         _connectionFactory = connectionFactory;
     }
 
+    /// <inheritdoc/>
     public Task<IUnitOfWork> CreateAsync(CancellationToken ct = default)
     {
         var connection = _connectionFactory.CreateConnection();
@@ -19,6 +20,7 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
         return Task.FromResult<IUnitOfWork>(new UnitOfWork(connection, transaction));
     }
 
+    /// <inheritdoc/>
     public async Task ExecuteAsync(Func<IUnitOfWork, Task> work, CancellationToken ct = default)
     {
         await using var uow = await CreateAsync(ct);

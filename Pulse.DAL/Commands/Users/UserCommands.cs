@@ -8,6 +8,7 @@ namespace Pulse.DAL.Commands.Users;
 public class UserCommands : IUserCommands
 {
     // change to Task later when we will remove adding user to default organization
+    /// <inheritdoc/>
     public async Task<Guid> CreateUserAsync(CreateUserInput input, IDbTransaction transaction, CancellationToken ct)
     {
         try

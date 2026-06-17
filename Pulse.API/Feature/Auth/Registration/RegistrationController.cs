@@ -15,6 +15,12 @@ public class RegistrationController : PulseControllerBase
         _handler = handler;
     }
 
+    /// <summary>
+    /// Registers a new user account.
+    /// </summary>
+    /// <param name="request">The registration payload containing email, name, and password.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>200 OK on success, or a problem details response on failure.</returns>
     [HttpPost("register")]
     public async Task<IActionResult> Register([Validate] RegistrationRequest request, CancellationToken ct)
     {

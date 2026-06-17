@@ -12,6 +12,7 @@ public class UserQueries : IUserQueries
         _connectionFactory = connectionFactory;
     }
 
+    /// <inheritdoc/>
     public async Task<bool> EmailExistsAsync(string email, CancellationToken ct)
     {
         using var connection = _connectionFactory.CreateConnection();
