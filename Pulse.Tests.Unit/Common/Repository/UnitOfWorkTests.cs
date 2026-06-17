@@ -1,5 +1,4 @@
 using System.Data;
-using FluentAssertions;
 using Moq;
 using Pulse.DAL.Common.Repository;
 

@@ -6,7 +6,7 @@ public class UnitOfWork : IUnitOfWork
 {
     private readonly IDbConnection _connection;
     private readonly IDbTransaction _transaction;
-    private bool _commited;
+    private bool _committed;
 
     /// <inheritdoc/>
     public IDbTransaction Transaction => _transaction;
@@ -21,7 +21,7 @@ public class UnitOfWork : IUnitOfWork
     public Task CommitAsync(CancellationToken ct = default)
     {
         _transaction.Commit();
-        _commited = true;
+        _committed = true;
         return Task.CompletedTask;
     }
 
@@ -30,7 +30,7 @@ public class UnitOfWork : IUnitOfWork
     /// </summary>
     public ValueTask DisposeAsync()
     {
-        if (!_commited)
+        if (!_committed)
         {
             _transaction.Rollback();
         }

@@ -1,6 +1,6 @@
-
 using System.Data;
 using Dapper;
+
 namespace Pulse.DAL.Commands.Members;
 
 public class MemberCommands : IMemberCommands
