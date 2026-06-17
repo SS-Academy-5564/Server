@@ -9,8 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDataAccess()
     .AddBusinessLogic(builder.Configuration);
+
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
+builder.Services.AddValidatorsFromAssembly(typeof(BLAssemblyMarker).Assembly, includeInternalTypes: true);
+
 builder.Services.AddControllers();
+builder.Services.AddAuthorization();
 builder.Services.AddOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
@@ -41,6 +46,7 @@ app.UseResponseLogging();
 app.UseRouting();
 app.UseRateLimiter();
 
+app.UseExceptionHandling();
 app.UseAuthorization();
 
 app.MapControllers();
