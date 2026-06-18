@@ -14,7 +14,7 @@ namespace Pulse.Tests.Unit.Middleware;
 public class ExceptionHandlingMiddlewareTests
 {
     [Fact]
-    public async Task InvokeAsync_WhenValidationExceptionThrown_ReturnsValidationEnvelope()
+    public async Task InvokeAsync_WhenValidationExceptionThrown_ReturnsValidationEnvelopeAsync()
     {
         RequestDelegate next = _ => throw new ValidationException(new[]
         {
@@ -38,7 +38,7 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenUnauthorizedAccessExceptionThrown_ReturnsUnauthorizedEnvelope()
+    public async Task InvokeAsync_WhenUnauthorizedAccessExceptionThrown_ReturnsUnauthorizedEnvelopeAsync()
     {
         RequestDelegate next = _ => throw new UnauthorizedAccessException();
 
@@ -58,7 +58,7 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenUnexpectedExceptionThrown_ReturnsInternalEnvelope()
+    public async Task InvokeAsync_WhenUnexpectedExceptionThrown_ReturnsInternalEnvelopeAsync()
     {
         RequestDelegate next = _ => throw new InvalidOperationException("boom");
 

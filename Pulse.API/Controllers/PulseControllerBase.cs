@@ -38,7 +38,7 @@ public abstract class PulseControllerBase : ControllerBase
                 Success = true
             });
         }
-        
+
         return MapErrorToResponse(result);
     }
 

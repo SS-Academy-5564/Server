@@ -63,6 +63,7 @@ internal static class ResultMapper
         }
 
         ApiError[] fieldErrors = error.FieldErrors
+            .Where(field => field.Value != null && field.Value.Any())
             .SelectMany(field => field.Value.Select(message => new ApiError
             {
                 Code = error.Code,
@@ -70,6 +71,14 @@ internal static class ResultMapper
                 Message = message
             }))
             .ToArray();
+
+        if (fieldErrors.Length == 0)
+        {
+            fieldErrors = new[]
+            {
+                new ApiError { Code = error.Code, Message = "An unexpected validation error occurred" }
+            };
+        }
 
         return (400, new ApiResponse
         {

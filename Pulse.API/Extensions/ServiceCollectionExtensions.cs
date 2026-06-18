@@ -68,7 +68,9 @@ public static class ServiceCollectionExtensions
                             new ApiError
                             {
                                 Code = AppError.Codes.TooManyRequests,
-                                Message = $"Too many requests. Retry after {retryAfterSeconds:0} second(s)."
+                                Message = retryAfterSeconds > 0
+                                    ? $"Too many requests. Retry after {retryAfterSeconds:0} second(s)"
+                                    : "Too many requests."
                             }
                         ]
                     }, cancellationToken);
