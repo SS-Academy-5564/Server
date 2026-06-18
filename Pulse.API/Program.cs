@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Pulse.API.Extensions;
 using Pulse.BL;
 using Pulse.DAL.Database;
@@ -13,8 +14,9 @@ builder.Services.AddDataAccess()
 builder.Services.AddValidatorsFromAssembly(typeof(BLAssemblyMarker).Assembly, includeInternalTypes: true);
 
 builder.Services.AddControllers();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddAuthorization();
-builder.Services.AddOpenApi();
+builder.Services.AddNativeOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -37,14 +39,18 @@ await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, see
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("Pulse API Documentation");
+    });
 }
 
 app.UseResponseLogging();
+app.UseExceptionHandling();
 app.UseRouting();
 app.UseRateLimiter();
 
-app.UseExceptionHandling();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
