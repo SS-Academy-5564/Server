@@ -15,7 +15,7 @@ public class SqlConnectionFactory : IDbConnectionFactory
 
     public IDbConnection CreateConnection()
     {
-        var connectionString =
+        string? connectionString =
             _configuration.GetConnectionString("DefaultConnection");
 
         if (string.IsNullOrWhiteSpace(connectionString))

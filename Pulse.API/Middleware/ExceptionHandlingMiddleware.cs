@@ -31,7 +31,9 @@ public class ExceptionHandlingMiddleware
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
 
             if (context.Response.HasStarted)
+            {
                 throw;
+            }
 
             await HandleExceptionAsync(context, ex);
         }
@@ -39,7 +41,7 @@ public class ExceptionHandlingMiddleware
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        var (status, body) = ex switch
+        (int status, ApiResponse body) = ex switch
         {
             ValidationException ve => MapValidation(ve),
             UnauthorizedAccessException => MapUnauthorized(),
@@ -49,13 +51,13 @@ public class ExceptionHandlingMiddleware
         context.Response.StatusCode = status;
         context.Response.ContentType = "application/json";
 
-        var payload = JsonSerializer.Serialize((object)body, body.GetType(), JsonOptions);
+        string payload = JsonSerializer.Serialize((object)body, body.GetType(), JsonOptions);
         await context.Response.WriteAsync(payload);
     }
 
     private static (int, ApiResponse) MapValidation(ValidationException ve)
     {
-        var errors = ve.Errors
+        ApiError[] errors = ve.Errors
             .Select(error => new ApiError
             {
                 Code = AppError.Codes.Validation,

@@ -21,15 +21,15 @@ public class ExceptionHandlingMiddlewareTests
             new ValidationFailure("Email", "Email is invalid")
         });
 
-        var middleware = new ExceptionHandlingMiddleware(next, NullLogger<ExceptionHandlingMiddleware>.Instance);
-        var context = CreateContext();
+        ExceptionHandlingMiddleware middleware = new(next, NullLogger<ExceptionHandlingMiddleware>.Instance);
+        DefaultHttpContext context = CreateContext();
 
         await middleware.InvokeAsync(context);
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
         context.Response.ContentType.Should().Be("application/json");
 
-        var response = await ReadBodyAsync(context);
+        ApiResponse response = await ReadBodyAsync(context);
         response.Success.Should().BeFalse();
         response.Errors.Should().ContainSingle();
         response.Errors[0].Code.Should().Be(AppError.Codes.Validation);
@@ -42,15 +42,15 @@ public class ExceptionHandlingMiddlewareTests
     {
         RequestDelegate next = _ => throw new UnauthorizedAccessException();
 
-        var middleware = new ExceptionHandlingMiddleware(next, NullLogger<ExceptionHandlingMiddleware>.Instance);
-        var context = CreateContext();
+        ExceptionHandlingMiddleware middleware = new(next, NullLogger<ExceptionHandlingMiddleware>.Instance);
+        DefaultHttpContext context = CreateContext();
 
         await middleware.InvokeAsync(context);
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
         context.Response.ContentType.Should().Be("application/json");
 
-        var response = await ReadBodyAsync(context);
+        ApiResponse response = await ReadBodyAsync(context);
         response.Success.Should().BeFalse();
         response.Errors.Should().ContainSingle();
         response.Errors[0].Code.Should().Be(AppError.Codes.Unauthorized);
@@ -62,15 +62,15 @@ public class ExceptionHandlingMiddlewareTests
     {
         RequestDelegate next = _ => throw new InvalidOperationException("boom");
 
-        var middleware = new ExceptionHandlingMiddleware(next, NullLogger<ExceptionHandlingMiddleware>.Instance);
-        var context = CreateContext();
+        ExceptionHandlingMiddleware middleware = new(next, NullLogger<ExceptionHandlingMiddleware>.Instance);
+        DefaultHttpContext context = CreateContext();
 
         await middleware.InvokeAsync(context);
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
         context.Response.ContentType.Should().Be("application/json");
 
-        var response = await ReadBodyAsync(context);
+        ApiResponse response = await ReadBodyAsync(context);
         response.Success.Should().BeFalse();
         response.Errors.Should().ContainSingle();
         response.Errors[0].Code.Should().Be(AppError.Codes.Internal);
@@ -78,15 +78,12 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenResponseHasStarted_RethrowsException()
+    public async Task InvokeAsync_WhenResponseHasStarted_RethrowsExceptionAsync()
     {
-        RequestDelegate next = context =>
-        {
-            throw new InvalidOperationException("started");
-        };
+        RequestDelegate next = context => throw new InvalidOperationException("started");
 
-        var middleware = new ExceptionHandlingMiddleware(next, NullLogger<ExceptionHandlingMiddleware>.Instance);
-        var context = CreateStartedContext();
+        ExceptionHandlingMiddleware middleware = new(next, NullLogger<ExceptionHandlingMiddleware>.Instance);
+        DefaultHttpContext context = CreateStartedContext();
 
         Func<Task> act = () => middleware.InvokeAsync(context);
 
@@ -96,14 +93,14 @@ public class ExceptionHandlingMiddlewareTests
 
     private static DefaultHttpContext CreateContext()
     {
-        var context = new DefaultHttpContext();
+        DefaultHttpContext context = new();
         context.Response.Body = new MemoryStream();
         return context;
     }
 
     private static DefaultHttpContext CreateStartedContext()
     {
-        var features = new FeatureCollection();
+        FeatureCollection features = new();
         features.Set<IHttpResponseFeature>(new StartedHttpResponseFeature());
 
         return new DefaultHttpContext(features);
@@ -112,9 +109,9 @@ public class ExceptionHandlingMiddlewareTests
     private static async Task<ApiResponse> ReadBodyAsync(DefaultHttpContext context)
     {
         context.Response.Body.Position = 0;
-        using var reader = new StreamReader(context.Response.Body);
-        var text = await reader.ReadToEndAsync();
-        var response = JsonSerializer.Deserialize<ApiResponse>(text, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        using StreamReader reader = new(context.Response.Body);
+        string text = await reader.ReadToEndAsync();
+        ApiResponse? response = JsonSerializer.Deserialize<ApiResponse>(text, new JsonSerializerOptions(JsonSerializerDefaults.Web));
         response.Should().NotBeNull();
         return response!;
     }

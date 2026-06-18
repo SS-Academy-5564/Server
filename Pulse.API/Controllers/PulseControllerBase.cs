@@ -44,7 +44,7 @@ public abstract class PulseControllerBase : ControllerBase
 
     protected IActionResult MapErrorToResponse(ResultBase result)
     {
-        var (statusCode, body) = ResultMapper.Map(result);
+        (int statusCode, object? body) = ResultMapper.Map(result);
         return StatusCode(statusCode, body);
     }
 }

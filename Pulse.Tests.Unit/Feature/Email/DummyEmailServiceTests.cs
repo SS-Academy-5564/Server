@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluentResults;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Pulse.BL.Feature.Email;
@@ -8,7 +9,7 @@ namespace Pulse.Tests.Unit.Feature.Email;
 public class DummyEmailServiceTests
 {
     [Fact]
-    public async Task SendEmailAsync_ReturnsOk()
+    public async Task SendEmailAsync_ReturnsOkAsync()
     {
         // Arrange
         var loggerMock = new Mock<ILogger<DummyEmailService>>();
@@ -22,7 +23,7 @@ public class DummyEmailServiceTests
             ReplyTo: null);
 
         // Act
-        var result = await service.SendEmailAsync(dto);
+        Result result = await service.SendEmailAsync(dto);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

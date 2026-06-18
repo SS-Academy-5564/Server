@@ -1,4 +1,5 @@
 using FluentAssertions;
+using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -25,7 +26,7 @@ public class ResendEmailServiceTests
         ReplyTo: ["reply@example.com"]);
 
     [Fact]
-    public async Task SendEmailAsync_WhenResendSucceeds_ReturnsOk()
+    public async Task SendEmailAsync_WhenResendSucceeds_ReturnsOkAsync()
     {
         // Arrange
         var resendMock = new Mock<IResend>();
@@ -33,17 +34,17 @@ public class ResendEmailServiceTests
             .Setup(r => r.EmailSendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(SuccessfulResendResponse());
 
-        var service = CreateService(resendMock);
+        ResendEmailService service = CreateService(resendMock);
 
         // Act
-        var result = await service.SendEmailAsync(DefaultDto);
+        Result result = await service.SendEmailAsync(DefaultDto);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
     }
 
     [Fact]
-    public async Task SendEmailAsync_WhenResendThrows_ReturnsFail()
+    public async Task SendEmailAsync_WhenResendThrows_ReturnsFailAsync()
     {
         // Arrange
         var resendMock = new Mock<IResend>();
@@ -51,10 +52,10 @@ public class ResendEmailServiceTests
             .Setup(r => r.EmailSendAsync(It.IsAny<EmailMessage>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Resend API error"));
 
-        var service = CreateService(resendMock);
+        ResendEmailService service = CreateService(resendMock);
 
         // Act
-        var result = await service.SendEmailAsync(DefaultDto);
+        Result result = await service.SendEmailAsync(DefaultDto);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -63,7 +64,7 @@ public class ResendEmailServiceTests
     }
 
     [Fact]
-    public async Task SendEmailAsync_WhenResendThrows_LogsError()
+    public async Task SendEmailAsync_WhenResendThrows_LogsErrorAsync()
     {
         // Arrange
         var resendMock = new Mock<IResend>();
@@ -72,7 +73,7 @@ public class ResendEmailServiceTests
             .ThrowsAsync(new HttpRequestException("Resend API error"));
 
         var loggerMock = new Mock<ILogger<ResendEmailService>>();
-        var service = CreateService(resendMock, loggerMock);
+        ResendEmailService service = CreateService(resendMock, loggerMock);
 
         // Act
         await service.SendEmailAsync(DefaultDto);
@@ -89,7 +90,7 @@ public class ResendEmailServiceTests
     }
 
     [Fact]
-    public async Task SendEmailAsync_MapsDtoAndOptions_ToEmailMessage()
+    public async Task SendEmailAsync_MapsDtoAndOptions_ToEmailMessageAsync()
     {
         // Arrange
         EmailMessage? capturedMessage = null;
@@ -100,7 +101,7 @@ public class ResendEmailServiceTests
             .Callback<EmailMessage, CancellationToken>((message, _) => capturedMessage = message)
             .ReturnsAsync(SuccessfulResendResponse());
 
-        var service = CreateService(resendMock);
+        ResendEmailService service = CreateService(resendMock);
 
         // Act
         await service.SendEmailAsync(DefaultDto);
@@ -118,7 +119,7 @@ public class ResendEmailServiceTests
     }
 
     [Fact]
-    public async Task SendEmailAsync_PassesCancellationToken_ToResend()
+    public async Task SendEmailAsync_PassesCancellationToken_ToResendAsync()
     {
         // Arrange
         using var cts = new CancellationTokenSource();
@@ -130,7 +131,7 @@ public class ResendEmailServiceTests
             .Callback<EmailMessage, CancellationToken>((_, token) => capturedToken = token)
             .ReturnsAsync(SuccessfulResendResponse());
 
-        var service = CreateService(resendMock);
+        ResendEmailService service = CreateService(resendMock);
 
         // Act
         await service.SendEmailAsync(DefaultDto, cts.Token);
@@ -139,8 +140,8 @@ public class ResendEmailServiceTests
         capturedToken.Should().Be(cts.Token);
     }
 
-    private static ResendResponse<Guid> SuccessfulResendResponse() =>
-        new(Guid.NewGuid(), null!);
+    private static ResendResponse<Guid> SuccessfulResendResponse()
+        => new(Guid.NewGuid(), null!);
 
     private static ResendEmailService CreateService(
         Mock<IResend> resendMock,

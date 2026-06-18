@@ -14,6 +14,7 @@ public class Worker(ILogger<Worker> logger) : BackgroundService
                 {
                     logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
                 }
+
                 await Task.Delay(1000, stoppingToken);
             }
             catch (SqlException ex)

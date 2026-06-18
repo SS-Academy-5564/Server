@@ -19,14 +19,14 @@ public class PulseControllerBaseTests
             new InternalError("Unexpected")
         });
 
-        var controller = new TestController();
+        TestController controller = new();
 
-        var actionResult = controller.InvokeToActionResult(result);
+        IActionResult actionResult = controller.InvokeToActionResult(result);
 
-        var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
+        ObjectResult objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(403);
 
-        var response = objectResult.Value.Should().BeOfType<ApiResponse>().Subject;
+        ApiResponse response = objectResult.Value.Should().BeOfType<ApiResponse>().Subject;
         response.Success.Should().BeFalse();
         response.Errors.Should().ContainSingle();
         response.Errors[0].Message.Should().Be("Access denied");
@@ -42,14 +42,14 @@ public class PulseControllerBaseTests
             new UnauthorizedError("Unauthorized")
         });
 
-        var controller = new TestController();
+        TestController controller = new();
 
-        var actionResult = controller.InvokeToActionResult(result);
+        IActionResult actionResult = controller.InvokeToActionResult(result);
 
-        var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
+        ObjectResult objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(401);
 
-        var response = objectResult.Value.Should().BeOfType<ApiResponse>().Subject;
+        ApiResponse response = objectResult.Value.Should().BeOfType<ApiResponse>().Subject;
         response.Success.Should().BeFalse();
         response.Errors.Should().ContainSingle();
         response.Errors[0].Message.Should().Be("Unauthorized");
@@ -66,14 +66,14 @@ public class PulseControllerBaseTests
                 ["Email"] = ["Email is required"]
             }));
 
-        var controller = new TestController();
+        TestController controller = new();
 
-        var actionResult = controller.InvokeToActionResult(result);
+        IActionResult actionResult = controller.InvokeToActionResult(result);
 
-        var badRequest = actionResult.Should().BeOfType<ObjectResult>().Subject;
+        ObjectResult badRequest = actionResult.Should().BeOfType<ObjectResult>().Subject;
         badRequest.StatusCode.Should().Be(400);
 
-        var response = badRequest.Value.Should().BeOfType<ApiResponse>().Subject;
+        ApiResponse response = badRequest.Value.Should().BeOfType<ApiResponse>().Subject;
         response.Success.Should().BeFalse();
         response.Errors.Should().ContainSingle();
         response.Errors[0].Code.Should().Be(AppError.Codes.Validation);
@@ -84,12 +84,12 @@ public class PulseControllerBaseTests
     [Fact]
     public void ToActionResult_WhenResultIsSuccess_ReturnsSuccessResponseEnvelope()
     {
-        var controller = new TestController();
+        TestController controller = new();
 
-        var actionResult = controller.InvokeToActionResult(Result.Ok());
+        IActionResult actionResult = controller.InvokeToActionResult(Result.Ok());
 
-        var okResult = actionResult.Should().BeOfType<OkObjectResult>().Subject;
-        var response = okResult.Value.Should().BeOfType<ApiResponse>().Subject;
+        OkObjectResult okResult = actionResult.Should().BeOfType<OkObjectResult>().Subject;
+        ApiResponse response = okResult.Value.Should().BeOfType<ApiResponse>().Subject;
 
         response.Success.Should().BeTrue();
         response.Errors.Should().BeEmpty();
