@@ -17,7 +17,9 @@ internal sealed class BearerSecuritySchemeTransformer(
         IEnumerable<AuthenticationScheme> schemes = await authenticationSchemeProvider.GetAllSchemesAsync();
 
         if (schemes.All(s => s.Name != JwtBearerDefaults.AuthenticationScheme))
+        {
             return;
+        }
 
         document.Components ??= new OpenApiComponents();
 

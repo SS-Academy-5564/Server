@@ -14,12 +14,14 @@ internal sealed class BearerSecurityOperationTransformer : IOpenApiOperationTran
         OpenApiOperationTransformerContext context,
         CancellationToken cancellationToken)
     {
-        var hasAuthorize = context.Description.ActionDescriptor.EndpointMetadata
+        bool hasAuthorize = context.Description.ActionDescriptor.EndpointMetadata
             .OfType<IAuthorizeData>()
             .Any();
 
         if (!hasAuthorize)
+        {
             return Task.CompletedTask;
+        }
 
         operation.Security ??= new List<OpenApiSecurityRequirement>();
 
