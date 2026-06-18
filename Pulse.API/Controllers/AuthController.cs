@@ -4,7 +4,7 @@ using Pulse.API.Constants;
 
 namespace Pulse.API.Controllers;
 
-public class AuthController : ControllerBase
+public class AuthController : PulseControllerBase
 {
     [EnableRateLimiting(RateLimitPolicies.Login)]
     public Task<IActionResult> Login()
