@@ -1,4 +1,3 @@
-
 namespace Pulse.BL.Common.Security;
 
 public interface IPasswordHasher

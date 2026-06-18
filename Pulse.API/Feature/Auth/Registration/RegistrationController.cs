@@ -1,3 +1,4 @@
+using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Attributes;
 using Pulse.API.Controllers;
@@ -31,7 +32,7 @@ public class RegistrationController : PulseControllerBase
             LastName = request.LastName,
             Password = request.Password
         };
-        var result = await _handler.RegisterAsync(command, ct);
+        Result result = await _handler.RegisterAsync(command, ct);
         return ToActionResult(result);
     }
 }

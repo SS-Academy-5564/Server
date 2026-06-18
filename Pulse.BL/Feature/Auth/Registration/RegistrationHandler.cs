@@ -35,18 +35,20 @@ public class RegistrationHandler : IRegistrationHandler
     /// <inheritdoc/>
     public async Task<Result> RegisterAsync(RegistrationCommand command, CancellationToken ct)
     {
-        var userExists = await _userQueries.EmailExistsAsync(command.Email, ct);
+        bool userExists = await _userQueries.EmailExistsAsync(command.Email, ct);
 
         if (userExists)
+        {
             return Result.Fail(new ConflictError("A user with this Email already exists."));
+        }
 
-        var passwordHash = _passwordHasher.HashPassword(command.Password);
+        string passwordHash = _passwordHasher.HashPassword(command.Password);
 
         try
         {
             await _unitOfWorkFactory.ExecuteAsync(async uow =>
             {
-                var userId = await _userCommands.CreateUserAsync(new CreateUserInput
+                Guid userId = await _userCommands.CreateUserAsync(new CreateUserInput
                 {
                     Email = command.Email,
                     FirstName = command.FirstName,
@@ -60,7 +62,7 @@ public class RegistrationHandler : IRegistrationHandler
                     OrganizationId = SeededIds.Organizations.Default,
                     RoleId = SeededIds.Roles.User
                 }, uow.Transaction, ct);
-            });
+            }, ct);
         }
         catch (DuplicateKeyException ex)
         {

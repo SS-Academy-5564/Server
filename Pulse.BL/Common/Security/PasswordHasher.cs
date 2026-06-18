@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Identity;
 
 namespace Pulse.BL.Common.Security;
@@ -21,7 +20,7 @@ public class PasswordHasher : IPasswordHasher
     /// <inheritdoc/>
     public bool VerifyHashedPassword(string hashedPassword, string providedPassword)
     {
-        var result = _identityPasswordHasher.VerifyHashedPassword(null!, hashedPassword, providedPassword);
+        PasswordVerificationResult result = _identityPasswordHasher.VerifyHashedPassword(null!, hashedPassword, providedPassword);
         return result != PasswordVerificationResult.Failed;
     }
 }
