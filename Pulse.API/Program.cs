@@ -39,10 +39,7 @@ await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, see
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("Pulse API Documentation");
-    });
+    app.MapScalarApiReference(options => options.WithTitle("Pulse API Documentation"));
 }
 
 app.UseResponseLogging();
