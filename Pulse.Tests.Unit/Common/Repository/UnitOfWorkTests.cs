@@ -24,7 +24,7 @@ public class UnitOfWorkTests
     }
 
     [Fact]
-    public async Task DisposeAsync_WhenNotCommitted_RollsBack()
+    public async Task DisposeAsync_WhenNotCommitted_RollsBackAsync()
     {
         await _uow.DisposeAsync();
 

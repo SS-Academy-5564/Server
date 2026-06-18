@@ -1,5 +1,6 @@
 using System.Data;
 using FluentAssertions;
+using FluentResults;
 using Moq;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security;
@@ -45,7 +46,7 @@ public class RegistrationHandlerTests
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        var result = await _handler.RegisterAsync(ValidCommand(), CancellationToken.None);
+        Result result = await _handler.RegisterAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         _userCommands.Verify(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IDbTransaction>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -64,7 +65,7 @@ public class RegistrationHandlerTests
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IDbTransaction>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DuplicateKeyException("Email"));
 
-        var result = await _handler.RegisterAsync(ValidCommand(), CancellationToken.None);
+        Result result = await _handler.RegisterAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ConflictError);
@@ -74,7 +75,7 @@ public class RegistrationHandlerTests
     [Fact]
     public async Task Register_ValidCommand_HashesPasswordAndCreatesUserAndMember()
     {
-        var command = ValidCommand();
+        RegistrationCommand command = ValidCommand();
         var userId = Guid.NewGuid();
         const string hashedPassword = "hashed_password";
 
@@ -88,7 +89,7 @@ public class RegistrationHandlerTests
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IDbTransaction>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userId);
 
-        var result = await _handler.RegisterAsync(command, CancellationToken.None);
+        Result result = await _handler.RegisterAsync(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
 

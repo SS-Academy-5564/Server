@@ -1,3 +1,4 @@
+using System.Data;
 using Pulse.DAL.Connection;
 
 namespace Pulse.DAL.Common.Repository;
@@ -14,16 +15,16 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
     /// <inheritdoc/>
     public Task<IUnitOfWork> CreateAsync(CancellationToken ct = default)
     {
-        var connection = _connectionFactory.CreateConnection();
+        IDbConnection connection = _connectionFactory.CreateConnection();
         connection.Open();
-        var transaction = connection.BeginTransaction();
+        IDbTransaction transaction = connection.BeginTransaction();
         return Task.FromResult<IUnitOfWork>(new UnitOfWork(connection, transaction));
     }
 
     /// <inheritdoc/>
     public async Task ExecuteAsync(Func<IUnitOfWork, Task> work, CancellationToken ct = default)
     {
-        await using var uow = await CreateAsync(ct);
+        await using IUnitOfWork uow = await CreateAsync(ct);
         await work(uow);
         await uow.CommitAsync(ct);
     }

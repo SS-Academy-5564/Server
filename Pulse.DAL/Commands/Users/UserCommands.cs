@@ -16,11 +16,11 @@ public class UserCommands : IUserCommands
             return await transaction.Connection!.ExecuteScalarAsync<Guid>(
                 new CommandDefinition(
                     "INSERT INTO Users (Email, FirstName, LastName, PasswordHash, CreatedAt, UpdatedAt) OUTPUT INSERTED.Id VALUES (@Email, @FirstName, @LastName, @PasswordHash, @Now, @Now)",
-                    new { Email = input.Email, FirstName = input.FirstName, LastName = input.LastName, PasswordHash = input.PasswordHash, Now = DateTimeOffset.UtcNow },
+                    new { input.Email, input.FirstName, input.LastName, input.PasswordHash, Now = DateTimeOffset.UtcNow },
                     transaction: transaction,
                     cancellationToken: ct));
         }
-        catch (SqlException ex) when (ex.Number == 2627 || ex.Number == 2601)
+        catch (SqlException ex) when (ex.Number is 2627 or 2601)
         {
             throw new DuplicateKeyException("Email");
         }

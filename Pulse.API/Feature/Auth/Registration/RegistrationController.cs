@@ -23,7 +23,7 @@ public class RegistrationController : PulseControllerBase
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>200 OK on success, or a problem details response on failure.</returns>
     [HttpPost("register")]
-    public async Task<IActionResult> Register([Validate] RegistrationRequest request, CancellationToken ct)
+    public async Task<IActionResult> RegisterAsync([Validate] RegistrationRequest request, CancellationToken ct)
     {
         var command = new RegistrationCommand
         {

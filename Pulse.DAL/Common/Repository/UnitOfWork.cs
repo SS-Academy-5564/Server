@@ -5,22 +5,21 @@ namespace Pulse.DAL.Common.Repository;
 public class UnitOfWork : IUnitOfWork
 {
     private readonly IDbConnection _connection;
-    private readonly IDbTransaction _transaction;
     private bool _committed;
 
     /// <inheritdoc/>
-    public IDbTransaction Transaction => _transaction;
+    public IDbTransaction Transaction { get; }
 
     public UnitOfWork(IDbConnection connection, IDbTransaction transaction)
     {
         _connection = connection;
-        _transaction = transaction;
+        Transaction = transaction;
     }
 
     /// <inheritdoc/>
     public Task CommitAsync(CancellationToken ct = default)
     {
-        _transaction.Commit();
+        Transaction.Commit();
         _committed = true;
         return Task.CompletedTask;
     }
@@ -32,10 +31,10 @@ public class UnitOfWork : IUnitOfWork
     {
         if (!_committed)
         {
-            _transaction.Rollback();
+            Transaction.Rollback();
         }
 
-        _transaction.Dispose();
+        Transaction.Dispose();
         _connection.Dispose();
         return ValueTask.CompletedTask;
     }
