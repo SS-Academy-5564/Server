@@ -13,7 +13,7 @@ namespace Pulse.Tests.Unit.Middleware;
 public class ExceptionHandlingMiddlewareTests
 {
     [Fact]
-    public async Task InvokeAsync_WhenValidationExceptionThrown_ReturnsValidationProblemDetails()
+    public async Task InvokeAsync_WhenValidationExceptionThrown_ReturnsValidationProblemDetailsAsync()
     {
         RequestDelegate next = _ => throw new ValidationException(new[]
         {
@@ -39,7 +39,7 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenUnauthorizedAccessExceptionThrown_ReturnsUnauthorizedProblemDetails()
+    public async Task InvokeAsync_WhenUnauthorizedAccessExceptionThrown_ReturnsUnauthorizedProblemDetailsAsync()
     {
         RequestDelegate next = _ => throw new UnauthorizedAccessException();
 
@@ -59,7 +59,7 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenUnexpectedExceptionThrown_ReturnsInternalProblemDetails()
+    public async Task InvokeAsync_WhenUnexpectedExceptionThrown_ReturnsInternalProblemDetailsAsync()
     {
         RequestDelegate next = _ => throw new InvalidOperationException("boom");
 
@@ -79,7 +79,7 @@ public class ExceptionHandlingMiddlewareTests
     }
 
     [Fact]
-    public async Task InvokeAsync_WhenResponseHasStarted_RethrowsException()
+    public async Task InvokeAsync_WhenResponseHasStarted_RethrowsExceptionAsync()
     {
         RequestDelegate next = context => throw new InvalidOperationException("started");
 

@@ -26,7 +26,7 @@ public class ResendEmailServiceTests
         ReplyTo: ["reply@example.com"]);
 
     [Fact]
-    public async Task SendEmailAsync_WhenResendSucceeds_ReturnsOk()
+    public async Task SendEmailAsync_WhenResendSucceeds_ReturnsOkAsync()
     {
         // Arrange
         var resendMock = new Mock<IResend>();
@@ -44,7 +44,7 @@ public class ResendEmailServiceTests
     }
 
     [Fact]
-    public async Task SendEmailAsync_WhenResendThrows_ReturnsFail()
+    public async Task SendEmailAsync_WhenResendThrows_ReturnsFailAsync()
     {
         // Arrange
         var resendMock = new Mock<IResend>();
@@ -64,7 +64,7 @@ public class ResendEmailServiceTests
     }
 
     [Fact]
-    public async Task SendEmailAsync_WhenResendThrows_LogsError()
+    public async Task SendEmailAsync_WhenResendThrows_LogsErrorAsync()
     {
         // Arrange
         var resendMock = new Mock<IResend>();
@@ -90,7 +90,7 @@ public class ResendEmailServiceTests
     }
 
     [Fact]
-    public async Task SendEmailAsync_MapsDtoAndOptions_ToEmailMessage()
+    public async Task SendEmailAsync_MapsDtoAndOptions_ToEmailMessageAsync()
     {
         // Arrange
         EmailMessage? capturedMessage = null;
@@ -119,7 +119,7 @@ public class ResendEmailServiceTests
     }
 
     [Fact]
-    public async Task SendEmailAsync_PassesCancellationToken_ToResend()
+    public async Task SendEmailAsync_PassesCancellationToken_ToResendAsync()
     {
         // Arrange
         using var cts = new CancellationTokenSource();

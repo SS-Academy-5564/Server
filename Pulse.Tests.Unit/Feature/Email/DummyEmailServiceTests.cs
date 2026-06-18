@@ -9,7 +9,7 @@ namespace Pulse.Tests.Unit.Feature.Email;
 public class DummyEmailServiceTests
 {
     [Fact]
-    public async Task SendEmailAsync_ReturnsOk()
+    public async Task SendEmailAsync_ReturnsOkAsync()
     {
         // Arrange
         var loggerMock = new Mock<ILogger<DummyEmailService>>();
