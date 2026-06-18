@@ -20,12 +20,12 @@ public class PulseControllerBaseTests
 
         var controller = new TestController();
 
-        var actionResult = controller.InvokeToActionResult(result);
+        IActionResult actionResult = controller.InvokeToActionResult(result);
 
-        var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
+        ObjectResult objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(403);
 
-        var problem = objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
+        ProblemDetails problem = objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
         problem.Detail.Should().Be("Access denied");
         problem.Extensions["code"].Should().Be(AppError.Codes.Forbidden);
     }
@@ -41,12 +41,12 @@ public class PulseControllerBaseTests
 
         var controller = new TestController();
 
-        var actionResult = controller.InvokeToActionResult(result);
+        IActionResult actionResult = controller.InvokeToActionResult(result);
 
-        var objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
+        ObjectResult objectResult = actionResult.Should().BeOfType<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(401);
 
-        var problem = objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
+        ProblemDetails problem = objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
         problem.Detail.Should().Be("Unauthorized");
         problem.Extensions["code"].Should().Be(AppError.Codes.Unauthorized);
     }
@@ -58,10 +58,10 @@ public class PulseControllerBaseTests
 
         var controller = new TestController();
 
-        var actionResult = controller.InvokeToActionResult(result);
+        IActionResult actionResult = controller.InvokeToActionResult(result);
 
-        var badRequest = actionResult.Should().BeOfType<ObjectResult>().Subject;
-        var problem = badRequest.Value.Should().BeOfType<ValidationProblemDetails>().Subject;
+        ObjectResult badRequest = actionResult.Should().BeOfType<ObjectResult>().Subject;
+        ValidationProblemDetails problem = badRequest.Value.Should().BeOfType<ValidationProblemDetails>().Subject;
         problem.Status.Should().Be(400);
         problem.Extensions["code"].Should().Be(AppError.Codes.Validation);
     }

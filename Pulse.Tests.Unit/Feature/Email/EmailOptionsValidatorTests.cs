@@ -20,7 +20,7 @@ public class EmailOptionsValidatorTests
         };
 
         // Act
-        var result = _validator.Validate(null, options);
+        ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
         result.Should().Be(ValidateOptionsResult.Success);
@@ -39,7 +39,7 @@ public class EmailOptionsValidatorTests
         };
 
         // Act
-        var result = _validator.Validate(null, options);
+        ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
         result.Should().Be(ValidateOptionsResult.Success);
@@ -56,7 +56,7 @@ public class EmailOptionsValidatorTests
         };
 
         // Act
-        var result = _validator.Validate(null, options);
+        ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
         result.Failed.Should().BeTrue();
@@ -75,7 +75,7 @@ public class EmailOptionsValidatorTests
         };
 
         // Act
-        var result = _validator.Validate(null, options);
+        ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
         result.Failed.Should().BeTrue();
@@ -96,7 +96,7 @@ public class EmailOptionsValidatorTests
         };
 
         // Act
-        var result = _validator.Validate(null, options);
+        ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
         result.Failed.Should().BeTrue();
@@ -114,7 +114,7 @@ public class EmailOptionsValidatorTests
         };
 
         // Act
-        var result = _validator.Validate(null, options);
+        ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
         result.Failed.Should().BeTrue();
@@ -133,7 +133,7 @@ public class EmailOptionsValidatorTests
         };
 
         // Act
-        var result = _validator.Validate(null, options);
+        ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
         result.Failed.Should().BeTrue();

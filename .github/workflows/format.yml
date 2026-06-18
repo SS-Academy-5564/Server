@@ -16,7 +16,7 @@ jobs:
       - run: dotnet restore Pulse.slnx
 
       - id: format
-        run: dotnet format Pulse.slnx --verify-no-changes --severity error
+        run: dotnet format Pulse.slnx --verify-no-changes --severity warn
 
       - if: failure() && steps.format.outcome == 'failure'
-        run: echo "::error title=Formatting violations detected::Run 'dotnet format Pulse.slnx --severity error' locally to fix"
+        run: echo "::error title=Formatting violations detected::Run 'dotnet format Pulse.slnx' locally to fix"

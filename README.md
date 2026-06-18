@@ -132,11 +132,11 @@ All configuration is driven by `.env`. See `.env.example` for available variable
 Verify locally:
 
 ```bash
-dotnet format Pulse.slnx --verify-no-changes --severity error
+dotnet format Pulse.slnx --verify-no-changes
 ```
 
 Fix violations:
 
 ```bash
-dotnet format Pulse.slnx --severity error
+dotnet format Pulse.slnx
 ```
