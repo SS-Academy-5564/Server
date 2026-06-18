@@ -11,7 +11,9 @@ public abstract class PulseControllerBase : ControllerBase
     protected IActionResult ToActionResult<T>(Result<T> result)
     {
         if (result.IsSuccess)
+        {
             return Ok(result.Value);
+        }
 
         return MapErrorToResponse(result);
     }
@@ -19,14 +21,16 @@ public abstract class PulseControllerBase : ControllerBase
     protected IActionResult ToActionResult(Result result)
     {
         if (result.IsSuccess)
+        {
             return NoContent();
+        }
 
         return MapErrorToResponse(result);
     }
 
     public IActionResult MapErrorToResponse(ResultBase result)
     {
-        var (statusCode, body) = ResultMapper.Map(result);
+        (int statusCode, object? body) = ResultMapper.Map(result);
         return StatusCode(statusCode, body);
     }
 }

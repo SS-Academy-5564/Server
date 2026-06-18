@@ -31,10 +31,7 @@ public static class EmailServiceCollectionExtensions
             case EmailProvider.Resend:
                 services.AddHttpClient<ResendClient>();
 
-                services.Configure<ResendClientOptions>(options =>
-                {
-                    options.ApiToken = emailOptions.ApiKey;
-                });
+                services.Configure<ResendClientOptions>(options => options.ApiToken = emailOptions.ApiKey);
 
                 services.AddTransient<IResend, ResendClient>();
                 services.AddScoped<IEmailService, ResendEmailService>();
