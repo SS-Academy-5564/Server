@@ -9,41 +9,43 @@ internal static class ResultMapper
     internal static (int StatusCode, object Body) Map(ResultBase result)
     {
         if (result.Errors.Count == 0)
+        {
             return (500, BuildProblemDetails(500, "Internal Server Error", "Unknown error", AppError.Codes.Internal));
+        }
 
         if (result.HasError<ForbiddenError>())
         {
-            var error = result.Errors.OfType<ForbiddenError>().First();
+            ForbiddenError error = result.Errors.OfType<ForbiddenError>().First();
             return (403, BuildProblemDetails(403, "Forbidden", error.Message, error.Code));
         }
 
         if (result.HasError<UnauthorizedError>())
         {
-            var error = result.Errors.OfType<UnauthorizedError>().First();
+            UnauthorizedError error = result.Errors.OfType<UnauthorizedError>().First();
             return (401, BuildProblemDetails(401, "Unauthorized", error.Message, error.Code));
         }
 
         if (result.HasError<ConflictError>())
         {
-            var error = result.Errors.OfType<ConflictError>().First();
+            ConflictError error = result.Errors.OfType<ConflictError>().First();
             return (409, BuildProblemDetails(409, "Conflict", error.Message, error.Code));
         }
 
         if (result.HasError<NotFoundError>())
         {
-            var error = result.Errors.OfType<NotFoundError>().First();
+            NotFoundError error = result.Errors.OfType<NotFoundError>().First();
             return (404, BuildProblemDetails(404, "Not Found", error.Message, error.Code));
         }
 
         if (result.HasError<ValidationError>())
         {
-            var error = result.Errors.OfType<ValidationError>().First();
+            ValidationError error = result.Errors.OfType<ValidationError>().First();
             return (400, BuildValidationProblemDetails(error));
         }
 
         if (result.HasError<InternalError>())
         {
-            var error = result.Errors.OfType<InternalError>().First();
+            InternalError error = result.Errors.OfType<InternalError>().First();
             return (500, BuildProblemDetails(500, "Internal Server Error", error.Message, error.Code));
         }
 
@@ -52,7 +54,7 @@ internal static class ResultMapper
 
     private static ValidationProblemDetails BuildValidationProblemDetails(ValidationError error)
     {
-        var errors = error.FieldErrors.Count > 0
+        Dictionary<string, string[]> errors = error.FieldErrors.Count > 0
             ? new Dictionary<string, string[]>(error.FieldErrors)
             : new Dictionary<string, string[]> { [string.Empty] = [error.Message] };
 

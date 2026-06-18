@@ -10,10 +10,10 @@ public static class ServiceCollectionExtensions
     {
         public IServiceCollection AddLoginRateLimiter(IConfiguration configuration)
         {
-            var rateLimiterSection = configuration.GetSection("RateLimit:Login");
+            IConfigurationSection rateLimiterSection = configuration.GetSection("RateLimit:Login");
 
-            var maxAttempts = rateLimiterSection.GetValue<int>("MaxAttempts");
-            var periodMinutes = rateLimiterSection.GetValue<int>("PeriodMinutes");
+            int maxAttempts = rateLimiterSection.GetValue<int>("MaxAttempts");
+            int periodMinutes = rateLimiterSection.GetValue<int>("PeriodMinutes");
 
             if (maxAttempts <= 0)
             {
@@ -46,11 +46,11 @@ public static class ServiceCollectionExtensions
 
                 options.OnRejected = async (onRejectedContext, cancellationToken) =>
                 {
-                    var httpContext = onRejectedContext.HttpContext;
+                    HttpContext httpContext = onRejectedContext.HttpContext;
                     httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
 
                     double retryAfterSeconds = 0;
-                    if (onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                    if (onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
                     {
                         retryAfterSeconds = Math.Ceiling(retryAfter.TotalSeconds);
                         httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
@@ -66,6 +66,6 @@ public static class ServiceCollectionExtensions
             return services;
         }
     }
-    private static string GetClientIdentifier(HttpContext context) =>
-        context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+    private static string GetClientIdentifier(HttpContext context)
+        => context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
 }

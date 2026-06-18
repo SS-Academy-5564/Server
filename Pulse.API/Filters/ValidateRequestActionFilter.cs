@@ -1,4 +1,5 @@
 using FluentValidation;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Pulse.API.Attributes;
@@ -17,29 +18,29 @@ public class ValidateRequestActionFilter : IAsyncActionFilter
 
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var parameters = context.ActionDescriptor.Parameters
+        IEnumerable<ControllerParameterDescriptor?> parameters = context.ActionDescriptor.Parameters
             .Select(parameter => parameter as ControllerParameterDescriptor)
             .Where(parameter => parameter is not null &&
                                 parameter.ParameterInfo.IsDefined(typeof(ValidateAttribute), false));
 
-        foreach (var parameter in parameters)
+        foreach (ControllerParameterDescriptor? parameter in parameters)
         {
             if (parameter is null)
             {
                 continue;
             }
 
-            if (!context.ActionArguments.TryGetValue(parameter.Name, out var parameterValue) ||
+            if (!context.ActionArguments.TryGetValue(parameter.Name, out object? parameterValue) ||
                 parameterValue is null)
             {
                 continue;
             }
 
-            var validators = _serviceProvider.GetValidators(parameter.ParameterType);
+            IEnumerable<IValidator> validators = _serviceProvider.GetValidators(parameter.ParameterType);
 
             var validationContext = new ValidationContext<object>(parameterValue);
 
-            var validationResults = await Task.WhenAll(
+            ValidationResult[] validationResults = await Task.WhenAll(
                 validators.Select(validator =>
                     validator.ValidateAsync(validationContext, context.HttpContext.RequestAborted)));
 
