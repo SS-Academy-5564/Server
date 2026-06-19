@@ -2,44 +2,49 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Pulse.API.Extensions;
 using Pulse.BL;
+using Pulse.BL.DependencyInjection;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
 
-WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDataAccess()
-    .AddBusinessLogic(builder.Configuration);
-
+builder.Services.AddDataAccess();
+builder.Services.AddBusinessLogic(builder.Configuration);
 builder.Services.AddValidatorsFromAssembly(typeof(BLAssemblyMarker).Assembly, includeInternalTypes: true);
-
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 builder.Services.AddControllers();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
-string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
 }
 
-WebApplication app = builder.Build();
+var app = builder.Build();
 
-ILogger migrationLogger = app.Services
+var migrationLogger = app.Services
     .GetRequiredService<ILoggerFactory>()
     .CreateLogger("DatabaseMigration");
 
-bool seedDevData = builder.Configuration.GetValue<bool>("Database:SeedDevData");
+var seedDevData = app.Configuration.GetValue<bool>("Database:SeedDevData");
 
-await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, seedDevData);
+await DatabaseMigration.RunWithRetryAsync(
+    connectionString,
+    migrationLogger,
+    seedDevData);
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference(options => options.WithTitle("Pulse API Documentation"));
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("Pulse API Documentation");
+    });
 }
 
 app.UseResponseLogging();
