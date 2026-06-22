@@ -9,8 +9,8 @@ public static class PiiHasher
 
     public static string HashForLogging(string value)
     {
-        var normalized = value.Trim().ToLowerInvariant();
-        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        string normalized = value.Trim().ToLowerInvariant();
+        byte[] hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
         return Convert.ToHexString(hash)[..HashPrefixLength];
     }
 }

@@ -26,10 +26,10 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
     public GeneratedJwtToken GenerateToken(Guid userId, string roleName, Guid organizationId)
     {
-        var now = _timeProvider.GetUtcNow();
-        var expiresAt = now.AddMinutes(_options.ExpirationMinutes);
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+        DateTimeOffset expiresAt = now.AddMinutes(_options.ExpirationMinutes);
 
-        var claims = new[]
+        Claim[] claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtClaimNames.Role, roleName),

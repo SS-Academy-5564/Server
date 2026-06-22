@@ -25,74 +25,76 @@ public class JwtTokenGeneratorTests
     [Fact]
     public void Generate_ShouldContainUserIdClaim()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var roleName = "User";
-        var organizationId = Guid.NewGuid();
-        var sut = CreateSut();
+        Guid userId = Guid.NewGuid();
+        string roleName = "User";
+        Guid organizationId = Guid.NewGuid();
 
-        // Act
-        var token = sut.GenerateToken(userId, roleName, organizationId).Token;
+        JwtTokenGenerator sut = CreateSut();
 
-        // Assert
-        var jwtToken = ReadToken(token);
+        GeneratedJwtToken result = sut.GenerateToken(userId, roleName, organizationId);
+        string token = result.Token;
 
-        jwtToken.GetClaim(JwtRegisteredClaimNames.Sub)!.Value.Should().Be(userId.ToString());
+        JsonWebToken jwtToken = ReadToken(token);
+
+        jwtToken.GetClaim(JwtRegisteredClaimNames.Sub)!.Value
+            .Should().Be(userId.ToString());
     }
 
     [Fact]
     public void Generate_ShouldContainRoleClaim()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var roleName = "User";
-        var organizationId = Guid.NewGuid();
-        var sut = CreateSut();
+        Guid userId = Guid.NewGuid();
+        string roleName = "User";
+        Guid organizationId = Guid.NewGuid();
 
-        // Act
-        var token = sut.GenerateToken(userId, roleName, organizationId).Token;
+        JwtTokenGenerator sut = CreateSut();
 
-        // Assert
-        var jwtToken = ReadToken(token);
+        GeneratedJwtToken result = sut.GenerateToken(userId, roleName, organizationId);
+        string token = result.Token;
 
-        jwtToken.GetClaim(JwtClaimNames.Role)!.Value.Should().Be(roleName);
+        JsonWebToken jwtToken = ReadToken(token);
+
+        jwtToken.GetClaim(JwtClaimNames.Role)!.Value
+            .Should().Be(roleName);
     }
 
     [Fact]
     public void Generate_ShouldContainOrganizationIdClaim()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var roleName = "User";
-        var organizationId = Guid.NewGuid();
-        var sut = CreateSut();
+        Guid userId = Guid.NewGuid();
+        string roleName = "User";
+        Guid organizationId = Guid.NewGuid();
 
-        // Act
-        var token = sut.GenerateToken(userId, roleName, organizationId).Token;
+        JwtTokenGenerator sut = CreateSut();
 
-        // Assert
-        var jwtToken = ReadToken(token);
+        GeneratedJwtToken result = sut.GenerateToken(userId, roleName, organizationId);
+        string token = result.Token;
 
-        jwtToken.GetClaim(JwtClaimNames.OrganizationId)!.Value.Should().Be(organizationId.ToString());
+        JsonWebToken jwtToken = ReadToken(token);
+
+        jwtToken.GetClaim(JwtClaimNames.OrganizationId)!.Value
+            .Should().Be(organizationId.ToString());
     }
 
     [Fact]
     public void Generate_ShouldSetExpirationFromTimeProvider()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var roleName = "User";
-        var organizationId = Guid.NewGuid();
-        var fixedTime = new DateTimeOffset(2025, 6, 15, 10, 0, 0, TimeSpan.Zero);
-        var timeProvider = new FakeTimeProvider(fixedTime);
-        var sut = CreateSut(timeProvider);
-        var expectedExpiry = fixedTime.AddMinutes(_jwtOptions.ExpirationMinutes);
+        Guid userId = Guid.NewGuid();
+        string roleName = "User";
+        Guid organizationId = Guid.NewGuid();
 
-        // Act
-        var generatedToken = sut.GenerateToken(userId, roleName, organizationId);
+        DateTimeOffset fixedTime = new(2025, 6, 15, 10, 0, 0, TimeSpan.Zero);
 
-        // Assert
-        var jwtToken = ReadToken(generatedToken.Token);
+        FakeTimeProvider timeProvider = new(fixedTime);
+        JwtTokenGenerator sut = CreateSut(timeProvider);
+
+        DateTimeOffset expectedExpiry =
+            fixedTime.AddMinutes(_jwtOptions.ExpirationMinutes);
+
+        GeneratedJwtToken generatedToken =
+            sut.GenerateToken(userId, roleName, organizationId);
+
+        JsonWebToken jwtToken = ReadToken(generatedToken.Token);
 
         generatedToken.ExpiresAt.Should().Be(expectedExpiry);
         jwtToken.ValidTo.Should().Be(expectedExpiry.UtcDateTime);
@@ -101,39 +103,42 @@ public class JwtTokenGeneratorTests
     [Fact]
     public void Generate_WhenTimeAdvances_ShouldUseUpdatedExpiration()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var roleName = "User";
-        var organizationId = Guid.NewGuid();
-        var initialTime = new DateTimeOffset(2025, 6, 15, 10, 0, 0, TimeSpan.Zero);
-        var timeProvider = new FakeTimeProvider(initialTime);
-        var sut = CreateSut(timeProvider);
+        Guid userId = Guid.NewGuid();
+        string roleName = "User";
+        Guid organizationId = Guid.NewGuid();
+
+        DateTimeOffset initialTime = new(2025, 6, 15, 10, 0, 0, TimeSpan.Zero);
+
+        FakeTimeProvider timeProvider = new(initialTime);
+        JwtTokenGenerator sut = CreateSut(timeProvider);
 
         timeProvider.Advance(TimeSpan.FromHours(2));
-        var expectedExpiry = timeProvider.GetUtcNow().AddMinutes(_jwtOptions.ExpirationMinutes);
 
-        // Act
-        var generatedToken = sut.GenerateToken(userId, roleName, organizationId);
+        DateTimeOffset expectedExpiry =
+            timeProvider.GetUtcNow().AddMinutes(_jwtOptions.ExpirationMinutes);
 
-        // Assert
+        GeneratedJwtToken generatedToken =
+            sut.GenerateToken(userId, roleName, organizationId);
+
+        JsonWebToken jwtToken = ReadToken(generatedToken.Token);
+
         generatedToken.ExpiresAt.Should().Be(expectedExpiry);
-        ReadToken(generatedToken.Token).ValidTo.Should().Be(expectedExpiry.UtcDateTime);
+        jwtToken.ValidTo.Should().Be(expectedExpiry.UtcDateTime);
     }
 
     [Fact]
     public void Generate_ShouldSetIssuerAndAudience()
     {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var roleName = "User";
-        var organizationId = Guid.NewGuid();
-        var sut = CreateSut();
+        Guid userId = Guid.NewGuid();
+        string roleName = "User";
+        Guid organizationId = Guid.NewGuid();
 
-        // Act
-        var token = sut.GenerateToken(userId, roleName, organizationId).Token;
+        JwtTokenGenerator sut = CreateSut();
 
-        // Assert
-        var jwtToken = ReadToken(token);
+        GeneratedJwtToken result = sut.GenerateToken(userId, roleName, organizationId);
+        string token = result.Token;
+
+        JsonWebToken jwtToken = ReadToken(token);
 
         jwtToken.Issuer.Should().Be(_jwtOptions.Issuer);
         jwtToken.Audiences.Should().Contain(_jwtOptions.Audience);
@@ -141,14 +146,18 @@ public class JwtTokenGeneratorTests
 
     private JwtTokenGenerator CreateSut(TimeProvider? timeProvider = null)
     {
-        var optionsMock = new Mock<IOptions<JwtOptions>>();
+        Mock<IOptions<JwtOptions>> optionsMock = new();
         optionsMock.Setup(x => x.Value).Returns(_jwtOptions);
 
-        return new JwtTokenGenerator(optionsMock.Object, timeProvider ?? TimeProvider.System);
+        return new JwtTokenGenerator(
+            optionsMock.Object,
+            timeProvider ?? TimeProvider.System
+        );
     }
 
     private static JsonWebToken ReadToken(string token)
     {
-        return new JsonWebTokenHandler().ReadJsonWebToken(token);
+        JsonWebTokenHandler handler = new();
+        return handler.ReadJsonWebToken(token);
     }
 }

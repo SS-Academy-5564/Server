@@ -1,5 +1,5 @@
 using FluentAssertions;
-using FluentValidation;
+using FluentValidation.Results;
 using Pulse.API.Features.Auth.Login;
 
 namespace Pulse.Tests.Unit.Features.Auth.Login;
@@ -14,7 +14,7 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenRequestValid_ReturnsNoErrors()
+    public async Task Validate_WhenRequestValid_ReturnsNoErrorsAsync()
     {
         // Arrange
         var request = new LoginRequest
@@ -24,7 +24,7 @@ public class LoginRequestValidatorTests
         };
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeTrue();
@@ -32,7 +32,7 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEmailEmpty_ReturnsError()
+    public async Task Validate_WhenEmailEmpty_ReturnsErrorAsync()
     {
         // Arrange
         var request = new LoginRequest
@@ -42,7 +42,7 @@ public class LoginRequestValidatorTests
         };
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -50,7 +50,7 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEmailInvalid_ReturnsError()
+    public async Task Validate_WhenEmailInvalid_ReturnsErrorAsync()
     {
         // Arrange
         var request = new LoginRequest
@@ -60,7 +60,7 @@ public class LoginRequestValidatorTests
         };
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -68,7 +68,7 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEmailTooLong_ReturnsError()
+    public async Task Validate_WhenEmailTooLong_ReturnsErrorAsync()
     {
         // Arrange
         var request = new LoginRequest
@@ -78,7 +78,7 @@ public class LoginRequestValidatorTests
         };
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -86,7 +86,7 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenPasswordEmpty_ReturnsError()
+    public async Task Validate_WhenPasswordEmpty_ReturnsErrorAsync()
     {
         // Arrange
         var request = new LoginRequest
@@ -96,7 +96,7 @@ public class LoginRequestValidatorTests
         };
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -104,7 +104,7 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenPasswordTooLong_ReturnsError()
+    public async Task Validate_WhenPasswordTooLong_ReturnsErrorAsync()
     {
         // Arrange
         var request = new LoginRequest
@@ -114,7 +114,7 @@ public class LoginRequestValidatorTests
         };
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -122,7 +122,7 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenBothFieldsEmpty_ReturnsMultipleErrors()
+    public async Task Validate_WhenBothFieldsEmpty_ReturnsMultipleErrorsAsync()
     {
         // Arrange
         var request = new LoginRequest
@@ -132,7 +132,7 @@ public class LoginRequestValidatorTests
         };
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();

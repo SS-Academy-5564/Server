@@ -18,31 +18,31 @@ public class LoginHandlerTests
 
     public LoginHandlerTests()
     {
-        _userQueriesMock = new Mock<IUserQueries>();
-        _passwordHasherMock = new Mock<IPasswordHasher>();
-        _jwtTokenGeneratorMock = new Mock<IJwtTokenGenerator>();
+        _userQueriesMock = new();
+        _passwordHasherMock = new();
+        _jwtTokenGeneratorMock = new();
 
         _sut = new LoginHandler(
             _userQueriesMock.Object,
             _passwordHasherMock.Object,
             _jwtTokenGeneratorMock.Object,
-            new Mock<Microsoft.Extensions.Logging.ILogger<LoginHandler>>().Object);
+            new Mock<Microsoft.Extensions.Logging.ILogger<LoginHandler>>().Object
+        );
     }
 
     [Fact]
-    public async Task LoginAsync_WhenCredentialsValid_ReturnsToken()
+    public async Task LoginAsync_WhenCredentialsValid_ReturnsTokenAsync()
     {
-        // Arrange
-        var email = "user@example.com";
-        var password = "ValidPassword123";
-        var passwordHash = "$2a$11$hashed_password";
-        var userId = Guid.NewGuid();
-        var roleName = "User";
-        var organizationId = Guid.NewGuid();
-        var accessToken = "jwt_token_here";
-        var expiresAt = DateTimeOffset.UtcNow.AddHours(1);
+        string email = "user@example.com";
+        string password = "ValidPassword123";
+        string passwordHash = "$2a$11$hashed_password";
+        Guid userId = Guid.NewGuid();
+        string roleName = "User";
+        Guid organizationId = Guid.NewGuid();
+        string accessToken = "jwt_token_here";
+        DateTimeOffset expiresAt = DateTimeOffset.UtcNow.AddHours(1);
 
-        var userRecord = new UserAuthRecord
+        UserAuthRecord userRecord = new()
         {
             Id = userId,
             Email = email,
@@ -51,7 +51,11 @@ public class LoginHandlerTests
             OrganizationId = organizationId
         };
 
-        var command = new LoginCommand { Email = email, Password = password };
+        LoginCommand command = new()
+        {
+            Email = email,
+            Password = password
+        };
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
@@ -65,45 +69,50 @@ public class LoginHandlerTests
             .Setup(x => x.GenerateToken(userId, roleName, organizationId))
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
 
-        // Act
-        var result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result =
+            await _sut.LoginAsync(command, CancellationToken.None);
 
-        // Assert
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().Be(accessToken);
         result.Value.ExpiresAt.Should().Be(expiresAt);
     }
 
     [Fact]
-    public async Task LoginAsync_WhenUserDoesNotExist_ReturnsUnauthorizedError()
+    public async Task LoginAsync_WhenUserDoesNotExist_ReturnsUnauthorizedErrorAsync()
     {
-        // Arrange
-        var email = "notfound@example.com";
-        var password = "Password123";
-        var command = new LoginCommand { Email = email, Password = password };
+        string email = "notfound@example.com";
+        string password = "Password123";
+
+        LoginCommand command = new()
+        {
+            Email = email,
+            Password = password
+        };
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserAuthRecord?)null);
 
-        // Act
-        var result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result =
+            await _sut.LoginAsync(command, CancellationToken.None);
 
-        // Assert
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle();
-        var error = result.Errors.First().Should().BeOfType<UnauthorizedError>().Subject;
+
+        UnauthorizedError error =
+            result.Errors.First().Should().BeOfType<UnauthorizedError>().Subject;
+
         error.Message.Should().Be("Invalid email or password.");
     }
 
     [Fact]
-    public async Task LoginAsync_WhenPasswordInvalid_ReturnsUnauthorizedError()
+    public async Task LoginAsync_WhenPasswordInvalid_ReturnsUnauthorizedErrorAsync()
     {
-        // Arrange
-        var email = "user@example.com";
-        var password = "InvalidPassword";
-        var passwordHash = "$2a$11$hashed_password";
-        var userRecord = new UserAuthRecord
+        string email = "user@example.com";
+        string password = "InvalidPassword";
+        string passwordHash = "$2a$11$hashed_password";
+
+        UserAuthRecord userRecord = new()
         {
             Id = Guid.NewGuid(),
             Email = email,
@@ -112,7 +121,11 @@ public class LoginHandlerTests
             OrganizationId = Guid.NewGuid()
         };
 
-        var command = new LoginCommand { Email = email, Password = password };
+        LoginCommand command = new()
+        {
+            Email = email,
+            Password = password
+        };
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
@@ -122,13 +135,15 @@ public class LoginHandlerTests
             .Setup(x => x.VerifyHashedPassword(passwordHash, password))
             .Returns(false);
 
-        // Act
-        var result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result =
+            await _sut.LoginAsync(command, CancellationToken.None);
 
-        // Assert
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle();
-        var error = result.Errors.First().Should().BeOfType<UnauthorizedError>().Subject;
+
+        UnauthorizedError error =
+            result.Errors.First().Should().BeOfType<UnauthorizedError>().Subject;
+
         error.Message.Should().Be("Invalid email or password.");
     }
 }

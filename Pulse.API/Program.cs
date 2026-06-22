@@ -7,7 +7,7 @@ using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDataAccess();
 builder.Services.AddBusinessLogic(builder.Configuration);
@@ -19,19 +19,19 @@ builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
 }
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
-var migrationLogger = app.Services
+ILogger migrationLogger = app.Services
     .GetRequiredService<ILoggerFactory>()
     .CreateLogger("DatabaseMigration");
 
-var seedDevData = app.Configuration.GetValue<bool>("Database:SeedDevData");
+bool seedDevData = app.Configuration.GetValue<bool>("Database:SeedDevData");
 
 await DatabaseMigration.RunWithRetryAsync(
     connectionString,
@@ -41,10 +41,7 @@ await DatabaseMigration.RunWithRetryAsync(
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference(options =>
-    {
-        options.WithTitle("Pulse API Documentation");
-    });
+    app.MapScalarApiReference(options => options.WithTitle("Pulse API Documentation"));
 }
 
 app.UseResponseLogging();

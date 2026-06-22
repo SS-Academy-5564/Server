@@ -1,3 +1,4 @@
+using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Pulse.API.Attributes;
@@ -28,7 +29,7 @@ public class LoginController : Controllers.PulseControllerBase
             Password = request.Password
         };
 
-        var result = await _handler.LoginAsync(command, ct);
+        Result<LoginResult> result = await _handler.LoginAsync(command, ct);
         return ToActionResult(result);
     }
 }
