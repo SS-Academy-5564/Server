@@ -1,7 +1,7 @@
 using System.Net.Mail;
 using Microsoft.Extensions.Options;
 
-namespace Pulse.BL.Feature.Email;
+namespace Pulse.BL.Features.Email;
 
 public class EmailOptionsValidator : IValidateOptions<EmailOptions>
 {

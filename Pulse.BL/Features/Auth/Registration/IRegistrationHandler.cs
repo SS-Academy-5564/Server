@@ -1,7 +1,7 @@
 using FluentResults;
 using Pulse.BL.Common.Handlers;
 
-namespace Pulse.BL.Feature.Auth.Registration;
+namespace Pulse.BL.Features.Auth.Registration;
 
 public interface IRegistrationHandler : IAsyncHandler
 {

@@ -8,7 +8,7 @@ using Pulse.DAL.Common.Repository;
 using Pulse.DAL.Exceptions;
 using Pulse.DAL.Queries.Users;
 
-namespace Pulse.BL.Feature.Auth.Registration;
+namespace Pulse.BL.Features.Auth.Registration;
 
 public class RegistrationHandler : IRegistrationHandler
 {
@@ -46,23 +46,21 @@ public class RegistrationHandler : IRegistrationHandler
 
         try
         {
-            await _unitOfWorkFactory.ExecuteAsync(async uow =>
-            {
-                Guid userId = await _userCommands.CreateUserAsync(new CreateUserInput
-                {
-                    Email = command.Email,
-                    FirstName = command.FirstName,
-                    LastName = command.LastName,
-                    PasswordHash = passwordHash
-                }, uow.Transaction, ct);
-
-                await _memberCommands.CreateMemberAsync(new CreateMemberInput
-                {
-                    UserId = userId,
-                    OrganizationId = SeededIds.Organizations.Default,
-                    RoleId = SeededIds.Roles.User
-                }, uow.Transaction, ct);
-            }, ct);
+            await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct);
+            Guid userId = await _userCommands.CreateUserAsync(new CreateUserInput
+            (
+                command.Email,
+                command.FirstName,
+                command.LastName,
+                passwordHash
+            ), uow, ct);
+            await _memberCommands.CreateMemberAsync(new CreateMemberInput
+            (
+                userId,
+                SeededIds.Organizations.Default,
+                SeededIds.Roles.User
+            ), uow, ct);
+            await uow.CommitAsync(ct);
         }
         catch (DuplicateKeyException ex)
         {

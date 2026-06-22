@@ -1,4 +1,4 @@
-namespace Pulse.BL.Feature.Email;
+namespace Pulse.BL.Features.Email;
 
 public record SendEmailDto(
     IEnumerable<string> To,

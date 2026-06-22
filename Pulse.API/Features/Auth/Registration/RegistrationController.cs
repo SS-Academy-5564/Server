@@ -2,9 +2,9 @@ using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Attributes;
 using Pulse.API.Controllers;
-using Pulse.BL.Feature.Auth.Registration;
+using Pulse.BL.Features.Auth.Registration;
 
-namespace Pulse.API.Feature.Auth.Registration;
+namespace Pulse.API.Features.Auth.Registration;
 
 [ApiController]
 [Route("api/auth")]
@@ -25,14 +25,9 @@ public class RegistrationController : PulseControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync([Validate] RegistrationRequest request, CancellationToken ct)
     {
-        var command = new RegistrationCommand
-        {
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Password = request.Password
-        };
+        RegistrationCommand command = new(request.Email, request.FirstName, request.LastName, request.Password);
         Result result = await _handler.RegisterAsync(command, ct);
+
         return ToActionResult(result);
     }
 }

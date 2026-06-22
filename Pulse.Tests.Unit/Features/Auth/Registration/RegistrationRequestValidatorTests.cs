@@ -1,7 +1,7 @@
 using FluentValidation.TestHelper;
-using Pulse.API.Feature.Auth.Registration;
+using Pulse.API.Features.Auth.Registration;
 
-namespace Pulse.Tests.Unit.Feature.Auth.Registration;
+namespace Pulse.Tests.Unit.Features.Auth.Registration;
 
 public class RegistrationRequestValidatorTests
 {
@@ -140,11 +140,11 @@ public class RegistrationRequestValidatorTests
         string email = "john.doe@example.com",
         string firstName = "John",
         string lastName = "Doe",
-        string password = "SecurePass1") => new()
-        {
-            Email = email,
-            FirstName = firstName,
-            LastName = lastName,
-            Password = password
-        };
+        string password = "SecurePass1") => new
+        (
+            email,
+            firstName,
+            lastName,
+            password
+        );
 }

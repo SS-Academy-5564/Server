@@ -5,6 +5,11 @@ namespace Pulse.DAL.Common.Repository;
 public interface IUnitOfWork : IAsyncDisposable
 {
     /// <summary>
+    /// The active database connection for this unit of work.
+    /// </summary>
+    IDbConnection Connection { get; }
+
+    /// <summary>
     /// The active database transaction for this unit of work.
     /// </summary>
     IDbTransaction Transaction { get; }

@@ -10,7 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddDataAccess(this IServiceCollection services)
     {
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
-        services.AddFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddCommandsAndQueriesFromAssembly(Assembly.GetExecutingAssembly());
         services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
         return services;

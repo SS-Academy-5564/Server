@@ -4,15 +4,17 @@ namespace Pulse.DAL.Common.Repository;
 
 public class UnitOfWork : IUnitOfWork
 {
-    private readonly IDbConnection _connection;
     private bool _committed;
+
+    /// <inheritdoc/>
+    public IDbConnection Connection { get; }
 
     /// <inheritdoc/>
     public IDbTransaction Transaction { get; }
 
     public UnitOfWork(IDbConnection connection, IDbTransaction transaction)
     {
-        _connection = connection;
+        Connection = connection;
         Transaction = transaction;
     }
 
@@ -35,7 +37,7 @@ public class UnitOfWork : IUnitOfWork
         }
 
         Transaction.Dispose();
-        _connection.Dispose();
+        Connection.Dispose();
         return ValueTask.CompletedTask;
     }
 }

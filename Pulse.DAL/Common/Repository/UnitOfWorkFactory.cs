@@ -20,12 +20,4 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
         IDbTransaction transaction = connection.BeginTransaction();
         return Task.FromResult<IUnitOfWork>(new UnitOfWork(connection, transaction));
     }
-
-    /// <inheritdoc/>
-    public async Task ExecuteAsync(Func<IUnitOfWork, Task> work, CancellationToken ct = default)
-    {
-        await using IUnitOfWork uow = await CreateAsync(ct);
-        await work(uow);
-        await uow.CommitAsync(ct);
-    }
 }

@@ -6,7 +6,7 @@ namespace Pulse.DAL.DependencyInjection;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddFromAssembly(this IServiceCollection services, Assembly assembly)
+    public static IServiceCollection AddCommandsAndQueriesFromAssembly(this IServiceCollection services, Assembly assembly)
     {
         IEnumerable<(Type Interface, Type Implementation)> registrations = assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract
