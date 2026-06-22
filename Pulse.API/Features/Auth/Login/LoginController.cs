@@ -20,7 +20,7 @@ public class LoginController : Controllers.PulseControllerBase
 
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.Login)]
-    public async Task<IActionResult> Login([Validate] LoginRequest request, CancellationToken ct)
+    public async Task<IActionResult> LoginAsync([Validate] LoginRequest request, CancellationToken ct)
     {
         var command = new LoginCommand
         {

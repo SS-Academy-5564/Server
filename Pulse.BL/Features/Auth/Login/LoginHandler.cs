@@ -29,23 +29,23 @@ public class LoginHandler : ILoginHandler
 
     public async Task<Result<LoginResult>> LoginAsync(LoginCommand command, CancellationToken ct)
     {
-        var user = await _userQueries.GetByEmailForAuthAsync(command.Email, ct);
+        UserAuthRecord? user = await _userQueries.GetByEmailForAuthAsync(command.Email, ct);
         if (user is null)
         {
             LogFailure("user not found", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
-        var passwordValid = _passwordHasher.VerifyHashedPassword(user.PasswordHash, command.Password);
+        bool passwordValid = _passwordHasher.VerifyHashedPassword(user.PasswordHash, command.Password);
         if (!passwordValid)
         {
             LogFailure("invalid password", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
-        var generatedToken = _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId);
+        GeneratedJwtToken generatedToken = _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId);
 
-        var loginResult = new LoginResult
+        LoginResult loginResult = new()
         {
             AccessToken = generatedToken.Token,
             ExpiresAt = generatedToken.ExpiresAt
