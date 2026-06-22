@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Errors;
 using Resend;
 
-namespace Pulse.BL.Feature.Email;
+namespace Pulse.BL.Features.Email;
 
 public class ResendEmailService : IEmailService
 {

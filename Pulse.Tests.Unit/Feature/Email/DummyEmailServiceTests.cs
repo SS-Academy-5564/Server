@@ -2,7 +2,7 @@ using FluentAssertions;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Pulse.BL.Feature.Email;
+using Pulse.BL.Features.Email;
 
 namespace Pulse.Tests.Unit.Feature.Email;
 

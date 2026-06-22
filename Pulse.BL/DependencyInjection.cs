@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Pulse.BL.Feature.Email;
+using Pulse.BL.Features.Email;
 
 namespace Pulse.BL;
 
