@@ -1,8 +1,8 @@
 using FluentAssertions;
 using Microsoft.Extensions.Options;
-using Pulse.BL.Feature.Email;
+using Pulse.BL.Features.Email;
 
-namespace Pulse.Tests.Unit.Feature.Email;
+namespace Pulse.Tests.Unit.Features.Email;
 
 public class EmailOptionsValidatorTests
 {

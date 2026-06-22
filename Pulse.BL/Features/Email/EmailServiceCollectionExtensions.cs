@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Resend;
 
-namespace Pulse.BL.Feature.Email;
+namespace Pulse.BL.Features.Email;
 
 public static class EmailServiceCollectionExtensions
 {
