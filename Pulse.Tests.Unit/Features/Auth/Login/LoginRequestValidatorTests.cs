@@ -17,11 +17,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenRequestValid_ReturnsNoErrorsAsync()
     {
         // Arrange
-        LoginRequest request = new()
-        {
-            Email = "user@example.com",
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new("user@example.com", "ValidPassword123");
 
         // Act
         ValidationResult result = await _sut.ValidateAsync(request);
@@ -35,11 +31,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenEmailEmpty_ReturnsErrorAsync()
     {
         // Arrange
-        LoginRequest request = new()
-        {
-            Email = string.Empty,
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new(string.Empty, "ValidPassword123");
 
         // Act
         ValidationResult result = await _sut.ValidateAsync(request);
@@ -53,11 +45,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenEmailInvalid_ReturnsErrorAsync()
     {
         // Arrange
-        LoginRequest request = new()
-        {
-            Email = "not-an-email",
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new("not-an-email", "ValidPassword123");
 
         // Act
         ValidationResult result = await _sut.ValidateAsync(request);
@@ -71,11 +59,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenEmailTooLong_ReturnsErrorAsync()
     {
         // Arrange
-        LoginRequest request = new()
-        {
-            Email = new string('a', 250) + "@example.com",
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new(new string('a', 250) + "@example.com", "ValidPassword123");
 
         // Act
         ValidationResult result = await _sut.ValidateAsync(request);
@@ -89,11 +73,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenPasswordEmpty_ReturnsErrorAsync()
     {
         // Arrange
-        LoginRequest request = new()
-        {
-            Email = "user@example.com",
-            Password = string.Empty
-        };
+        LoginRequest request = new("user@example.com", string.Empty);
 
         // Act
         ValidationResult result = await _sut.ValidateAsync(request);
@@ -107,11 +87,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenPasswordTooLong_ReturnsErrorAsync()
     {
         // Arrange
-        LoginRequest request = new()
-        {
-            Email = "user@example.com",
-            Password = new string('a', 257)
-        };
+        LoginRequest request = new("user@example.com", new string('a', 257));
 
         // Act
         ValidationResult result = await _sut.ValidateAsync(request);
@@ -125,11 +101,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenBothFieldsEmpty_ReturnsMultipleErrorsAsync()
     {
         // Arrange
-        LoginRequest request = new()
-        {
-            Email = string.Empty,
-            Password = string.Empty
-        };
+        LoginRequest request = new(string.Empty, string.Empty);
 
         // Act
         ValidationResult result = await _sut.ValidateAsync(request);
