@@ -5,6 +5,7 @@ using Moq;
 using Pulse.API.Features.Auth.Login;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Features.Auth.Login;
+using Pulse.API.Responses;
 
 namespace Pulse.Tests.Unit.Features.Auth.Login;
 
@@ -38,11 +39,16 @@ public class LoginControllerTests
         IActionResult result =
             await _sut.LoginAsync(request, CancellationToken.None);
 
-        OkObjectResult okResult =
-            result.Should().BeOfType<OkObjectResult>().Subject;
+        OkObjectResult okResult = result.Should().BeOfType<OkObjectResult>().Subject;
 
         okResult.StatusCode.Should().Be(200);
-        okResult.Value.Should().Be(loginResult);
+
+        ApiResponse<LoginResult> response =
+            okResult.Value.Should().BeOfType<ApiResponse<LoginResult>>().Subject;
+
+        response.Success.Should().BeTrue();
+        response.Errors.Should().BeEmpty();
+        response.Data.Should().BeEquivalentTo(loginResult);
     }
 
     [Fact]
@@ -62,17 +68,19 @@ public class LoginControllerTests
             await _sut.LoginAsync(request, CancellationToken.None);
 
         ObjectResult objectResult =
-            result.Should().BeOfType<ObjectResult>().Subject;
+            result.Should().BeAssignableTo<ObjectResult>().Subject;
 
         objectResult.StatusCode.Should().Be(401);
 
-        ProblemDetails problem =
-            objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
+        ApiResponse response =
+            objectResult.Value.Should().BeOfType<ApiResponse>().Subject;
 
-        problem.Detail.Should().Be("Invalid email or password.");
-        problem.Extensions["code"].Should().Be(AppError.Codes.Unauthorized);
+        response.Success.Should().BeFalse();
+        response.Errors.Should().NotBeEmpty();
+
+        response.Errors[0].Message.Should().Be("Invalid email or password.");
+        response.Errors[0].Code.Should().Be(AppError.Codes.Unauthorized);
     }
-
     [Fact]
     public async Task Login_WhenHandlerCalled_PassesCorrectCommandAsync()
     {

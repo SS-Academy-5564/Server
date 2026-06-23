@@ -1,6 +1,6 @@
 using FluentResults;
 using Pulse.BL.Common.Errors;
-using Pulse.BL.Common.Security;
+using Pulse.BL.Common.Security.Passwords;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Users;
 using Pulse.DAL.Common.Constants;
