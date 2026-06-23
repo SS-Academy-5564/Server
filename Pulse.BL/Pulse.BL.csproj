@@ -8,11 +8,12 @@
 </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Pulse.DAL\Pulse.DAL.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="FluentResults" Version="4.0.0" />
     <PackageReference Include="Resend" Version="0.5.1" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Pulse.DAL\Pulse.DAL.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

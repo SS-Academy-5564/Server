@@ -3,10 +3,10 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using Pulse.BL.Feature.Email;
+using Pulse.BL.Features.Email;
 using Resend;
 
-namespace Pulse.Tests.Unit.Feature.Email;
+namespace Pulse.Tests.Unit.Features.Email;
 
 public class ResendEmailServiceTests
 {

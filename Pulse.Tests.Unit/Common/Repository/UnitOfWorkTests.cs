@@ -1,0 +1,61 @@
+using System.Data;
+using Moq;
+using Pulse.DAL.Common.Repository;
+
+namespace Pulse.Tests.Unit.Common.Repository;
+
+public class UnitOfWorkTests
+{
+    private readonly Mock<IDbConnection> _connection = new();
+    private readonly Mock<IDbTransaction> _transaction = new();
+    private readonly UnitOfWork _uow;
+
+    public UnitOfWorkTests()
+    {
+        _uow = new UnitOfWork(_connection.Object, _transaction.Object);
+    }
+
+    [Fact]
+    public async Task CommitAsync_CommitsTransaction()
+    {
+        await _uow.CommitAsync();
+
+        _transaction.Verify(t => t.Commit(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_WhenNotCommitted_RollsBackAsync()
+    {
+        await _uow.DisposeAsync();
+
+        _transaction.Verify(t => t.Rollback(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_WhenCommitted_DoesNotRollBack()
+    {
+        await _uow.CommitAsync();
+        await _uow.DisposeAsync();
+
+        _transaction.Verify(t => t.Rollback(), Times.Never);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_AlwaysDisposesTransactionAndConnection()
+    {
+        await _uow.DisposeAsync();
+
+        _transaction.Verify(t => t.Dispose(), Times.Once);
+        _connection.Verify(c => c.Dispose(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_AfterCommit_StillDisposesTransactionAndConnection()
+    {
+        await _uow.CommitAsync();
+        await _uow.DisposeAsync();
+
+        _transaction.Verify(t => t.Dispose(), Times.Once);
+        _connection.Verify(c => c.Dispose(), Times.Once);
+    }
+}

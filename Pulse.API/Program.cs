@@ -9,15 +9,27 @@ using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDataAccess();
-builder.Services.AddBusinessLogic(builder.Configuration);
+builder.Services.AddDataAccess()
+    .AddBusinessLogic(builder.Configuration);
+
 builder.Services.AddValidatorsFromAssembly(typeof(BLAssemblyMarker).Assembly, includeInternalTypes: true);
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
 builder.Services.AddControllers();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -31,13 +43,11 @@ ILogger migrationLogger = app.Services
     .GetRequiredService<ILoggerFactory>()
     .CreateLogger("DatabaseMigration");
 
-bool seedDevData = app.Configuration.GetValue<bool>("Database:SeedDevData");
+bool seedDevData = builder.Configuration.GetValue<bool>("Database:SeedDevData");
 
-await DatabaseMigration.RunWithRetryAsync(
-    connectionString,
-    migrationLogger,
-    seedDevData);
+await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, seedDevData);
 
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -47,6 +57,7 @@ if (app.Environment.IsDevelopment())
 app.UseResponseLogging();
 app.UseExceptionHandling();
 app.UseRouting();
+app.UseCors("AngularPolicy");
 app.UseRateLimiter();
 
 app.UseAuthentication();

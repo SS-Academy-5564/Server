@@ -1,4 +1,3 @@
-
 using System.Data;
 using Dapper;
 using Pulse.DAL.Connection;
@@ -14,6 +13,7 @@ public class UserQueries : IUserQueries
         _connectionFactory = connectionFactory;
     }
 
+    /// <inheritdoc/>
     public async Task<bool> EmailExistsAsync(string email, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();

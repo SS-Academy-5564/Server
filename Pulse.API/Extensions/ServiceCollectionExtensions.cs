@@ -3,6 +3,8 @@ using System.Threading.RateLimiting;
 using Microsoft.OpenApi;
 using Pulse.API.Constants;
 using Pulse.API.Documentation;
+using Pulse.API.Responses;
+using Pulse.BL.Common.Errors;
 
 namespace Pulse.API.Extensions;
 
@@ -58,10 +60,19 @@ public static class ServiceCollectionExtensions
                         httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
                     }
 
-                    await httpContext.Response.WriteAsJsonAsync(new
+                    await httpContext.Response.WriteAsJsonAsync(new ApiResponse
                     {
-                        Error = "Too many requests",
-                        RetryAfter = retryAfterSeconds
+                        Success = false,
+                        Errors =
+                        [
+                            new ApiError
+                            {
+                                Code = AppError.Codes.TooManyRequests,
+                                Message = retryAfterSeconds > 0
+                                    ? $"Too many requests. Retry after {retryAfterSeconds:0} second(s)"
+                                    : "Too many requests."
+                            }
+                        ]
                     }, cancellationToken);
                 };
             });
