@@ -21,6 +21,16 @@ builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
@@ -47,6 +57,7 @@ if (app.Environment.IsDevelopment())
 app.UseResponseLogging();
 app.UseExceptionHandling();
 app.UseRouting();
+app.UseCors("AngularPolicy");
 app.UseRateLimiter();
 
 app.UseAuthentication();
