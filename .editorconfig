@@ -236,6 +236,10 @@ dotnet_code_quality.CA2007.output_kind = DynamicallyLinkedLibrary
 dotnet_diagnostic.CA2016.severity = warning
 dotnet_diagnostic.CA1849.severity = warning
 
+# Test projects - async suffix rule doesn't apply to test method names
+[Pulse.Tests*/**/*.cs]
+dotnet_naming_rule.async_methods_end_in_async.severity = none
+
 # Generated code
 [*{_AssemblyInfo.cs,.notsupported.cs,AsmOffsets.cs}]
 generated_code = true
