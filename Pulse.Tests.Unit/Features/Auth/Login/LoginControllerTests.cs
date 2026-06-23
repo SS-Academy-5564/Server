@@ -2,10 +2,11 @@ using FluentAssertions;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+
 using Pulse.API.Features.Auth.Login;
+using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Features.Auth.Login;
-using Pulse.API.Responses;
 
 namespace Pulse.Tests.Unit.Features.Auth.Login;
 
