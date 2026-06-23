@@ -18,6 +18,7 @@ public abstract class AppError : Error
         public const string Unauthorized = "UNAUTHORIZED";
         public const string Forbidden = "FORBIDDEN";
         public const string Conflict = "CONFLICT";
+        public const string TooManyRequests = "TOO_MANY_REQUESTS";
         public const string Internal = "INTERNAL_ERROR";
     }
 }
