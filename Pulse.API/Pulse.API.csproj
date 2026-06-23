@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Pulse.BL\Pulse.BL.csproj"/>
+    <ProjectReference Include="..\Pulse.BL\Pulse.BL.csproj" />
   </ItemGroup>
 
 </Project>
