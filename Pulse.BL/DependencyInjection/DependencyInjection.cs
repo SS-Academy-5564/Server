@@ -16,11 +16,11 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<IPasswordHasher, PasswordHasher>();
         services.AddTransient<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services
             .AddOptions<JwtOptions>()
             .Bind(configuration.GetRequiredSection(JwtOptions.SectionName))
             .ValidateOnStart();
-        services.AddSingleton<IValidateOptions<JwtOptions>, JwtOptionsValidator>();
         services.AddEmailing(configuration);
 
         return services;

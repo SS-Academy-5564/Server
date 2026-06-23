@@ -19,7 +19,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 
-string connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
