@@ -7,15 +7,6 @@ internal static class ResultMapper
 {
     internal static (int StatusCode, object Body) Map(ResultBase result)
     {
-        if (result.Errors.Count == 0)
-        {
-            return BuildErrorResponse(
-                500,
-                AppError.Codes.Internal,
-                "An unexpected error occurred"
-            );
-        }
-
         if (result.HasError<ForbiddenError>())
         {
             ForbiddenError error = result.Errors.OfType<ForbiddenError>().First();
@@ -52,7 +43,7 @@ internal static class ResultMapper
             return BuildErrorResponse(500, error.Code, error.Message);
         }
 
-        return BuildErrorResponse(500, AppError.Codes.Internal, "An unexpected error occurred");
+        throw new InvalidOperationException("Unhandled error type in ResultMapper");
     }
 
     private static (int StatusCode, object Body) BuildValidationError(ValidationError error)
