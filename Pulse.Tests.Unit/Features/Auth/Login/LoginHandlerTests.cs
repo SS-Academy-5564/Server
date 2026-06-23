@@ -42,20 +42,14 @@ public class LoginHandlerTests
         string accessToken = "jwt_token_here";
         DateTimeOffset expiresAt = DateTimeOffset.UtcNow.AddHours(1);
 
-        UserAuthRecord userRecord = new()
-        {
-            Id = userId,
-            Email = email,
-            PasswordHash = passwordHash,
-            RoleName = roleName,
-            OrganizationId = organizationId
-        };
+        UserAuthRecord userRecord = new(
+            userId,
+            email,
+            passwordHash,
+            organizationId,
+            roleName);
 
-        LoginCommand command = new()
-        {
-            Email = email,
-            Password = password
-        };
+        LoginCommand command = new(email, password);
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
@@ -82,12 +76,7 @@ public class LoginHandlerTests
     {
         string email = "notfound@example.com";
         string password = "Password123";
-
-        LoginCommand command = new()
-        {
-            Email = email,
-            Password = password
-        };
+        LoginCommand command = new(email, password);
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
@@ -111,21 +100,16 @@ public class LoginHandlerTests
         string email = "user@example.com";
         string password = "InvalidPassword";
         string passwordHash = "$2a$11$hashed_password";
+        Guid organizationId = Guid.NewGuid();
 
-        UserAuthRecord userRecord = new()
-        {
-            Id = Guid.NewGuid(),
-            Email = email,
-            PasswordHash = passwordHash,
-            RoleName = "User",
-            OrganizationId = Guid.NewGuid()
-        };
+        UserAuthRecord userRecord = new(
+            Guid.NewGuid(),
+            email,
+            passwordHash,
+            organizationId,
+            "User");
 
-        LoginCommand command = new()
-        {
-            Email = email,
-            Password = password
-        };
+        LoginCommand command = new(email, password);
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))

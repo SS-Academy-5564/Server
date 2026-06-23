@@ -23,12 +23,7 @@ public class LoginController : Controllers.PulseControllerBase
     [EnableRateLimiting(RateLimitPolicies.Login)]
     public async Task<IActionResult> LoginAsync([Validate] LoginRequest request, CancellationToken ct)
     {
-        var command = new LoginCommand
-        {
-            Email = request.Email,
-            Password = request.Password
-        };
-
+        LoginCommand command = new(request.Email, request.Password);
         Result<LoginResult> result = await _handler.LoginAsync(command, ct);
         return ToActionResult(result);
     }

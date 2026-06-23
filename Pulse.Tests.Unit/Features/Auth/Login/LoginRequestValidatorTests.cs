@@ -17,7 +17,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenRequestValid_ReturnsNoErrorsAsync()
     {
         // Arrange
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = "user@example.com",
             Password = "ValidPassword123"
@@ -35,7 +35,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenEmailEmpty_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = string.Empty,
             Password = "ValidPassword123"
@@ -53,7 +53,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenEmailInvalid_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = "not-an-email",
             Password = "ValidPassword123"
@@ -71,7 +71,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenEmailTooLong_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = new string('a', 250) + "@example.com",
             Password = "ValidPassword123"
@@ -89,7 +89,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenPasswordEmpty_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = "user@example.com",
             Password = string.Empty
@@ -107,7 +107,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenPasswordTooLong_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = "user@example.com",
             Password = new string('a', 257)
@@ -125,7 +125,7 @@ public class LoginRequestValidatorTests
     public async Task Validate_WhenBothFieldsEmpty_ReturnsMultipleErrorsAsync()
     {
         // Arrange
-        var request = new LoginRequest
+        LoginRequest request = new()
         {
             Email = string.Empty,
             Password = string.Empty

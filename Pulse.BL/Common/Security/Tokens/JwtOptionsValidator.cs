@@ -8,7 +8,7 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        var errors = new List<string>();
+        List<string> errors = new();
 
         if (string.IsNullOrWhiteSpace(options.Issuer))
         {

@@ -28,11 +28,8 @@ public class LoginControllerTests
             Password = "ValidPassword123"
         };
 
-        LoginResult loginResult = new()
-        {
-            AccessToken = "jwt_token_here",
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(1)
-        };
+        DateTimeOffset expiresAt = DateTimeOffset.UtcNow.AddHours(1);
+        LoginResult loginResult = new("jwt_token_here", expiresAt);
 
         _handlerMock
             .Setup(x => x.LoginAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
@@ -85,11 +82,7 @@ public class LoginControllerTests
             Password = "Password123"
         };
 
-        LoginResult loginResult = new()
-        {
-            AccessToken = "token",
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(1)
-        };
+        LoginResult loginResult = new("token", DateTimeOffset.UtcNow.AddHours(1));
 
         _handlerMock
             .Setup(x => x.LoginAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))

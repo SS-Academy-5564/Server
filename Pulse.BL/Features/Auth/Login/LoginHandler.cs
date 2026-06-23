@@ -45,13 +45,7 @@ public class LoginHandler : ILoginHandler
 
         GeneratedJwtToken generatedToken = _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId);
 
-        LoginResult loginResult = new()
-        {
-            AccessToken = generatedToken.Token,
-            ExpiresAt = generatedToken.ExpiresAt
-        };
-
-        return Result.Ok(loginResult);
+        return Result.Ok(new LoginResult(generatedToken.Token, generatedToken.ExpiresAt));
     }
 
     private void LogFailure(string reason, string email)
