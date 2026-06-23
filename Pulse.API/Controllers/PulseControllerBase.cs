@@ -8,10 +8,6 @@ namespace Pulse.API.Controllers;
 [AutoValidate]
 [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
 [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status401Unauthorized)]
-[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status403Forbidden)]
-[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
-[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status409Conflict)]
-[ProducesResponseType(typeof(ApiResponse), StatusCodes.Status429TooManyRequests)]
 [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
 public abstract class PulseControllerBase : ControllerBase
 {
