@@ -6,10 +6,10 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Pulse.API.Constants;
-using Pulse.BL.Common.Security.Tokens;
 using Pulse.API.Documentation;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Security.Tokens;
 
 namespace Pulse.API.Extensions;
 
@@ -29,7 +29,7 @@ public static class ServiceCollectionExtensions
             services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
                 .Configure<IOptions<JwtOptions>>((bearerOptions, jwtOptionsAccessor) =>
                 {
-                    var jwtOptions = jwtOptionsAccessor.Value;
+                    JwtOptions jwtOptions = jwtOptionsAccessor.Value;
                     bearerOptions.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuer = true,
