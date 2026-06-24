@@ -2,7 +2,7 @@ using FluentAssertions;
 using FluentResults;
 using Moq;
 using Pulse.BL.Common.Errors;
-using Pulse.BL.Common.Security;
+using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Features.Auth.Registration;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Users;

@@ -2,12 +2,11 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="FluentResults" Version="4.0.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />  
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
     <PackageReference Include="Resend" Version="0.5.1" />
-  </ItemGroup>
+</ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Pulse.DAL\Pulse.DAL.csproj" />

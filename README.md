@@ -87,6 +87,15 @@ dotnet user-secrets set "Email:ApiKey" "re_xxxx" --project Pulse.API
 
 Environment variable equivalent: `Email__ApiKey`, `Email__Provider`.
 
+### JWT Secret Configuration
+
+The JWT signing key must not be committed to the repository. Set it via environment variables or User Secrets instead:
+
+```bash
+dotnet user-secrets set "Jwt:SecretKey" "your-long-secret-key" --project Pulse.API
+```
+
+Environment variable equivalent: `Jwt__SecretKey`.
 
 ## Getting Started
 
