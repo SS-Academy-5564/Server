@@ -1,4 +1,5 @@
 using FluentValidation;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Pulse.API.Extensions;
 using Pulse.BL;
 using Pulse.BL.DependencyInjection;
@@ -6,44 +7,67 @@ using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDataAccess();
-builder.Services.AddBusinessLogic(builder.Configuration);
-builder.Services.AddValidatorsFromAssembly(typeof(AssemblyMarker).Assembly, includeInternalTypes: true);
+builder.Services.AddDataAccess()
+    .AddBusinessLogic(builder.Configuration);
+
+builder.Services.AddValidatorsFromAssembly(typeof(BLAssemblyMarker).Assembly, includeInternalTypes: true);
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
+
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+builder.Services.AddAuthorization();
+builder.Services.AddNativeOpenApi();
 builder.Services.AddLoginRateLimiter(builder.Configuration);
 builder.Services.AddJwtAuthentication();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularPolicy", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
 }
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
-var migrationLogger = app.Services
+ILogger migrationLogger = app.Services
     .GetRequiredService<ILoggerFactory>()
     .CreateLogger("DatabaseMigration");
-var seedDevData = app.Configuration.GetValue<bool>("Database:SeedDevData");
+
+bool seedDevData = builder.Configuration.GetValue<bool>("Database:SeedDevData");
+
 await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, seedDevData);
 
+// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options => options.WithTitle("Pulse API Documentation"));
 }
 
-app.UseExceptionHandling();
 app.UseResponseLogging();
+app.UseExceptionHandling();
+app.UseRouting();
+app.UseCors("AngularPolicy");
 app.UseRateLimiter();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
 
-public partial class Program { }
+public partial class Program
+{
+}

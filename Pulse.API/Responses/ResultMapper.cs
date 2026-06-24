@@ -1,5 +1,4 @@
 using FluentResults;
-using Microsoft.AspNetCore.Mvc;
 using Pulse.BL.Common.Errors;
 
 namespace Pulse.API.Responses;
@@ -8,70 +7,90 @@ internal static class ResultMapper
 {
     internal static (int StatusCode, object Body) Map(ResultBase result)
     {
-        if (result.Errors.Count == 0)
-            return (500, BuildProblemDetails(500, "Internal Server Error", "Unknown error", AppError.Codes.Internal));
-
         if (result.HasError<ForbiddenError>())
         {
-            var error = result.Errors.OfType<ForbiddenError>().First();
-            return (403, BuildProblemDetails(403, "Forbidden", error.Message, error.Code));
+            ForbiddenError error = result.Errors.OfType<ForbiddenError>().First();
+            return BuildErrorResponse(403, error.Code, error.Message);
         }
 
         if (result.HasError<UnauthorizedError>())
         {
-            var error = result.Errors.OfType<UnauthorizedError>().First();
-            return (401, BuildProblemDetails(401, "Unauthorized", error.Message, error.Code));
+            UnauthorizedError error = result.Errors.OfType<UnauthorizedError>().First();
+            return BuildErrorResponse(401, error.Code, error.Message);
         }
 
         if (result.HasError<ConflictError>())
         {
-            var error = result.Errors.OfType<ConflictError>().First();
-            return (409, BuildProblemDetails(409, "Conflict", error.Message, error.Code));
+            ConflictError error = result.Errors.OfType<ConflictError>().First();
+            return BuildErrorResponse(409, error.Code, error.Message);
         }
 
         if (result.HasError<NotFoundError>())
         {
-            var error = result.Errors.OfType<NotFoundError>().First();
-            return (404, BuildProblemDetails(404, "Not Found", error.Message, error.Code));
+            NotFoundError error = result.Errors.OfType<NotFoundError>().First();
+            return BuildErrorResponse(404, error.Code, error.Message);
         }
 
         if (result.HasError<ValidationError>())
         {
-            var error = result.Errors.OfType<ValidationError>().First();
-            return (400, BuildValidationProblemDetails(error));
+            ValidationError error = result.Errors.OfType<ValidationError>().First();
+            return BuildValidationError(error);
         }
 
         if (result.HasError<InternalError>())
         {
-            var error = result.Errors.OfType<InternalError>().First();
-            return (500, BuildProblemDetails(500, "Internal Server Error", error.Message, error.Code));
+            InternalError error = result.Errors.OfType<InternalError>().First();
+            return BuildErrorResponse(500, error.Code, error.Message);
         }
 
-        return (500, BuildProblemDetails(500, "Internal Server Error", "Unexpected error", AppError.Codes.Internal));
+        throw new InvalidOperationException("Unhandled error type in ResultMapper");
     }
 
-    private static ValidationProblemDetails BuildValidationProblemDetails(ValidationError error)
+    private static (int StatusCode, object Body) BuildValidationError(ValidationError error)
     {
-        var errors = error.FieldErrors.Count > 0
-            ? new Dictionary<string, string[]>(error.FieldErrors)
-            : new Dictionary<string, string[]> { [string.Empty] = [error.Message] };
-
-        var pd = new ValidationProblemDetails(errors)
+        if (error.FieldErrors.Count == 0)
         {
-            Status = 400,
-            Title = "Validation Error",
-            Detail = "One or more validation errors occurred"
-        };
+            return BuildErrorResponse(400, error.Code, error.Message);
+        }
 
-        pd.Extensions["code"] = error.Code;
+        ApiError[] fieldErrors = error.FieldErrors
+            .Where(field => field.Value != null && field.Value.Any())
+            .SelectMany(field => field.Value.Select(message => new ApiError
+            {
+                Code = error.Code,
+                Field = field.Key,
+                Message = message
+            }))
+            .ToArray();
 
-        return pd;
+        if (fieldErrors.Length == 0)
+        {
+            fieldErrors = new[]
+            {
+                new ApiError { Code = error.Code, Message = "An unexpected validation error occurred" }
+            };
+        }
+
+        return (400, new ApiResponse
+        {
+            Success = false,
+            Errors = fieldErrors
+        });
     }
 
-    private static ProblemDetails BuildProblemDetails(int status, string title, string detail, string code)
+    private static (int StatusCode, object Body) BuildErrorResponse(int statusCode, string code, string message)
     {
-        var pd = new ProblemDetails { Status = status, Title = title, Detail = detail };
-        pd.Extensions["code"] = code;
-        return pd;
+        return (statusCode, new ApiResponse
+        {
+            Success = false,
+            Errors =
+            [
+                new ApiError
+                {
+                    Code = code,
+                    Message = message
+                }
+            ]
+        });
     }
 }

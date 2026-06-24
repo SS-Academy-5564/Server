@@ -1,5 +1,6 @@
 using System.Reflection;
 using DbUp;
+using DbUp.Engine;
 using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Exceptions;
 
@@ -11,7 +12,7 @@ public static class DatabaseInitializer
     {
         EnsureDatabase.For.SqlDatabase(connectionString);
 
-        foreach (var folder in MigrationConstants.Folders)
+        foreach (string folder in MigrationConstants.Folders)
         {
             RunScripts(connectionString, folder);
         }
@@ -26,24 +27,28 @@ public static class DatabaseInitializer
         string connectionString,
         string folderFilter)
     {
-        var upgrader = DeployChanges.To
+        UpgradeEngine upgrader = DeployChanges.To
             .SqlDatabase(connectionString)
             .WithScriptsEmbeddedInAssembly(
                 Assembly.GetExecutingAssembly(),
                 scriptName =>
                 {
                     if (!scriptName.Contains(folderFilter, StringComparison.OrdinalIgnoreCase))
+                    {
                         return false;
+                    }
 
                     if (folderFilter == MigrationConstants.DevSeedFolder)
+                    {
                         return true;
+                    }
 
                     return !scriptName.Contains(MigrationConstants.DevSeedFolder, StringComparison.OrdinalIgnoreCase);
                 })
             .LogToConsole()
             .Build();
 
-        var result = upgrader.PerformUpgrade();
+        DatabaseUpgradeResult result = upgrader.PerformUpgrade();
 
         if (!result.Successful)
         {

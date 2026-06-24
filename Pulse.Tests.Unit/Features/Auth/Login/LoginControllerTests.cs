@@ -3,6 +3,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Pulse.API.Features.Auth.Login;
+using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Features.Auth.Login;
 
@@ -15,92 +16,81 @@ public class LoginControllerTests
 
     public LoginControllerTests()
     {
-        _handlerMock = new Mock<ILoginHandler>();
+        _handlerMock = new();
         _sut = new LoginController(_handlerMock.Object);
     }
 
     [Fact]
-    public async Task Login_WhenSuccess_Returns200()
+    public async Task Login_WhenSuccess_Returns200Async()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = "user@example.com",
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new("user@example.com", "ValidPassword123");
 
-        var loginResult = new LoginResult
-        {
-            AccessToken = "jwt_token_here",
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(1)
-        };
+        DateTimeOffset expiresAt = DateTimeOffset.UtcNow.AddHours(1);
+        LoginResult loginResult = new("jwt_token_here", expiresAt);
 
         _handlerMock
             .Setup(x => x.LoginAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(loginResult));
 
         // Act
-        var result = await _sut.Login(request, CancellationToken.None);
+        IActionResult result = await _sut.LoginAsync(request, CancellationToken.None);
 
         // Assert
-        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        OkObjectResult okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.StatusCode.Should().Be(200);
-        okResult.Value.Should().Be(loginResult);
+
+        ApiResponse<LoginResult> response = okResult.Value.Should().BeOfType<ApiResponse<LoginResult>>().Subject;
+        response.Success.Should().BeTrue();
+        response.Errors.Should().BeEmpty();
+        response.Data.Should().BeEquivalentTo(loginResult);
     }
 
     [Fact]
-    public async Task Login_WhenUnauthorized_Returns401()
+    public async Task Login_WhenUnauthorized_Returns401Async()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = "invalid@example.com",
-            Password = "InvalidPassword"
-        };
+        LoginRequest request = new("invalid@example.com", "InvalidPassword");
 
         _handlerMock
             .Setup(x => x.LoginAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail(new UnauthorizedError("Invalid email or password.")));
 
         // Act
-        var result = await _sut.Login(request, CancellationToken.None);
+        IActionResult result = await _sut.LoginAsync(request, CancellationToken.None);
 
         // Assert
-        var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
+        ObjectResult objectResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(401);
 
-        var problem = objectResult.Value.Should().BeOfType<ProblemDetails>().Subject;
-        problem.Detail.Should().Be("Invalid email or password.");
-        problem.Extensions["code"].Should().Be(AppError.Codes.Unauthorized);
+        ApiResponse response = objectResult.Value.Should().BeOfType<ApiResponse>().Subject;
+        response.Success.Should().BeFalse();
+        response.Errors.Should().NotBeEmpty();
+        response.Errors[0].Message.Should().Be("Invalid email or password.");
+        response.Errors[0].Code.Should().Be(AppError.Codes.Unauthorized);
     }
 
     [Fact]
-    public async Task Login_WhenHandlerCalled_PassesCorrectCommand()
+    public async Task Login_WhenHandlerCalled_PassesCorrectCommandAsync()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = "user@example.com",
-            Password = "Password123"
-        };
+        LoginRequest request = new("user@example.com", "Password123");
 
-        var loginResult = new LoginResult
-        {
-            AccessToken = "token",
-            ExpiresAt = DateTimeOffset.UtcNow.AddHours(1)
-        };
+        LoginResult loginResult = new("token", DateTimeOffset.UtcNow.AddHours(1));
 
         _handlerMock
             .Setup(x => x.LoginAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(loginResult));
 
         // Act
-        await _sut.Login(request, CancellationToken.None);
+        await _sut.LoginAsync(request, CancellationToken.None);
 
         // Assert
         _handlerMock.Verify(
             x => x.LoginAsync(
-                It.Is<LoginCommand>(cmd => cmd.Email == request.Email && cmd.Password == request.Password),
+                It.Is<LoginCommand>(cmd =>
+                    cmd.Email == request.Email &&
+                    cmd.Password == request.Password),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

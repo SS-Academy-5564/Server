@@ -2,13 +2,20 @@ using Microsoft.Extensions.Options;
 
 namespace Pulse.BL.Common.Security.Tokens;
 
+/// <summary>
+/// Validates JWT options values.
+/// </summary>
 public class JwtOptionsValidator : IValidateOptions<JwtOptions>
 {
+    /// <summary>
+    /// Validates the JWT options instance.
+    /// </summary>
+    /// <param name="name">The options name.</param>
+    /// <param name="options">The options to validate.</param>
+    /// <returns>The validation result.</returns>
     public ValidateOptionsResult Validate(string? name, JwtOptions options)
     {
-        ArgumentNullException.ThrowIfNull(options);
-
-        var errors = new List<string>();
+        List<string> errors = new();
 
         if (string.IsNullOrWhiteSpace(options.Issuer))
         {

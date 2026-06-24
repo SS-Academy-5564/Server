@@ -2,7 +2,7 @@ using System.Text.Json;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 
-namespace Pulse.BL.Feature.Email;
+namespace Pulse.BL.Features.Email;
 
 public class DummyEmailService : IEmailService
 {

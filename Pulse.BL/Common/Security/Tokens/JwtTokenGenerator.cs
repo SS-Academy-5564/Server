@@ -14,34 +14,32 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     private readonly byte[] _secretKeyBytes;
     private readonly TimeProvider _timeProvider;
 
+    /// <inheritdoc/>
     public JwtTokenGenerator(IOptions<JwtOptions> options, TimeProvider timeProvider)
     {
-        _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-
-        if (string.IsNullOrWhiteSpace(_options.SecretKey))
-            throw new InvalidOperationException("JWT SecretKey must be configured.");
-
+        _options = options.Value;
+        _timeProvider = timeProvider;
         _secretKeyBytes = Encoding.UTF8.GetBytes(_options.SecretKey);
     }
 
-    public string GenerateToken(Guid userId, Guid roleId, Guid organizationId, out DateTimeOffset expiresAt)
+    /// <inheritdoc/>
+    public GeneratedJwtToken GenerateToken(Guid userId, string roleName, Guid organizationId)
     {
-        var now = _timeProvider.GetUtcNow();
-        expiresAt = now.AddMinutes(_options.ExpirationMinutes);
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+        DateTimeOffset expiresAt = now.AddMinutes(_options.ExpirationMinutes);
 
-        var claims = new[]
+        Claim[] claims =
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim("roleId", roleId.ToString()),
-            new Claim("orgId", organizationId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtClaimNames.Role, roleName),
+            new(JwtClaimNames.OrganizationId, organizationId.ToString()),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        var key = new SymmetricSecurityKey(_secretKeyBytes);
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        SymmetricSecurityKey key = new(_secretKeyBytes);
+        SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);
 
-        var tokenDescriptor = new SecurityTokenDescriptor
+        SecurityTokenDescriptor tokenDescriptor = new()
         {
             Subject = new ClaimsIdentity(claims),
             Issuer = _options.Issuer,
@@ -51,6 +49,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             SigningCredentials = credentials
         };
 
-        return TokenHandler.CreateToken(tokenDescriptor);
+        return new GeneratedJwtToken(
+            TokenHandler.CreateToken(tokenDescriptor),
+            expiresAt
+        );
     }
 }

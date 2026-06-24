@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Resend;
 
-namespace Pulse.BL.Feature.Email;
+namespace Pulse.BL.Features.Email;
 
 public static class EmailServiceCollectionExtensions
 {
@@ -31,10 +31,7 @@ public static class EmailServiceCollectionExtensions
             case EmailProvider.Resend:
                 services.AddHttpClient<ResendClient>();
 
-                services.Configure<ResendClientOptions>(options =>
-                {
-                    options.ApiToken = emailOptions.ApiKey;
-                });
+                services.Configure<ResendClientOptions>(options => options.ApiToken = emailOptions.ApiKey);
 
                 services.AddTransient<IResend, ResendClient>();
                 services.AddScoped<IEmailService, ResendEmailService>();

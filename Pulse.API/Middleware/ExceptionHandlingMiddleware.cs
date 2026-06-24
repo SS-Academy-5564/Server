@@ -1,6 +1,6 @@
 using System.Text.Json;
 using FluentValidation;
-using Microsoft.AspNetCore.Mvc;
+using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
 
 namespace Pulse.API.Middleware;
@@ -31,7 +31,9 @@ public class ExceptionHandlingMiddleware
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
 
             if (context.Response.HasStarted)
+            {
                 throw;
+            }
 
             await HandleExceptionAsync(context, ex);
         }
@@ -39,7 +41,7 @@ public class ExceptionHandlingMiddleware
 
     private static async Task HandleExceptionAsync(HttpContext context, Exception ex)
     {
-        var (status, problem) = ex switch
+        (int status, ApiResponse body) = ex switch
         {
             ValidationException ve => MapValidation(ve),
             UnauthorizedAccessException => MapUnauthorized(),
@@ -47,46 +49,53 @@ public class ExceptionHandlingMiddleware
         };
 
         context.Response.StatusCode = status;
-        context.Response.ContentType = "application/problem+json";
+        context.Response.ContentType = "application/json";
 
-        var payload = JsonSerializer.Serialize((object)problem, problem.GetType(), JsonOptions);
+        string payload = JsonSerializer.Serialize((object)body, body.GetType(), JsonOptions);
         await context.Response.WriteAsync(payload);
     }
 
-    private static (int, ProblemDetails) MapValidation(ValidationException ve)
+    private static (int, ApiResponse) MapValidation(ValidationException ve)
     {
-        var errors = ve.Errors
-            .GroupBy(e => e.PropertyName)
-            .ToDictionary(
-                g => g.Key,
-                g => g.Select(e => e.ErrorMessage).ToArray()
-            );
+        ApiError[] errors = ve.Errors
+            .Select(error => new ApiError
+            {
+                Code = AppError.Codes.Validation,
+                Field = error.PropertyName,
+                Message = error.ErrorMessage
+            })
+            .ToArray();
 
-        var pd = new ValidationProblemDetails(errors)
+        return (400, new ApiResponse
         {
-            Status = 400,
-            Title = "Validation Error",
-            Detail = "One or more validation errors occurred"
-        };
-
-        pd.Extensions["code"] = AppError.Codes.Validation;
-
-        return (400, pd);
+            Success = false,
+            Errors = errors
+        });
     }
 
-    private static (int, ProblemDetails) MapUnauthorized() => (401, new ProblemDetails
+    private static (int, ApiResponse) MapUnauthorized() => (401, new ApiResponse
     {
-        Status = 401,
-        Title = "Unauthorized",
-        Detail = "Unauthorized",
-        Extensions = { ["code"] = AppError.Codes.Unauthorized }
+        Success = false,
+        Errors =
+        [
+            new ApiError
+            {
+                Code = AppError.Codes.Unauthorized,
+                Message = "Unauthorized"
+            }
+        ]
     });
 
-    private static (int, ProblemDetails) MapInternal() => (500, new ProblemDetails
+    private static (int, ApiResponse) MapInternal() => (500, new ApiResponse
     {
-        Status = 500,
-        Title = "Internal Server Error",
-        Detail = "An unexpected error occurred",
-        Extensions = { ["code"] = AppError.Codes.Internal }
+        Success = false,
+        Errors =
+        [
+            new ApiError
+            {
+                Code = AppError.Codes.Internal,
+                Message = "An unexpected error occurred"
+            }
+        ]
     });
 }

@@ -17,7 +17,7 @@ public class JwtOptionsValidatorTests
     public void Validate_WhenAllRequiredFieldsSet_ReturnsSuccess()
     {
         // Arrange
-        var options = new JwtOptions
+        JwtOptions options = new()
         {
             Issuer = "https://pulse.local",
             Audience = "https://pulse.local",
@@ -26,7 +26,7 @@ public class JwtOptionsValidatorTests
         };
 
         // Act
-        var result = _sut.Validate(null, options);
+        ValidateOptionsResult result = _sut.Validate(null, options);
 
         // Assert
         result.Succeeded.Should().BeTrue();
@@ -36,7 +36,7 @@ public class JwtOptionsValidatorTests
     public void Validate_WhenIssuerMissing_ReturnsFail()
     {
         // Arrange
-        var options = new JwtOptions
+        JwtOptions options = new()
         {
             Issuer = string.Empty,
             Audience = "https://pulse.local",
@@ -45,7 +45,7 @@ public class JwtOptionsValidatorTests
         };
 
         // Act
-        var result = _sut.Validate(null, options);
+        ValidateOptionsResult result = _sut.Validate(null, options);
 
         // Assert
         result.Succeeded.Should().BeFalse();
@@ -56,7 +56,7 @@ public class JwtOptionsValidatorTests
     public void Validate_WhenAudienceMissing_ReturnsFail()
     {
         // Arrange
-        var options = new JwtOptions
+        JwtOptions options = new()
         {
             Issuer = "https://pulse.local",
             Audience = string.Empty,
@@ -65,7 +65,7 @@ public class JwtOptionsValidatorTests
         };
 
         // Act
-        var result = _sut.Validate(null, options);
+        ValidateOptionsResult result = _sut.Validate(null, options);
 
         // Assert
         result.Succeeded.Should().BeFalse();
@@ -76,7 +76,7 @@ public class JwtOptionsValidatorTests
     public void Validate_WhenSecretKeyMissing_ReturnsFail()
     {
         // Arrange
-        var options = new JwtOptions
+        JwtOptions options = new()
         {
             Issuer = "https://pulse.local",
             Audience = "https://pulse.local",
@@ -85,7 +85,7 @@ public class JwtOptionsValidatorTests
         };
 
         // Act
-        var result = _sut.Validate(null, options);
+        ValidateOptionsResult result = _sut.Validate(null, options);
 
         // Assert
         result.Succeeded.Should().BeFalse();
@@ -96,7 +96,7 @@ public class JwtOptionsValidatorTests
     public void Validate_WhenSecretKeyTooShort_ReturnsFail()
     {
         // Arrange
-        var options = new JwtOptions
+        JwtOptions options = new()
         {
             Issuer = "https://pulse.local",
             Audience = "https://pulse.local",
@@ -105,7 +105,7 @@ public class JwtOptionsValidatorTests
         };
 
         // Act
-        var result = _sut.Validate(null, options);
+        ValidateOptionsResult result = _sut.Validate(null, options);
 
         // Assert
         result.Succeeded.Should().BeFalse();
@@ -116,7 +116,7 @@ public class JwtOptionsValidatorTests
     public void Validate_WhenExpirationMinutesZeroOrNegative_ReturnsFail()
     {
         // Arrange
-        var options = new JwtOptions
+        JwtOptions options = new()
         {
             Issuer = "https://pulse.local",
             Audience = "https://pulse.local",
@@ -125,7 +125,7 @@ public class JwtOptionsValidatorTests
         };
 
         // Act
-        var result = _sut.Validate(null, options);
+        ValidateOptionsResult result = _sut.Validate(null, options);
 
         // Assert
         result.Succeeded.Should().BeFalse();
@@ -136,7 +136,7 @@ public class JwtOptionsValidatorTests
     public void Validate_WhenMultipleErrorsExist_ReturnsAllErrors()
     {
         // Arrange
-        var options = new JwtOptions
+        JwtOptions options = new()
         {
             Issuer = string.Empty,
             Audience = string.Empty,
@@ -145,7 +145,7 @@ public class JwtOptionsValidatorTests
         };
 
         // Act
-        var result = _sut.Validate(null, options);
+        ValidateOptionsResult result = _sut.Validate(null, options);
 
         // Assert
         result.Succeeded.Should().BeFalse();

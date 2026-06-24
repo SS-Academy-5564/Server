@@ -1,6 +1,6 @@
 using FluentResults;
 
-namespace Pulse.BL.Feature.Email;
+namespace Pulse.BL.Features.Email;
 
 public interface IEmailService
 {

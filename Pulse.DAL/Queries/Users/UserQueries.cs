@@ -1,4 +1,4 @@
-
+using System.Data;
 using Dapper;
 using Pulse.DAL.Connection;
 
@@ -13,26 +13,29 @@ public class UserQueries : IUserQueries
         _connectionFactory = connectionFactory;
     }
 
+    /// <inheritdoc/>
     public async Task<bool> EmailExistsAsync(string email, CancellationToken ct)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        using IDbConnection connection = _connectionFactory.CreateConnection();
 
         return await connection.ExecuteScalarAsync<bool>(
             new CommandDefinition(
-                "SELECT CAST(1 AS BIT) FROM Users WHERE Email = @Email",
+                "SELECT CASE WHEN EXISTS (SELECT 1 FROM Users WHERE Email = @Email) THEN 1 ELSE 0 END",
                 new { Email = email },
                 cancellationToken: ct));
     }
 
+    /// <inheritdoc/>
     public async Task<UserAuthRecord?> GetByEmailForAuthAsync(string email, CancellationToken ct)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        using IDbConnection connection = _connectionFactory.CreateConnection();
 
         return await connection.QuerySingleOrDefaultAsync<UserAuthRecord>(
             new CommandDefinition(
-                "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, m.RoleId " +
+                "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, r.Name AS RoleName " +
                 "FROM Users u " +
                 "JOIN Members m ON m.UserId = u.Id " +
+                "JOIN Roles r ON r.Id = m.RoleId " +
                 "WHERE u.Email = @Email " +
                 "ORDER BY m.JoinedAt DESC",
                 new { Email = email },

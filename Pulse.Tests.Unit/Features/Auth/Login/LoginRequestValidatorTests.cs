@@ -1,5 +1,5 @@
 using FluentAssertions;
-using FluentValidation;
+using FluentValidation.Results;
 using Pulse.API.Features.Auth.Login;
 
 namespace Pulse.Tests.Unit.Features.Auth.Login;
@@ -14,17 +14,13 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenRequestValid_ReturnsNoErrors()
+    public async Task Validate_WhenRequestValid_ReturnsNoErrorsAsync()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = "user@example.com",
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new("user@example.com", "ValidPassword123");
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeTrue();
@@ -32,17 +28,13 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEmailEmpty_ReturnsError()
+    public async Task Validate_WhenEmailEmpty_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = string.Empty,
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new(string.Empty, "ValidPassword123");
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -50,17 +42,13 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEmailInvalid_ReturnsError()
+    public async Task Validate_WhenEmailInvalid_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = "not-an-email",
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new("not-an-email", "ValidPassword123");
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -68,17 +56,13 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenEmailTooLong_ReturnsError()
+    public async Task Validate_WhenEmailTooLong_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = new string('a', 250) + "@example.com",
-            Password = "ValidPassword123"
-        };
+        LoginRequest request = new(new string('a', 250) + "@example.com", "ValidPassword123");
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -86,17 +70,13 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenPasswordEmpty_ReturnsError()
+    public async Task Validate_WhenPasswordEmpty_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = "user@example.com",
-            Password = string.Empty
-        };
+        LoginRequest request = new("user@example.com", string.Empty);
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -104,17 +84,13 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenPasswordTooLong_ReturnsError()
+    public async Task Validate_WhenPasswordTooLong_ReturnsErrorAsync()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = "user@example.com",
-            Password = new string('a', 257)
-        };
+        LoginRequest request = new("user@example.com", new string('a', 257));
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();
@@ -122,17 +98,13 @@ public class LoginRequestValidatorTests
     }
 
     [Fact]
-    public async Task Validate_WhenBothFieldsEmpty_ReturnsMultipleErrors()
+    public async Task Validate_WhenBothFieldsEmpty_ReturnsMultipleErrorsAsync()
     {
         // Arrange
-        var request = new LoginRequest
-        {
-            Email = string.Empty,
-            Password = string.Empty
-        };
+        LoginRequest request = new(string.Empty, string.Empty);
 
         // Act
-        var result = await _sut.ValidateAsync(request);
+        ValidationResult result = await _sut.ValidateAsync(request);
 
         // Assert
         result.IsValid.Should().BeFalse();

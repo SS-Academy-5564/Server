@@ -1,65 +1,72 @@
+using FluentResults;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Users;
 using Pulse.DAL.Common.Constants;
+using Pulse.DAL.Common.Repository;
+using Pulse.DAL.Exceptions;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.Registration;
 
 public class RegistrationHandler : IRegistrationHandler
 {
+    private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IUserCommands _userCommands;
     private readonly IUserQueries _userQueries;
     private readonly IPasswordHasher _passwordHasher;
 
-    // remove later
     private readonly IMemberCommands _memberCommands;
 
-
     public RegistrationHandler(
+        IUnitOfWorkFactory unitOfWorkFactory,
         IUserCommands userCommands,
         IUserQueries userQueries,
         IPasswordHasher passwordHasher,
         IMemberCommands memberCommands)
     {
+        _unitOfWorkFactory = unitOfWorkFactory;
         _userCommands = userCommands;
         _userQueries = userQueries;
         _passwordHasher = passwordHasher;
         _memberCommands = memberCommands;
     }
-    public async Task Register(RegistrationCommand command, CancellationToken ct)
+    /// <inheritdoc/>
+    public async Task<Result> RegisterAsync(RegistrationCommand command, CancellationToken ct)
     {
-        var userExists = await _userQueries.EmailExistsAsync(command.Email, ct);
+        bool userExists = await _userQueries.EmailExistsAsync(command.Email, ct);
 
         if (userExists)
         {
-            //return fail here
-            return;
+            return Result.Fail(new ConflictError("A user with this Email already exists."));
         }
 
-        var passwordHash = _passwordHasher.HashPassword(command.Password);
+        string passwordHash = _passwordHasher.HashPassword(command.Password);
 
-        var userId = await _userCommands.CreateAsync(new CreateUserInput
+        try
         {
-            Email = command.Email,
-            FirstName = command.FirstName,
-            LastName = command.LastName,
-            PasswordHash = passwordHash
-        }, ct);
-
-        if (userId == Guid.Empty)
+            await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct);
+            Guid userId = await _userCommands.CreateUserAsync(new CreateUserInput
+            (
+                command.Email,
+                command.FirstName,
+                command.LastName,
+                passwordHash
+            ), uow, ct);
+            await _memberCommands.CreateMemberAsync(new CreateMemberInput
+            (
+                userId,
+                SeededIds.Organizations.Default,
+                SeededIds.Roles.User
+            ), uow, ct);
+            await uow.CommitAsync(ct);
+        }
+        catch (DuplicateKeyException ex)
         {
-            // return failure
-            return;
+            return Result.Fail(new ConflictError($"A user with this {ex.FieldName} already exists."));
         }
 
-        await _memberCommands.CreateMemberAsync(new CreateMemberInput
-        {
-            UserId = userId,
-            OrganizationId = SeededIds.Organizations.Default,
-            RoleId = SeededIds.Roles.User
-        }, ct);
-
-        // return success
+        return Result.Ok();
     }
 }

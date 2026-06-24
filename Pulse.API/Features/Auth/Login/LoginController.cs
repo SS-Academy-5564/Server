@@ -1,3 +1,4 @@
+using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Pulse.API.Attributes;
@@ -12,23 +13,23 @@ namespace Pulse.API.Features.Auth.Login;
 public class LoginController : Controllers.PulseControllerBase
 {
     private readonly ILoginHandler _handler;
-
     public LoginController(ILoginHandler handler)
     {
         _handler = handler;
     }
 
+    /// <summary>
+    /// Authenticates a user and returns an access token.
+    /// </summary>
+    /// <param name="request">The login payload containing email and password.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>200 OK with login result (e.g., JWT token) on success, or an error response on failure.</returns>
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.Login)]
-    public async Task<IActionResult> Login([Validate] LoginRequest request, CancellationToken ct)
+    public async Task<IActionResult> LoginAsync([Validate] LoginRequest request, CancellationToken ct)
     {
-        var command = new LoginCommand
-        {
-            Email = request.Email,
-            Password = request.Password
-        };
-
-        var result = await _handler.LoginAsync(command, ct);
+        LoginCommand command = new(request.Email, request.Password);
+        Result<LoginResult> result = await _handler.LoginAsync(command, ct);
         return ToActionResult(result);
     }
 }

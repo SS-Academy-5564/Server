@@ -1,13 +1,14 @@
+using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Attributes;
+using Pulse.API.Controllers;
 using Pulse.BL.Features.Auth.Registration;
 
 namespace Pulse.API.Features.Auth.Registration;
 
 [ApiController]
 [Route("api/auth")]
-[AutoValidate]
-public class RegistrationController : ControllerBase
+public class RegistrationController : PulseControllerBase
 {
     private readonly IRegistrationHandler _handler;
     public RegistrationController(IRegistrationHandler handler)
@@ -15,17 +16,18 @@ public class RegistrationController : ControllerBase
         _handler = handler;
     }
 
+    /// <summary>
+    /// Registers a new user account.
+    /// </summary>
+    /// <param name="request">The registration payload containing email, name, and password.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>200 OK on success, or a problem details response on failure.</returns>
     [HttpPost("register")]
-    public async Task<IActionResult> Register([Validate] RegistrationRequest request, CancellationToken ct)
+    public async Task<IActionResult> RegisterAsync([Validate] RegistrationRequest request, CancellationToken ct)
     {
-        var command = new RegistrationCommand
-        {
-            Email = request.Email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Password = request.Password
-        };
-        await _handler.Register(command, ct);
-        return Ok();
+        RegistrationCommand command = new(request.Email, request.FirstName, request.LastName, request.Password);
+        Result result = await _handler.RegisterAsync(command, ct);
+
+        return ToActionResult(result);
     }
 }

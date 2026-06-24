@@ -8,8 +8,8 @@ public class ResponseLoggingMiddleware(RequestDelegate next, ILogger<ResponseLog
 
         if (context.Response.StatusCode == StatusCodes.Status429TooManyRequests)
         {
-            var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
-            var path = context.Request.Path;
+            string ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+            PathString path = context.Request.Path;
 
             logger.LogWarning("Rate limit exceeded for IP: {IP} on Path: {Path}", ipAddress, path);
         }
