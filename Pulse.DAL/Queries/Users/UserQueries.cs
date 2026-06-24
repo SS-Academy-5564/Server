@@ -20,11 +20,12 @@ public class UserQueries : IUserQueries
 
         return await connection.ExecuteScalarAsync<bool>(
             new CommandDefinition(
-                "SELECT CAST(1 AS BIT) FROM Users WHERE Email = @Email",
+                "SELECT CASE WHEN EXISTS (SELECT 1 FROM Users WHERE Email = @Email) THEN 1 ELSE 0 END",
                 new { Email = email },
                 cancellationToken: ct));
     }
 
+    /// <inheritdoc/>
     public async Task<UserAuthRecord?> GetByEmailForAuthAsync(string email, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();

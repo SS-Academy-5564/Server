@@ -19,9 +19,6 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     {
         _options = options.Value;
         _timeProvider = timeProvider;
-
-        ArgumentException.ThrowIfNullOrWhiteSpace(_options.SecretKey);
-
         _secretKeyBytes = Encoding.UTF8.GetBytes(_options.SecretKey);
     }
 
