@@ -1,5 +1,4 @@
 using FluentValidation;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Pulse.API.Extensions;
 using Pulse.BL;
 using Pulse.BL.DependencyInjection;
@@ -16,10 +15,10 @@ builder.Services.AddValidatorsFromAssembly(typeof(BLAssemblyMarker).Assembly, in
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 builder.Services.AddControllers();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
+builder.Services.AddJwtAuthentication();
 
 builder.Services.AddCors(options =>
 {
