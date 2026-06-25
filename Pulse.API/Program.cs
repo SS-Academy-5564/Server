@@ -19,7 +19,7 @@ builder.Services.AddControllers();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
 builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
-builder.Services.AddLoginRateLimiter(builder.Configuration);
+builder.Services.AddPulseRateLimiting(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
