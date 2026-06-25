@@ -17,7 +17,7 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
-builder.Services.AddLoginRateLimiter(builder.Configuration);
+builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
 
 builder.Services.AddCors(options =>
