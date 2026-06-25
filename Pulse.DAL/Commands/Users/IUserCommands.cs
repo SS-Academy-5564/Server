@@ -14,4 +14,12 @@ public interface IUserCommands : ICommands
     /// <returns>The <see cref="Guid"/> of the newly created user.</returns>
     /// <exception cref="Pulse.DAL.Exceptions.DuplicateKeyException">Thrown when a user with the same email already exists.</exception>
     Task<Guid> CreateUserAsync(CreateUserInput input, IUnitOfWork uow, CancellationToken ct);
+
+    /// <summary>
+    /// Updates the password hash for the specified user.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose password should be updated.</param>
+    /// <param name="passwordHash">The new hashed password.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    Task UpdatePasswordAsync(Guid userId, string passwordHash, CancellationToken ct);
 }

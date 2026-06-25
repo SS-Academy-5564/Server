@@ -20,4 +20,19 @@ public interface IJwtTokenGenerator
     /// <param name="organizationId">The identifier of the organization.</param>
     /// <returns>A generated JWT token along with its expiration time.</returns>
     GeneratedJwtToken GenerateToken(Guid userId, string roleName, Guid organizationId);
+
+    /// <summary>
+    /// Generates a short-lived password reset token for the given user.
+    /// </summary>
+    /// <param name="userId">The identifier of the user.</param>
+    /// <param name="expiresIn">How long the reset token should be valid.</param>
+    /// <returns>A signed JWT intended only for the password reset flow.</returns>
+    string GeneratePasswordResetToken(Guid userId, TimeSpan expiresIn);
+
+    /// <summary>
+    /// Validates a password reset token and extracts the user ID.
+    /// </summary>
+    /// <param name="token">The token to validate.</param>
+    /// <returns>The user ID embedded in the token, or <c>null</c> if the token is invalid or expired.</returns>
+    Guid? ValidatePasswordResetToken(string token);
 }

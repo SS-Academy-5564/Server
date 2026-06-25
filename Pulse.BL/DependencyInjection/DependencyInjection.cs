@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
+using Pulse.BL.Features.Auth.PasswordReset;
 using Pulse.BL.Features.Email;
 
 namespace Pulse.BL.DependencyInjection;
@@ -20,6 +21,12 @@ public static class DependencyInjection
         services
             .AddOptions<JwtOptions>()
             .Bind(configuration.GetRequiredSection(JwtOptions.SectionName))
+            .ValidateOnStart();
+
+        services.AddSingleton<IValidateOptions<PasswordResetOptions>, PasswordResetOptionsValidator>();
+        services
+            .AddOptions<PasswordResetOptions>()
+            .Bind(configuration.GetRequiredSection(PasswordResetOptions.SectionName))
             .ValidateOnStart();
         services.AddEmailing(configuration);
 

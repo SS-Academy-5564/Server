@@ -1,0 +1,67 @@
+namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
+
+/// <summary>
+/// Builds the email content for a password reset OTP code.
+/// </summary>
+internal static class PasswordResetEmailBuilder
+{
+    public static string BuildSubject() => "Your Pulse password reset code";
+
+    public static string BuildHtmlBody(string code, int codeTtlMinutes)
+        => $"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        </head>
+        <body style="margin:0;padding:0;background:#F8FAFC;font-family:'Inter',Arial,sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#F8FAFC;padding:40px 0;">
+            <tr>
+              <td align="center">
+                <table width="480" cellpadding="0" cellspacing="0" style="background:#FFFFFF;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;">
+                  <tr>
+                    <td style="padding:32px 40px 16px;text-align:left;">
+                      <h1 style="margin:0;color:#6C63FF;font-size:24px;font-weight:700;letter-spacing:-0.5px;">Pulse</h1>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 40px 40px;">
+                      <h2 style="margin:0 0 16px;font-size:20px;color:#0F172A;font-weight:600;">Reset your password</h2>
+                      <p style="margin:0 0 24px;font-size:16px;color:#64748B;line-height:1.6;font-weight:400;">
+                        Use the code below to complete your password reset. It expires in <strong>{codeTtlMinutes} minutes</strong>.
+                      </p>
+                      <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:24px;text-align:center;margin-bottom:24px;">
+                        <span style="font-size:36px;font-weight:700;letter-spacing:12px;color:#0F172A;font-family:'Inter',monospace;">{code}</span>
+                      </div>
+                      <p style="margin:0;font-size:14px;color:#64748B;line-height:1.6;font-weight:400;">
+                        If you did not request a password reset, you can safely ignore this email.
+                        Your password will not be changed.
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding:24px 40px;border-top:1px solid #E2E8F0;text-align:left;">
+                      <p style="margin:0;font-size:12px;color:#64748B;font-weight:500;">&copy; Pulse. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+        """;
+
+    public static string BuildPlainTextBody(string code, int codeTtlMinutes)
+        => $"""
+        Pulse – Password Reset
+
+        Your verification code: {code}
+
+        This code expires in {codeTtlMinutes} minutes.
+
+        If you did not request this, please ignore this email.
+        """;
+}

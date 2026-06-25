@@ -41,4 +41,18 @@ public class UserQueries : IUserQueries
                 new { Email = email },
                 cancellationToken: ct));
     }
+
+    /// <inheritdoc/>
+    public async Task<Guid?> GetIdByEmailAsync(string email, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        Guid result = await connection.ExecuteScalarAsync<Guid>(
+            new CommandDefinition(
+                "SELECT TOP(1) Id FROM Users WHERE Email = @Email",
+                new { Email = email },
+                cancellationToken: ct));
+
+        return result == Guid.Empty ? null : result;
+    }
 }

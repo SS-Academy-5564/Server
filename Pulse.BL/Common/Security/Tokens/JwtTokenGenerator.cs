@@ -54,4 +54,72 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             expiresAt
         );
     }
+
+    /// <inheritdoc/>
+    public string GeneratePasswordResetToken(Guid userId, TimeSpan expiresIn)
+    {
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+
+        Claim[] claims =
+        {
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtClaimNames.Purpose, JwtClaimNames.PasswordResetPurpose),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        SymmetricSecurityKey key = new(_secretKeyBytes);
+        SigningCredentials credentials = new(key, SecurityAlgorithms.HmacSha256);
+
+        SecurityTokenDescriptor tokenDescriptor = new()
+        {
+            Subject = new ClaimsIdentity(claims),
+            Issuer = _options.Issuer,
+            Audience = _options.Audience,
+            NotBefore = now.UtcDateTime,
+            Expires = now.Add(expiresIn).UtcDateTime,
+            SigningCredentials = credentials
+        };
+
+        return TokenHandler.CreateToken(tokenDescriptor);
+    }
+
+    /// <inheritdoc/>
+    public Guid? ValidatePasswordResetToken(string token)
+    {
+        SymmetricSecurityKey key = new(_secretKeyBytes);
+
+        TokenValidationParameters validationParameters = new()
+        {
+            ValidateIssuer = true,
+            ValidIssuer = _options.Issuer,
+            ValidateAudience = true,
+            ValidAudience = _options.Audience,
+            ValidateLifetime = true,
+            IssuerSigningKey = key,
+            ClockSkew = TimeSpan.Zero
+        };
+
+        try
+        {
+            TokenValidationResult result = TokenHandler.ValidateTokenAsync(token, validationParameters).GetAwaiter().GetResult();
+
+            if (!result.IsValid)
+            {
+                return null;
+            }
+
+            string? purpose = result.ClaimsIdentity.FindFirst(JwtClaimNames.Purpose)?.Value;
+            if (purpose != JwtClaimNames.PasswordResetPurpose)
+            {
+                return null;
+            }
+
+            string? sub = result.ClaimsIdentity.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+            return Guid.TryParse(sub, out Guid userId) ? userId : null;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
