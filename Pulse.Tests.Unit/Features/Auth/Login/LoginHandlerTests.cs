@@ -64,7 +64,7 @@ public class LoginHandlerTests
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
 
         // Act
-        Result<LoginResult> result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -85,7 +85,7 @@ public class LoginHandlerTests
             .ReturnsAsync((UserAuthRecord?)null);
 
         // Act
-        Result<LoginResult> result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -122,7 +122,7 @@ public class LoginHandlerTests
             .Returns(false);
 
         // Act
-        Result<LoginResult> result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();

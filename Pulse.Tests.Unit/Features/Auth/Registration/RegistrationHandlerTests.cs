@@ -45,7 +45,7 @@ public class RegistrationHandlerTests
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        Result result = await _handler.RegisterAsync(ValidCommand(), CancellationToken.None);
+        Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         _userCommands.Verify(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -64,7 +64,7 @@ public class RegistrationHandlerTests
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DuplicateKeyException("Email"));
 
-        Result result = await _handler.RegisterAsync(ValidCommand(), CancellationToken.None);
+        Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ConflictError);
@@ -88,7 +88,7 @@ public class RegistrationHandlerTests
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userId);
 
-        Result result = await _handler.RegisterAsync(command, CancellationToken.None);
+        Result result = await _handler.HandleAsync(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
 
