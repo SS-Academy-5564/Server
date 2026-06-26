@@ -39,7 +39,7 @@ public class RegistrationHandlerTests
     }
 
     [Fact]
-    public async Task Register_EmailAlreadyExists_ReturnsFailResult()
+    public async Task HandleAsync_EmailAlreadyExists_ReturnsFailResult()
     {
         _userQueries
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -52,7 +52,7 @@ public class RegistrationHandlerTests
     }
 
     [Fact]
-    public async Task Register_DuplicateEmail_ReturnsConflictErrorAndMemberIsNotCreated()
+    public async Task HandleAsync_DuplicateEmail_ReturnsConflictErrorAndMemberIsNotCreated()
     {
         _userQueries
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -72,7 +72,7 @@ public class RegistrationHandlerTests
     }
 
     [Fact]
-    public async Task Register_ValidCommand_HashesPasswordAndCreatesUserAndMember()
+    public async Task HandleAsync_ValidCommand_HashesPasswordAndCreatesUserAndMember()
     {
         RegistrationCommand command = ValidCommand();
         var userId = Guid.NewGuid();
