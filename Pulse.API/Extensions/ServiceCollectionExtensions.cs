@@ -59,6 +59,10 @@ public static class ServiceCollectionExtensions
                 .Bind(configuration.GetRequiredSection(RateLimitSections.Login))
                 .ValidateOnStart();
 
+            services.AddOptions<RateLimitRuleOptions>(RateLimitSections.PasswordReset)
+                .Bind(configuration.GetRequiredSection(RateLimitSections.PasswordReset))
+                .ValidateOnStart();
+
             services.AddRateLimiter();
             services.AddOptions<RateLimiterOptions>()
                 .Configure<IOptionsMonitor<RateLimitRuleOptions>>((rateLimiterOptions, rateLimitRules) =>
@@ -75,6 +79,21 @@ public static class ServiceCollectionExtensions
                                 TokensPerPeriod = 1,
                                 ReplenishmentPeriod = TimeSpan.FromSeconds(
                                     loginRateLimit.PeriodMinutes * 60.0 / loginRateLimit.MaxAttempts),
+                                QueueLimit = 0,
+                                AutoReplenishment = true
+                            });
+                    });
+
+                    rateLimiterOptions.AddPolicy(RateLimitPolicies.PasswordReset, context =>
+                    {
+                        RateLimitRuleOptions resetRateLimit = rateLimitRules.Get(RateLimitSections.PasswordReset);
+
+                        return RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: GetClientIdentifier(context),
+                            factory: _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = resetRateLimit.MaxAttempts,
+                                Window = TimeSpan.FromMinutes(resetRateLimit.PeriodMinutes),
                                 QueueLimit = 0,
                                 AutoReplenishment = true
                             });
