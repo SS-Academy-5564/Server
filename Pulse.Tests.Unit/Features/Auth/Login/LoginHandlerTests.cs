@@ -5,6 +5,7 @@ using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login;
+using Pulse.BL.Features.Auth.Login.LoginLockout;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.Tests.Unit.Features.Auth.Login;
@@ -14,6 +15,7 @@ public class LoginHandlerTests
     private readonly Mock<IUserQueries> _userQueriesMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock;
+    private readonly Mock<ILoginLockoutService> _loginLockoutServiceMock;
     private readonly LoginHandler _sut;
 
     public LoginHandlerTests()
@@ -21,11 +23,13 @@ public class LoginHandlerTests
         _userQueriesMock = new();
         _passwordHasherMock = new();
         _jwtTokenGeneratorMock = new();
+        _loginLockoutServiceMock = new();
 
         _sut = new LoginHandler(
             _userQueriesMock.Object,
             _passwordHasherMock.Object,
             _jwtTokenGeneratorMock.Object,
+            _loginLockoutServiceMock.Object,
             new Mock<Microsoft.Extensions.Logging.ILogger<LoginHandler>>().Object);
     }
 
@@ -62,6 +66,10 @@ public class LoginHandlerTests
         _jwtTokenGeneratorMock
             .Setup(x => x.GenerateToken(userId, roleName, organizationId))
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
+
+        _loginLockoutServiceMock
+            .Setup(x => x.IsUserAllowedAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         // Act
         Result<LoginResult> result = await _sut.LoginAsync(command, CancellationToken.None);
@@ -116,6 +124,10 @@ public class LoginHandlerTests
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
+
+        _loginLockoutServiceMock
+            .Setup(x => x.IsUserAllowedAsync(userRecord.Id, ct: CancellationToken.None))
+            .ReturnsAsync(true);
 
         _passwordHasherMock
             .Setup(x => x.VerifyHashedPassword(passwordHash, password))
