@@ -3,7 +3,7 @@ IF OBJECT_ID(N'dbo.Monitors', N'U') IS NULL
         CREATE TABLE dbo.Monitors
         (
             Id                     UNIQUEIDENTIFIER NOT NULL DEFAULT NEWSEQUENTIALID(),
-            Name                   VARCHAR(64)      NOT NULL,
+            Name                   NVARCHAR(64)      NOT NULL,
             Url                    NVARCHAR(2083)   NOT NULL,
             HttpMethod             NVARCHAR(20)     NOT NULL,
             CurrentValue           NVARCHAR(MAX),
