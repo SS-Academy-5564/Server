@@ -59,6 +59,7 @@ public class LoginHandler : ILoginHandler
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
+        await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
         GeneratedJwtToken generatedToken =
             _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId);
 

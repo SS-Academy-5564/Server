@@ -7,17 +7,20 @@ namespace Pulse.BL.Features.Auth.Login.LoginLockout;
 public class LoginLockoutService : ILoginLockoutService
 {
     private readonly IUserLoginAttemptsQueries _userLoginLockoutQueries;
+    private readonly IUserLoginAttemptsCommands _userLoginLockoutCommands;
     private readonly TimeProvider _timeProvider;
     private readonly LoginLockoutOptions _options;
 
     public LoginLockoutService(
         IUserLoginAttemptsQueries userLoginLockoutQueries,
+        IUserLoginAttemptsCommands userLoginLockoutCommands,
         TimeProvider timeProvider,
         IOptions<LoginLockoutOptions> options)
     {
         _timeProvider = timeProvider;
         _options = options.Value;
         _userLoginLockoutQueries = userLoginLockoutQueries;
+        _userLoginLockoutCommands = userLoginLockoutCommands;
     }
     public async Task<bool> IsUserAllowedAsync(Guid userId, CancellationToken ct)
     {
@@ -25,5 +28,10 @@ public class LoginLockoutService : ILoginLockoutService
 
         return loginAttempts?.LockedUntil is null ||
                loginAttempts.LockedUntil <= _timeProvider.GetUtcNow().UtcDateTime;
+    }
+
+    public async Task ResetAttemptsAsync(Guid userId, CancellationToken ct)
+    {
+        await _userLoginLockoutCommands.ResetAttemptsAsync(userId, ct);
     }
 }
