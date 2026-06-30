@@ -34,7 +34,7 @@ public class ResetPasswordHandler : IResetPasswordHandler
     /// <inheritdoc/>
     public async Task<Result> ResetAsync(ResetPasswordCommand command, CancellationToken ct)
     {
-        (Guid UserId, string Jti)? tokenData = _jwtTokenGenerator.ValidatePasswordResetToken(command.ResetToken);
+        (Guid UserId, string Jti)? tokenData = await _jwtTokenGenerator.ValidatePasswordResetTokenAsync(command.ResetToken);
 
         if (tokenData is null)
         {

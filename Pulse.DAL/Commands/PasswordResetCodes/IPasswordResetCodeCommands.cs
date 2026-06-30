@@ -21,16 +21,17 @@ public interface IPasswordResetCodeCommands : ICommands
     /// </summary>
     /// <param name="id">The ID of the reset code.</param>
     /// <param name="jti">The unique identifier of the JWT.</param>
+    /// <param name="expiresAt">The expiration time of the JWT.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>True if exactly one row was updated.</returns>
-    Task<bool> MarkAsVerifiedAsync(Guid id, string jti, CancellationToken ct);
+    Task<bool> MarkAsVerifiedAsync(Guid id, string jti, DateTimeOffset expiresAt, CancellationToken ct);
 
     /// <summary>
-    /// Deletes all password reset codes for the specified user.
+    /// Deletes a specific password reset code by its ID.
     /// </summary>
-    /// <param name="userId">The user whose codes should be deleted.</param>
+    /// <param name="id">The ID of the reset code to delete.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    Task DeleteByUserIdAsync(Guid userId, CancellationToken ct);
+    Task DeleteByIdAsync(Guid id, CancellationToken ct);
 
     /// <summary>
     /// Increments the failed attempt counter for a specific reset code and returns the new count.

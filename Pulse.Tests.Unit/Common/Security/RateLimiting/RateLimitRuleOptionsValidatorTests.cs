@@ -15,8 +15,7 @@ public class RateLimitRuleOptionsValidatorTests
         RateLimitRuleOptions options = new()
         {
             MaxAttempts = 20,
-            PeriodMinutes = 15,
-            Segments = 10
+            PeriodMinutes = 15
         };
 
         // Act
@@ -35,8 +34,7 @@ public class RateLimitRuleOptionsValidatorTests
         RateLimitRuleOptions options = new()
         {
             MaxAttempts = maxAttempts,
-            PeriodMinutes = 15,
-            Segments = 10
+            PeriodMinutes = 15
         };
 
         // Act
@@ -56,8 +54,7 @@ public class RateLimitRuleOptionsValidatorTests
         RateLimitRuleOptions options = new()
         {
             MaxAttempts = 20,
-            PeriodMinutes = periodMinutes,
-            Segments = 10
+            PeriodMinutes = periodMinutes
         };
 
         // Act
@@ -66,27 +63,6 @@ public class RateLimitRuleOptionsValidatorTests
         // Assert
         result.Succeeded.Should().BeFalse();
         result.Failures.Should().Contain("RateLimit:Login:PeriodMinutes must be greater than zero.");
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public void Validate_WhenSegmentsZeroOrNegative_ReturnsFail(int segments)
-    {
-        // Arrange
-        RateLimitRuleOptions options = new()
-        {
-            MaxAttempts = 20,
-            PeriodMinutes = 15,
-            Segments = segments
-        };
-
-        // Act
-        ValidateOptionsResult result = _sut.Validate(RateLimitSections.Login, options);
-
-        // Assert
-        result.Succeeded.Should().BeFalse();
-        result.Failures.Should().Contain("RateLimit:Login:Segments must be greater than zero.");
     }
 
     [Fact]
@@ -96,8 +72,7 @@ public class RateLimitRuleOptionsValidatorTests
         RateLimitRuleOptions options = new()
         {
             MaxAttempts = 0,
-            PeriodMinutes = -1,
-            Segments = -1
+            PeriodMinutes = -1
         };
 
         // Act
@@ -107,6 +82,5 @@ public class RateLimitRuleOptionsValidatorTests
         result.Succeeded.Should().BeFalse();
         result.Failures.Should().Contain("RateLimit:Login:MaxAttempts must be greater than zero.");
         result.Failures.Should().Contain("RateLimit:Login:PeriodMinutes must be greater than zero.");
-        result.Failures.Should().Contain("RateLimit:Login:Segments must be greater than zero.");
     }
 }

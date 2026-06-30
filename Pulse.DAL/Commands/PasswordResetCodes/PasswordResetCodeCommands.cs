@@ -37,42 +37,28 @@ public class PasswordResetCodeCommands : IPasswordResetCodeCommands
     }
 
     /// <inheritdoc/>
-    public async Task<bool> MarkAsVerifiedAsync(Guid id, string jti, CancellationToken ct)
+    public async Task<bool> MarkAsVerifiedAsync(Guid id, string jti, DateTimeOffset expiresAt, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
 
         int rowsAffected = await connection.ExecuteAsync(
             new CommandDefinition(
-                "UPDATE PasswordResetCodes SET Jti = @Jti WHERE Id = @Id AND Jti IS NULL",
-                new { Id = id, Jti = jti },
+                "UPDATE PasswordResetCodes SET Jti = @Jti, ExpiresAt = @ExpiresAt WHERE Id = @Id AND Jti IS NULL",
+                new { Id = id, Jti = jti, ExpiresAt = expiresAt },
                 cancellationToken: ct));
 
         return rowsAffected == 1;
     }
 
     /// <inheritdoc/>
-    public async Task<bool> DeleteByIdAsync(Guid id, CancellationToken ct)
-    {
-        using IDbConnection connection = _connectionFactory.CreateConnection();
-
-        int rowsAffected = await connection.ExecuteAsync(
-            new CommandDefinition(
-                "DELETE FROM PasswordResetCodes WHERE Id = @Id",
-                new { Id = id },
-                cancellationToken: ct));
-
-        return rowsAffected == 1;
-    }
-
-    /// <inheritdoc/>
-    public async Task DeleteByUserIdAsync(Guid userId, CancellationToken ct)
+    public async Task DeleteByIdAsync(Guid id, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
 
         await connection.ExecuteAsync(
             new CommandDefinition(
-                "DELETE FROM PasswordResetCodes WHERE UserId = @UserId",
-                new { UserId = userId },
+                "DELETE FROM PasswordResetCodes WHERE Id = @Id",
+                new { Id = id },
                 cancellationToken: ct));
     }
 

@@ -35,5 +35,5 @@ public interface IJwtTokenGenerator
     /// </summary>
     /// <param name="token">The token to validate.</param>
     /// <returns>The user ID and JTI embedded in the token, or <c>null</c> if the token is invalid or expired.</returns>
-    (Guid UserId, string Jti)? ValidatePasswordResetToken(string token);
+    Task<(Guid UserId, string Jti)?> ValidatePasswordResetTokenAsync(string token);
 }

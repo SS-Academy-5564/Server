@@ -69,7 +69,7 @@ public class VerifyPasswordResetCodeHandlerTests
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
         _passwordHasherMock.Setup(x => x.VerifyHashedPassword("hashed_code", code)).Returns(true);
         _jwtTokenGeneratorMock.Setup(x => x.GeneratePasswordResetToken(userId, It.IsAny<string>(), TimeSpan.FromMinutes(10))).Returns(resetToken);
-        _codeCommandsMock.Setup(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
+        _codeCommandsMock.Setup(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         VerifyPasswordResetCodeCommand command = new(email, code);
 
@@ -80,7 +80,7 @@ public class VerifyPasswordResetCodeHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.ResetToken.Should().Be(resetToken);
 
-        _codeCommandsMock.Verify(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _codeCommandsMock.Verify(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public class VerifyPasswordResetCodeHandlerTests
         _passwordHasherMock.Setup(x => x.VerifyHashedPassword("hashed_code", code)).Returns(true);
 
         // Setup MarkAsVerifiedAsync to return false, simulating concurrent consumption
-        _codeCommandsMock.Setup(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+        _codeCommandsMock.Setup(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         VerifyPasswordResetCodeCommand command = new(email, code);
 
@@ -111,7 +111,7 @@ public class VerifyPasswordResetCodeHandlerTests
         result.IsFailed.Should().BeTrue();
         result.Errors.First().Should().BeOfType<ValidationError>().Which.Message.Should().Be("Invalid code.");
 
-        _codeCommandsMock.Verify(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _codeCommandsMock.Verify(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()), Times.Once);
         _jwtTokenGeneratorMock.Verify(x => x.GeneratePasswordResetToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<TimeSpan>()), Times.Never);
     }
 
@@ -168,7 +168,7 @@ public class VerifyPasswordResetCodeHandlerTests
         // Assert
         result.IsFailed.Should().BeTrue();
         result.Errors.First().Should().BeOfType<ValidationError>().Which.Message.Should().Be("The code has expired. Please request a new one.");
-        _codeCommandsMock.Verify(x => x.DeleteByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _codeCommandsMock.Verify(x => x.DeleteByIdAsync(record.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -194,7 +194,8 @@ public class VerifyPasswordResetCodeHandlerTests
         result.IsFailed.Should().BeTrue();
         result.Errors.First().Should().BeOfType<ValidationError>().Which.Message.Should().Be("Invalid code.");
         _codeCommandsMock.Verify(x => x.IncrementFailedAttemptsAsync(codeId, It.IsAny<CancellationToken>()), Times.Once);
-        _codeCommandsMock.Verify(x => x.DeleteByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _codeCommandsMock.Verify(x => x.DeleteByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+
     }
 
     [Fact]
@@ -219,6 +220,6 @@ public class VerifyPasswordResetCodeHandlerTests
         // Assert
         result.IsFailed.Should().BeTrue();
         result.Errors.First().Should().BeOfType<ValidationError>().Which.Message.Should().Be("Invalid code.");
-        _codeCommandsMock.Verify(x => x.DeleteByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _codeCommandsMock.Verify(x => x.DeleteByIdAsync(record.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 }

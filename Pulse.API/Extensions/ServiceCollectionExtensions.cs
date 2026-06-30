@@ -55,17 +55,19 @@ public static class ServiceCollectionExtensions
         public IServiceCollection AddPulseRateLimiting(IConfiguration configuration)
         {
             services.AddSingleton<IValidateOptions<RateLimitRuleOptions>, RateLimitRuleOptionsValidator>();
+            services.AddSingleton<IValidateOptions<SlidingWindowRateLimitRuleOptions>, SlidingWindowRateLimitRuleOptionsValidator>();
+
             services.AddOptions<RateLimitRuleOptions>(RateLimitSections.Login)
                 .Bind(configuration.GetRequiredSection(RateLimitSections.Login))
                 .ValidateOnStart();
 
-            services.AddOptions<RateLimitRuleOptions>(RateLimitSections.PasswordReset)
+            services.AddOptions<SlidingWindowRateLimitRuleOptions>(RateLimitSections.PasswordReset)
                 .Bind(configuration.GetRequiredSection(RateLimitSections.PasswordReset))
                 .ValidateOnStart();
 
             services.AddRateLimiter();
             services.AddOptions<RateLimiterOptions>()
-                .Configure<IOptionsMonitor<RateLimitRuleOptions>>((rateLimiterOptions, rateLimitRules) =>
+                .Configure<IOptionsMonitor<RateLimitRuleOptions>, IOptionsMonitor<SlidingWindowRateLimitRuleOptions>>((rateLimiterOptions, rateLimitRules, slidingWindowRules) =>
                 {
                     rateLimiterOptions.AddPolicy(RateLimitPolicies.Login, context =>
                     {
@@ -86,7 +88,7 @@ public static class ServiceCollectionExtensions
 
                     rateLimiterOptions.AddPolicy(RateLimitPolicies.PasswordReset, context =>
                     {
-                        RateLimitRuleOptions resetRateLimit = rateLimitRules.Get(RateLimitSections.PasswordReset);
+                        SlidingWindowRateLimitRuleOptions resetRateLimit = slidingWindowRules.Get(RateLimitSections.PasswordReset);
 
                         return RateLimitPartition.GetSlidingWindowLimiter(
                             partitionKey: GetClientIdentifier(context),

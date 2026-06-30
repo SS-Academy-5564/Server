@@ -65,7 +65,7 @@ public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
         // Check expiry
         if (_timeProvider.GetUtcNow() >= record.ExpiresAt)
         {
-            await _codeCommands.DeleteByUserIdAsync(userId.Value, ct);
+            await _codeCommands.DeleteByIdAsync(record.Id, ct);
             LogFailure("code expired", command.Email);
             return Result.Fail(new ValidationError("The code has expired. Please request a new one."));
         }
@@ -79,7 +79,7 @@ public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
 
             if (failedAttempts >= _options.MaxFailedAttempts)
             {
-                await _codeCommands.DeleteByUserIdAsync(userId.Value, ct);
+                await _codeCommands.DeleteByIdAsync(record.Id, ct);
                 LogFailure($"code invalidated after {failedAttempts} failed attempts", command.Email);
             }
             else
@@ -95,7 +95,9 @@ public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
 
         // Atomically bind this JTI to the reset code record to prevent concurrent reuse
         // and to track token consumption during the final password reset step.
-        bool marked = await _codeCommands.MarkAsVerifiedAsync(record.Id, jti, ct);
+        // Update ExpiresAt to align with the JWT token lifetime.
+        DateTimeOffset newExpiresAt = _timeProvider.GetUtcNow().AddMinutes(_options.ResetTokenLifetimeMinutes);
+        bool marked = await _codeCommands.MarkAsVerifiedAsync(record.Id, jti, newExpiresAt, ct);
         if (!marked)
         {
             LogFailure("code already consumed concurrently", command.Email);

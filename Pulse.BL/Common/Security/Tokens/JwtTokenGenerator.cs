@@ -84,7 +84,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     }
 
     /// <inheritdoc/>
-    public (Guid UserId, string Jti)? ValidatePasswordResetToken(string token)
+    public async Task<(Guid UserId, string Jti)?> ValidatePasswordResetTokenAsync(string token)
     {
         SymmetricSecurityKey key = new(_secretKeyBytes);
 
@@ -101,7 +101,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
         try
         {
-            TokenValidationResult result = TokenHandler.ValidateTokenAsync(token, validationParameters).GetAwaiter().GetResult();
+            TokenValidationResult result = await TokenHandler.ValidateTokenAsync(token, validationParameters);
 
             if (!result.IsValid)
             {
