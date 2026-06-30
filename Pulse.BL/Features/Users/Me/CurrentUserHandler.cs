@@ -32,6 +32,6 @@ public sealed class CurrentUserHandler : ICurrentUserHandler
             return Result.Fail(new NotFoundError("User not found."));
         }
 
-        return Result.Ok(new UserProfileResult(user.Id, user.Email, user.CreatedAt, user.UpdatedAt));
+        return Result.Ok(new UserProfileResult(user.Id, user.Email, user.FirstName, user.LastName, user.CreatedAt, user.UpdatedAt));
     }
 }

@@ -23,7 +23,7 @@ public class CurrentUserControllerTests
     [Fact]
     public async Task GetCurrentUser_WhenSuccess_Returns200()
     {
-        var profile = new UserProfileResult(Guid.NewGuid(), "user@example.com", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
+        var profile = new UserProfileResult(Guid.NewGuid(), "user@example.com", "John", "Doe", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
 
         _handlerMock.Setup(x => x.GetCurrentUserAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(profile));
