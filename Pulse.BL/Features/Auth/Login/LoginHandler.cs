@@ -4,6 +4,7 @@ using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
+using Pulse.BL.Features.Auth.Login.LoginLockout;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.Login;
@@ -14,17 +15,20 @@ public class LoginHandler : ILoginHandler
     private readonly IUserQueries _userQueries;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly ILoginLockoutService _loginLockoutService;
     private readonly ILogger<LoginHandler> _logger;
 
     public LoginHandler(
         IUserQueries userQueries,
         IPasswordHasher passwordHasher,
         IJwtTokenGenerator jwtTokenGenerator,
+        ILoginLockoutService loginLockoutService,
         ILogger<LoginHandler> logger)
     {
         _userQueries = userQueries;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _loginLockoutService = loginLockoutService;
         _logger = logger;
     }
 
@@ -36,6 +40,13 @@ public class LoginHandler : ILoginHandler
         if (user is null)
         {
             LogFailure("user not found", command.Email);
+            return Result.Fail(new UnauthorizedError("Invalid email or password."));
+        }
+
+        bool isAllowed = await _loginLockoutService.IsUserAllowedAsync(user.Id, ct);
+        if (!isAllowed)
+        {
+            LogFailure("user not allowed", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
