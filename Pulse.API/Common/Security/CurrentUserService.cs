@@ -8,7 +8,8 @@ public sealed class CurrentUserService : ICurrentUserService
 {
     public CurrentUserService(IHttpContextAccessor httpContextAccessor)
     {
-        Claim? sub = httpContextAccessor.HttpContext?.User.FindFirst(JwtRegisteredClaimNames.Sub);
+        Claim? sub = httpContextAccessor.HttpContext?.User.FindFirst(JwtRegisteredClaimNames.Sub)
+                    ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
         UserId = sub is not null && Guid.TryParse(sub.Value, out Guid id) ? id : null;
     }
 
