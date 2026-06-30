@@ -41,4 +41,15 @@ public class UserQueries : IUserQueries
                 new { Email = email },
                 cancellationToken: ct));
     }
+
+    public async Task<UserProfileRecord?> GetByIdAsync(Guid id, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        return await connection.QuerySingleOrDefaultAsync<UserProfileRecord>(
+            new CommandDefinition(
+                "SELECT Id, Email, CreatedAt, UpdatedAt FROM Users WHERE Id = @Id",
+                new { Id = id },
+                cancellationToken: ct));
+    }
 }
