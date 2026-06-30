@@ -16,7 +16,7 @@ IF OBJECT_ID(N'dbo.Monitors', N'U') IS NULL
             CONSTRAINT PK_Monitors_Id PRIMARY KEY (Id),
             CONSTRAINT FK_Monitors_Status_Id FOREIGN KEY (StatusId) REFERENCES dbo.MonitorStatuses (Id),
             CONSTRAINT CK_Monitors_PollingIntervalSeconds CHECK (PollingIntervalSeconds BETWEEN 60 AND 24 * 60 * 60),
-            CONSTRAINT CK_Monitors_PollingTimeoutSeconds CHECK (PollingIntervalSeconds BETWEEN 5 AND 30),
+            CONSTRAINT CK_Monitors_PollingTimeoutSeconds CHECK (PollingTimeoutSeconds BETWEEN 5 AND 30),
             CONSTRAINT CK_Monitors_ResultPath CHECK (ResultPath BETWEEN 1 AND 255),
             CONSTRAINT CK_Monitors_HttpMethod CHECK (HttpMethod IN (
                                                                     'GET',
