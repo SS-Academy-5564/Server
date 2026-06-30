@@ -6,7 +6,7 @@ IF OBJECT_ID(N'dbo.Monitors', N'U') IS NULL
             Name                   NVARCHAR(64)     NOT NULL,
             Url                    NVARCHAR(2083)   NOT NULL,
             HttpMethod             NVARCHAR(20)     NOT NULL,
-            ResultPath             NVARCHAR(255),
+            ResultPath             NVARCHAR(255)    NOT NULL,
             CurrentValue           NVARCHAR(MAX),
             LastCheckedAt          DATETIMEOFFSET,
             StatusId               UNIQUEIDENTIFIER NOT NULL,
