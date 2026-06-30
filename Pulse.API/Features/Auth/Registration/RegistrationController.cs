@@ -11,6 +11,7 @@ namespace Pulse.API.Features.Auth.Registration;
 public class RegistrationController : PulseControllerBase
 {
     private readonly IRegistrationHandler _handler;
+
     public RegistrationController(IRegistrationHandler handler)
     {
         _handler = handler;

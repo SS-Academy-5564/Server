@@ -63,7 +63,7 @@ public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
         }
 
         // Check expiry
-        if (_timeProvider.GetUtcNow() > record.ExpiresAt)
+        if (_timeProvider.GetUtcNow() >= record.ExpiresAt)
         {
             await _codeCommands.DeleteByUserIdAsync(userId.Value, ct);
             LogFailure("code expired", command.Email);
@@ -90,10 +90,19 @@ public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
             return Result.Fail(new ValidationError("Invalid code."));
         }
 
-        // Delete the used code
-        await _codeCommands.DeleteByUserIdAsync(userId.Value, ct);
+        // Generate a unique session ID (JTI) for the reset token
+        string jti = Guid.NewGuid().ToString();
 
-        string resetToken = _jwtTokenGenerator.GeneratePasswordResetToken(userId.Value, TimeSpan.FromMinutes(_options.ResetTokenLifetimeMinutes));
+        // Atomically bind this JTI to the reset code record to prevent concurrent reuse
+        // and to track token consumption during the final password reset step.
+        bool marked = await _codeCommands.MarkAsVerifiedAsync(record.Id, jti, ct);
+        if (!marked)
+        {
+            LogFailure("code already consumed concurrently", command.Email);
+            return Result.Fail(new ValidationError("Invalid code."));
+        }
+
+        string resetToken = _jwtTokenGenerator.GeneratePasswordResetToken(userId.Value, jti, TimeSpan.FromMinutes(_options.ResetTokenLifetimeMinutes));
 
         _logger.LogInformation(
             "Password reset code verified successfully. Identifier: {Identifier}",

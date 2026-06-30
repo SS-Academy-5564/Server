@@ -56,7 +56,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     }
 
     /// <inheritdoc/>
-    public string GeneratePasswordResetToken(Guid userId, TimeSpan expiresIn)
+    public string GeneratePasswordResetToken(Guid userId, string jti, TimeSpan expiresIn)
     {
         DateTimeOffset now = _timeProvider.GetUtcNow();
 
@@ -64,7 +64,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         {
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(JwtClaimNames.Purpose, JwtClaimNames.PasswordResetPurpose),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Jti, jti)
         };
 
         SymmetricSecurityKey key = new(_secretKeyBytes);
@@ -84,7 +84,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     }
 
     /// <inheritdoc/>
-    public Guid? ValidatePasswordResetToken(string token)
+    public (Guid UserId, string Jti)? ValidatePasswordResetToken(string token)
     {
         SymmetricSecurityKey key = new(_secretKeyBytes);
 
@@ -115,7 +115,14 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             }
 
             string? sub = result.ClaimsIdentity.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
-            return Guid.TryParse(sub, out Guid userId) ? userId : null;
+            string? jti = result.ClaimsIdentity.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
+            
+            if (Guid.TryParse(sub, out Guid userId) && !string.IsNullOrEmpty(jti))
+            {
+                return (userId, jti);
+            }
+            
+            return null;
         }
         catch
         {

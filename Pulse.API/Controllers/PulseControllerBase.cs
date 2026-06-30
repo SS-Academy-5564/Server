@@ -15,11 +15,7 @@ public abstract class PulseControllerBase : ControllerBase
     {
         if (result.IsSuccess)
         {
-            return Ok(new ApiResponse<T>
-            {
-                Success = true,
-                Data = result.Value
-            });
+            return Ok(new ApiResponse<T> { Success = true, Data = result.Value });
         }
 
         return MapErrorToResponse(result);
@@ -29,10 +25,7 @@ public abstract class PulseControllerBase : ControllerBase
     {
         if (result.IsSuccess)
         {
-            return Ok(new ApiResponse
-            {
-                Success = true
-            });
+            return Ok(new ApiResponse { Success = true });
         }
 
         return MapErrorToResponse(result);

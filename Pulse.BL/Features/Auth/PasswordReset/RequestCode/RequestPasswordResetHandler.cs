@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Features.Email;
@@ -57,11 +58,7 @@ public class RequestPasswordResetHandler : IRequestPasswordResetHandler
         string codeHash = _passwordHasher.HashPassword(plainCode);
         DateTimeOffset expiresAt = _timeProvider.GetUtcNow().AddMinutes(_options.CodeTtlMinutes);
 
-        // Delete any existing codes for this user, then create a fresh one
-        await _codeCommands.DeleteByUserIdAsync(userId.Value, ct);
-        await _codeCommands.CreateAsync(new PasswordResetCodeInput(userId.Value, codeHash, expiresAt), ct);
-
-        // Send the email (best-effort; we still return Ok even if it fails)
+        // Send the email first
         Result emailResult = await _emailService.SendEmailAsync(new SendEmailDto(
             To: [command.Email],
             Subject: PasswordResetEmailBuilder.BuildSubject(),
@@ -71,10 +68,14 @@ public class RequestPasswordResetHandler : IRequestPasswordResetHandler
 
         if (emailResult.IsFailed)
         {
-            _logger.LogWarning(
-                "Password reset code created but email delivery failed for identifier: {Identifier}",
+            _logger.LogError("Failed to send reset email for identifier: {Identifier}",
                 PiiHasher.HashForLogging(command.Email));
+
+            return Result.Ok();
         }
+
+        // Transactionally replace any existing codes for this user with a fresh one ONLY after successful email
+        await _codeCommands.ReplaceAsync(new PasswordResetCodeInput(userId.Value, codeHash, expiresAt), ct);
 
         _logger.LogInformation(
             "Password reset code issued. Identifier: {Identifier}",

@@ -22,17 +22,18 @@ public interface IJwtTokenGenerator
     GeneratedJwtToken GenerateToken(Guid userId, string roleName, Guid organizationId);
 
     /// <summary>
-    /// Generates a short-lived password reset token for the given user.
+    /// Generates a short-lived password reset token for the given user, tied to a specific session JTI.
     /// </summary>
     /// <param name="userId">The identifier of the user.</param>
+    /// <param name="jti">The unique JWT ID for the reset session.</param>
     /// <param name="expiresIn">How long the reset token should be valid.</param>
     /// <returns>A signed JWT intended only for the password reset flow.</returns>
-    string GeneratePasswordResetToken(Guid userId, TimeSpan expiresIn);
+    string GeneratePasswordResetToken(Guid userId, string jti, TimeSpan expiresIn);
 
     /// <summary>
-    /// Validates a password reset token and extracts the user ID.
+    /// Validates a password reset token and extracts the user ID and JTI.
     /// </summary>
     /// <param name="token">The token to validate.</param>
-    /// <returns>The user ID embedded in the token, or <c>null</c> if the token is invalid or expired.</returns>
-    Guid? ValidatePasswordResetToken(string token);
+    /// <returns>The user ID and JTI embedded in the token, or <c>null</c> if the token is invalid or expired.</returns>
+    (Guid UserId, string Jti)? ValidatePasswordResetToken(string token);
 }

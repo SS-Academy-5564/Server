@@ -88,12 +88,13 @@ public static class ServiceCollectionExtensions
                     {
                         RateLimitRuleOptions resetRateLimit = rateLimitRules.Get(RateLimitSections.PasswordReset);
 
-                        return RateLimitPartition.GetFixedWindowLimiter(
+                        return RateLimitPartition.GetSlidingWindowLimiter(
                             partitionKey: GetClientIdentifier(context),
-                            factory: _ => new FixedWindowRateLimiterOptions
+                            factory: _ => new SlidingWindowRateLimiterOptions
                             {
                                 PermitLimit = resetRateLimit.MaxAttempts,
                                 Window = TimeSpan.FromMinutes(resetRateLimit.PeriodMinutes),
+                                SegmentsPerWindow = resetRateLimit.Segments,
                                 QueueLimit = 0,
                                 AutoReplenishment = true
                             });

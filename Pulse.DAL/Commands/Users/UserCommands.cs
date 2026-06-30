@@ -24,7 +24,14 @@ public class UserCommands : IUserCommands
             return await uow.Connection.ExecuteScalarAsync<Guid>(
                 new CommandDefinition(
                     "INSERT INTO Users (Email, FirstName, LastName, PasswordHash, CreatedAt, UpdatedAt) OUTPUT INSERTED.Id VALUES (@Email, @FirstName, @LastName, @PasswordHash, @Now, @Now)",
-                    new { input.Email, input.FirstName, input.LastName, input.PasswordHash, Now = DateTimeOffset.UtcNow },
+                    new
+                    {
+                        input.Email,
+                        input.FirstName,
+                        input.LastName,
+                        input.PasswordHash,
+                        Now = DateTimeOffset.UtcNow
+                    },
                     transaction: uow.Transaction,
                     cancellationToken: ct));
         }
@@ -35,14 +42,40 @@ public class UserCommands : IUserCommands
     }
 
     /// <inheritdoc/>
-    public async Task UpdatePasswordAsync(Guid userId, string passwordHash, CancellationToken ct)
+    public async Task<bool> ConsumeResetTokenAndUpdatePasswordAsync(Guid userId, string jti, string newPasswordHash,
+        CancellationToken ct)
     {
         using System.Data.IDbConnection connection = _connectionFactory.CreateConnection();
 
-        await connection.ExecuteAsync(
+        string sql = @"
+            SET XACT_ABORT ON;
+            BEGIN TRAN;
+
+            DECLARE @Deleted INT;
+
+            DELETE FROM PasswordResetCodes
+            WHERE UserId = @UserId AND Jti = @Jti AND ExpiresAt > GETUTCDATE();
+
+            SET @Deleted = @@ROWCOUNT;
+
+            IF @Deleted = 1
+            BEGIN
+                UPDATE Users
+                SET PasswordHash = @PasswordHash, UpdatedAt = @Now
+                WHERE Id = @UserId;
+            END
+
+            COMMIT TRAN;
+
+            SELECT @Deleted;
+        ";
+
+        int result = await connection.ExecuteScalarAsync<int>(
             new CommandDefinition(
-                "UPDATE Users SET PasswordHash = @PasswordHash, UpdatedAt = @Now WHERE Id = @UserId",
-                new { UserId = userId, PasswordHash = passwordHash, Now = DateTimeOffset.UtcNow },
+                sql,
+                new { UserId = userId, Jti = jti, PasswordHash = newPasswordHash, Now = DateTimeOffset.UtcNow },
                 cancellationToken: ct));
+
+        return result == 1;
     }
 }

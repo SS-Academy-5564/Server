@@ -76,8 +76,7 @@ public class RequestPasswordResetHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        _codeCommandsMock.Verify(x => x.DeleteByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-        _codeCommandsMock.Verify(x => x.CreateAsync(
+        _codeCommandsMock.Verify(x => x.ReplaceAsync(
             It.Is<PasswordResetCodeInput>(i => i.UserId == userId && i.CodeHash == "hashed_code" && i.ExpiresAt == now.AddMinutes(5)),
             It.IsAny<CancellationToken>()), Times.Once);
 
@@ -103,8 +102,7 @@ public class RequestPasswordResetHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        _codeCommandsMock.Verify(x => x.DeleteByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-        _codeCommandsMock.Verify(x => x.CreateAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
+        _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
         _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -131,5 +129,7 @@ public class RequestPasswordResetHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue(); // Endpoint should still succeed to avoid enumeration
+        
+        _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

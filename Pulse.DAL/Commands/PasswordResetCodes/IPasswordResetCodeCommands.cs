@@ -13,7 +13,17 @@ public interface IPasswordResetCodeCommands : ICommands
     /// <param name="input">The data required to create the reset code.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The <see cref="Guid"/> of the newly created record.</returns>
-    Task<Guid> CreateAsync(PasswordResetCodeInput input, CancellationToken ct);
+    Task<Guid> ReplaceAsync(PasswordResetCodeInput input, CancellationToken ct);
+
+    /// <summary>
+    /// Marks a password reset code as verified by replacing its hash with a JWT ID (JTI).
+    /// This prevents the 6-digit code from being reused, while preserving the row for the final atomic reset.
+    /// </summary>
+    /// <param name="id">The ID of the reset code.</param>
+    /// <param name="jti">The unique identifier of the JWT.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>True if exactly one row was updated.</returns>
+    Task<bool> MarkAsVerifiedAsync(Guid id, string jti, CancellationToken ct);
 
     /// <summary>
     /// Deletes all password reset codes for the specified user.

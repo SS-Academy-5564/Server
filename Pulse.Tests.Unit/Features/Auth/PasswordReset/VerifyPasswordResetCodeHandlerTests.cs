@@ -68,7 +68,8 @@ public class VerifyPasswordResetCodeHandlerTests
         _codeQueriesMock.Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(record);
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
         _passwordHasherMock.Setup(x => x.VerifyHashedPassword("hashed_code", code)).Returns(true);
-        _jwtTokenGeneratorMock.Setup(x => x.GeneratePasswordResetToken(userId, TimeSpan.FromMinutes(10))).Returns(resetToken);
+        _jwtTokenGeneratorMock.Setup(x => x.GeneratePasswordResetToken(userId, It.IsAny<string>(), TimeSpan.FromMinutes(10))).Returns(resetToken);
+        _codeCommandsMock.Setup(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         VerifyPasswordResetCodeCommand command = new(email, code);
 
@@ -79,7 +80,39 @@ public class VerifyPasswordResetCodeHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.ResetToken.Should().Be(resetToken);
 
-        _codeCommandsMock.Verify(x => x.DeleteByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _codeCommandsMock.Verify(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyAsync_WhenCodeAlreadyConsumed_ReturnsValidationError()
+    {
+        // Arrange
+        string email = "test@example.com";
+        string code = "123456";
+        Guid userId = Guid.NewGuid();
+        Guid codeId = Guid.NewGuid();
+
+        PasswordResetCodeRecord record = new(codeId, userId, "hashed_code", DateTimeOffset.UtcNow.AddMinutes(5), 0);
+
+        _userQueriesMock.Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>())).ReturnsAsync(userId);
+        _codeQueriesMock.Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(record);
+        _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
+        _passwordHasherMock.Setup(x => x.VerifyHashedPassword("hashed_code", code)).Returns(true);
+        
+        // Setup MarkAsVerifiedAsync to return false, simulating concurrent consumption
+        _codeCommandsMock.Setup(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        VerifyPasswordResetCodeCommand command = new(email, code);
+
+        // Act
+        Result<VerifyCodeResult> result = await _sut.VerifyAsync(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailed.Should().BeTrue();
+        result.Errors.First().Should().BeOfType<ValidationError>().Which.Message.Should().Be("Invalid code.");
+
+        _codeCommandsMock.Verify(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+        _jwtTokenGeneratorMock.Verify(x => x.GeneratePasswordResetToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<TimeSpan>()), Times.Never);
     }
 
     [Fact]

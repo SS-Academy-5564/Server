@@ -41,18 +41,20 @@ public class ResetPasswordHandlerTests
         string token = "valid_reset_token";
         string newPassword = "NewPassword123";
         Guid userId = Guid.NewGuid();
+        string jti = Guid.NewGuid().ToString();
         ResetPasswordCommand command = new(token, newPassword);
 
-        _jwtTokenGeneratorMock.Setup(x => x.ValidatePasswordResetToken(token)).Returns(userId);
+        _jwtTokenGeneratorMock.Setup(x => x.ValidatePasswordResetToken(token)).Returns((userId, jti));
         _passwordHasherMock.Setup(x => x.HashPassword(newPassword)).Returns("new_hashed_password");
+
+        _userCommandsMock.Setup(x => x.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, "new_hashed_password", It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         // Act
         Result result = await _sut.ResetAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        _userCommandsMock.Verify(x => x.UpdatePasswordAsync(userId, "new_hashed_password", It.IsAny<CancellationToken>()), Times.Once);
-        _codeCommandsMock.Verify(x => x.DeleteByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
+        _userCommandsMock.Verify(x => x.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, "new_hashed_password", It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -62,7 +64,7 @@ public class ResetPasswordHandlerTests
         string token = "invalid_token";
         ResetPasswordCommand command = new(token, "NewPassword123");
 
-        _jwtTokenGeneratorMock.Setup(x => x.ValidatePasswordResetToken(token)).Returns((Guid?)null);
+        _jwtTokenGeneratorMock.Setup(x => x.ValidatePasswordResetToken(token)).Returns(((Guid, string)?)null);
 
         // Act
         Result result = await _sut.ResetAsync(command, CancellationToken.None);
@@ -71,7 +73,31 @@ public class ResetPasswordHandlerTests
         result.IsFailed.Should().BeTrue();
         result.Errors.First().Should().BeOfType<UnauthorizedError>().Which.Message.Should().Be("The reset token is invalid or has expired.");
 
-        _userCommandsMock.Verify(x => x.UpdatePasswordAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-        _codeCommandsMock.Verify(x => x.DeleteByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+        _userCommandsMock.Verify(x => x.ConsumeResetTokenAndUpdatePasswordAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResetAsync_WhenTokenAlreadyConsumedOrUserNotFound_ReturnsUnauthorizedError()
+    {
+        // Arrange
+        string token = "valid_reset_token";
+        string newPassword = "NewPassword123";
+        Guid userId = Guid.NewGuid();
+        string jti = Guid.NewGuid().ToString();
+        ResetPasswordCommand command = new(token, newPassword);
+
+        _jwtTokenGeneratorMock.Setup(x => x.ValidatePasswordResetToken(token)).Returns((userId, jti));
+        _passwordHasherMock.Setup(x => x.HashPassword(newPassword)).Returns("new_hashed_password");
+        
+        _userCommandsMock.Setup(x => x.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, "new_hashed_password", It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+        // Act
+        Result result = await _sut.ResetAsync(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailed.Should().BeTrue();
+        result.Errors.First().Should().BeOfType<UnauthorizedError>().Which.Message.Should().Be("The reset token is invalid or has already been used.");
+
+        _userCommandsMock.Verify(x => x.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, "new_hashed_password", It.IsAny<CancellationToken>()), Times.Once);
     }
 }

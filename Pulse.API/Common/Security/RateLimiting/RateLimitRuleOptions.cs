@@ -14,4 +14,9 @@ public sealed class RateLimitRuleOptions
     /// Gets or sets the period, in minutes, used to replenish attempts.
     /// </summary>
     public int PeriodMinutes { get; set; }
+
+    /// <summary>
+    /// Gets or sets the number of segments used for rate limiting.
+    /// </summary>
+    public int Segments { get; set; }
 }

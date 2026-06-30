@@ -16,10 +16,12 @@ public interface IUserCommands : ICommands
     Task<Guid> CreateUserAsync(CreateUserInput input, IUnitOfWork uow, CancellationToken ct);
 
     /// <summary>
-    /// Updates the password hash for the specified user.
+    /// Atomically consumes a one-time password reset token (JTI) and updates the password hash if valid.
     /// </summary>
-    /// <param name="userId">The ID of the user whose password should be updated.</param>
-    /// <param name="passwordHash">The new hashed password.</param>
+    /// <param name="userId">The ID of the user.</param>
+    /// <param name="jti">The JWT ID of the reset token.</param>
+    /// <param name="newPasswordHash">The new hashed password.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    Task UpdatePasswordAsync(Guid userId, string passwordHash, CancellationToken ct);
+    /// <returns>True if the token was consumed and password updated, false otherwise.</returns>
+    Task<bool> ConsumeResetTokenAndUpdatePasswordAsync(Guid userId, string jti, string newPasswordHash, CancellationToken ct);
 }
