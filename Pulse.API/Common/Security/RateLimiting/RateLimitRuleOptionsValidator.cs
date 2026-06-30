@@ -28,6 +28,11 @@ public sealed class RateLimitRuleOptionsValidator : IValidateOptions<RateLimitRu
             errors.Add($"{optionsPath}:PeriodMinutes must be greater than zero.");
         }
 
+        if (options.Segments <= 0)
+        {
+            errors.Add($"{optionsPath}:Segments must be greater than zero.");
+        }
+
         return errors.Count > 0
             ? ValidateOptionsResult.Fail(errors)
             : ValidateOptionsResult.Success;
