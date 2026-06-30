@@ -129,7 +129,7 @@ public class RequestPasswordResetHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue(); // Endpoint should still succeed to avoid enumeration
-        
+
         _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }

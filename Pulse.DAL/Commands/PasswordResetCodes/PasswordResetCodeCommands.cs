@@ -46,7 +46,7 @@ public class PasswordResetCodeCommands : IPasswordResetCodeCommands
                 "UPDATE PasswordResetCodes SET Jti = @Jti WHERE Id = @Id AND Jti IS NULL",
                 new { Id = id, Jti = jti },
                 cancellationToken: ct));
-        
+
         return rowsAffected == 1;
     }
 
@@ -60,7 +60,7 @@ public class PasswordResetCodeCommands : IPasswordResetCodeCommands
                 "DELETE FROM PasswordResetCodes WHERE Id = @Id",
                 new { Id = id },
                 cancellationToken: ct));
-        
+
         return rowsAffected == 1;
     }
 

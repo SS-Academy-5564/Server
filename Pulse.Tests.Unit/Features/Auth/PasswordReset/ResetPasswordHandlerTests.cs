@@ -88,7 +88,7 @@ public class ResetPasswordHandlerTests
 
         _jwtTokenGeneratorMock.Setup(x => x.ValidatePasswordResetToken(token)).Returns((userId, jti));
         _passwordHasherMock.Setup(x => x.HashPassword(newPassword)).Returns("new_hashed_password");
-        
+
         _userCommandsMock.Setup(x => x.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, "new_hashed_password", It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         // Act

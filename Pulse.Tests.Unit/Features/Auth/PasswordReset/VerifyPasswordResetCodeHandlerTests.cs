@@ -98,7 +98,7 @@ public class VerifyPasswordResetCodeHandlerTests
         _codeQueriesMock.Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(record);
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
         _passwordHasherMock.Setup(x => x.VerifyHashedPassword("hashed_code", code)).Returns(true);
-        
+
         // Setup MarkAsVerifiedAsync to return false, simulating concurrent consumption
         _codeCommandsMock.Setup(x => x.MarkAsVerifiedAsync(codeId, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(false);
 

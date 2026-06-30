@@ -116,12 +116,12 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
             string? sub = result.ClaimsIdentity.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
             string? jti = result.ClaimsIdentity.FindFirst(JwtRegisteredClaimNames.Jti)?.Value;
-            
+
             if (Guid.TryParse(sub, out Guid userId) && !string.IsNullOrEmpty(jti))
             {
                 return (userId, jti);
             }
-            
+
             return null;
         }
         catch

@@ -46,7 +46,7 @@ public class ResetPasswordHandler : IResetPasswordHandler
         string jti = tokenData.Value.Jti;
 
         string newHash = _passwordHasher.HashPassword(command.NewPassword);
-        
+
         bool success = await _userCommands.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, newHash, ct);
 
         if (!success)
