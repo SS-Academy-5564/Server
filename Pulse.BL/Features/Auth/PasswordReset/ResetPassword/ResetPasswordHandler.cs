@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
-using Pulse.DAL.Commands.PasswordResetCodes;
 using Pulse.DAL.Commands.Users;
 
 namespace Pulse.BL.Features.Auth.PasswordReset.ResetPassword;
@@ -14,20 +13,17 @@ public class ResetPasswordHandler : IResetPasswordHandler
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUserCommands _userCommands;
-    private readonly IPasswordResetCodeCommands _codeCommands;
     private readonly ILogger<ResetPasswordHandler> _logger;
 
     public ResetPasswordHandler(
         IJwtTokenGenerator jwtTokenGenerator,
         IPasswordHasher passwordHasher,
         IUserCommands userCommands,
-        IPasswordResetCodeCommands codeCommands,
         ILogger<ResetPasswordHandler> logger)
     {
         _jwtTokenGenerator = jwtTokenGenerator;
         _passwordHasher = passwordHasher;
         _userCommands = userCommands;
-        _codeCommands = codeCommands;
         _logger = logger;
     }
 

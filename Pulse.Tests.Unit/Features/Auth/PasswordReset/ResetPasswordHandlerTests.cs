@@ -30,7 +30,6 @@ public class ResetPasswordHandlerTests
             _jwtTokenGeneratorMock.Object,
             _passwordHasherMock.Object,
             _userCommandsMock.Object,
-            _codeCommandsMock.Object,
             new Mock<ILogger<ResetPasswordHandler>>().Object);
     }
 

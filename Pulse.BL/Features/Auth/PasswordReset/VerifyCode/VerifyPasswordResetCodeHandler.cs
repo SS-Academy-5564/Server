@@ -62,31 +62,13 @@ public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
             return Result.Fail(new ValidationError("Invalid code."));
         }
 
-        // Check expiry
-        if (_timeProvider.GetUtcNow() >= record.ExpiresAt)
+        if (await DeleteIfExpiredAsync(record, command.Email, ct))
         {
-            await _codeCommands.DeleteByIdAsync(record.Id, ct);
-            LogFailure("code expired", command.Email);
             return Result.Fail(new ValidationError("The code has expired. Please request a new one."));
         }
 
-        // Verify the plain code against the stored hash
-        bool codeValid = _passwordHasher.VerifyHashedPassword(record.CodeHash, command.Code);
-
-        if (!codeValid)
+        if (!await VerifyCodeOrHandleFailureAsync(record, command.Code, command.Email, ct))
         {
-            int failedAttempts = await _codeCommands.IncrementFailedAttemptsAsync(record.Id, ct);
-
-            if (failedAttempts >= _options.MaxFailedAttempts)
-            {
-                await _codeCommands.DeleteByIdAsync(record.Id, ct);
-                LogFailure($"code invalidated after {failedAttempts} failed attempts", command.Email);
-            }
-            else
-            {
-                LogFailure($"wrong code ({failedAttempts}/{_options.MaxFailedAttempts} attempts)", command.Email);
-            }
-
             return Result.Fail(new ValidationError("Invalid code."));
         }
 
@@ -111,6 +93,42 @@ public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
             PiiHasher.HashForLogging(command.Email));
 
         return Result.Ok(new VerifyCodeResult(resetToken));
+    }
+
+    private async Task<bool> DeleteIfExpiredAsync(PasswordResetCodeRecord record, string email, CancellationToken ct)
+    {
+        if (_timeProvider.GetUtcNow() >= record.ExpiresAt)
+        {
+            await _codeCommands.DeleteByIdAsync(record.Id, ct);
+            LogFailure("code expired", email);
+            return true;
+        }
+
+        return false;
+    }
+
+    private async Task<bool> VerifyCodeOrHandleFailureAsync(PasswordResetCodeRecord record, string code, string email, CancellationToken ct)
+    {
+        bool codeValid = _passwordHasher.VerifyHashedPassword(record.CodeHash, code);
+
+        if (!codeValid)
+        {
+            int failedAttempts = await _codeCommands.IncrementFailedAttemptsAsync(record.Id, ct);
+
+            if (failedAttempts >= _options.MaxFailedAttempts)
+            {
+                await _codeCommands.DeleteByIdAsync(record.Id, ct);
+                LogFailure($"code invalidated after {failedAttempts} failed attempts", email);
+            }
+            else
+            {
+                LogFailure($"wrong code ({failedAttempts}/{_options.MaxFailedAttempts} attempts)", email);
+            }
+
+            return false;
+        }
+
+        return true;
     }
 
     private void LogFailure(string reason, string email)

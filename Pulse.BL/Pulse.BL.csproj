@@ -1,15 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="FluentResults" Version="4.0.0" />
-    <PackageReference Include="FluentValidation" Version="12.1.1" />  
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="Scriban" Version="7.2.5" />  
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.16.0" />
     <PackageReference Include="Resend" Version="0.5.1" />
 </ItemGroup>
   
   <ItemGroup>
     <ProjectReference Include="..\Pulse.DAL\Pulse.DAL.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="**\*.html" />
+    <EmbeddedResource Include="**\*.txt" />
   </ItemGroup>
 
   <PropertyGroup>
