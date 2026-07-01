@@ -5,5 +5,5 @@ Create table UserLoginAttempts(
 
     CONSTRAINT PK_UserLoginAttempts PRIMARY KEY(UserId),
     CONSTRAINT FK_UserLoginAttempts_Users FOREIGN KEY(UserId) REFERENCES Users(Id) ON DELETE CASCADE,
-    CONSTRAINT CHK_UserLoginAttempts_AttemptCount CHECK (AttemptCount >= 0)
+    CONSTRAINT CHK_UserLoginAttempts_AttemptCount CHECK (FailedAttempts >= 0)
 )

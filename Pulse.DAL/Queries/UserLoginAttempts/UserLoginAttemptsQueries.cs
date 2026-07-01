@@ -18,7 +18,7 @@ public class UserLoginAttemptsQueries : IUserLoginAttemptsQueries
 
         return await connection.QuerySingleOrDefaultAsync<UserLoginAttemptsRecord?>(
             new CommandDefinition(
-                "SELECT ula.UserId, ula.AttemptCount, ula.LockedUntil " +
+                "SELECT ula.UserId, ula.FailedAttempts, ula.LockedUntil " +
                 "FROM UserLoginAttempts AS ula " +
                 " WHERE ula.UserId = @userId",
                     new { userId },
