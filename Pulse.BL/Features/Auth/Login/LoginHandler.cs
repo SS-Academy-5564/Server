@@ -55,6 +55,7 @@ public class LoginHandler : ILoginHandler
 
         if (!passwordValid)
         {
+            await _loginLockoutService.AddFailedAttemptAsync(user.Id, ct);
             LogFailure("invalid password", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }

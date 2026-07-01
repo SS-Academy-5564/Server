@@ -30,6 +30,18 @@ public class LoginLockoutService : ILoginLockoutService
                loginAttempts.LockedUntil <= _timeProvider.GetUtcNow().UtcDateTime;
     }
 
+    public Task AddFailedAttemptAsync(Guid userId, CancellationToken ct)
+    {
+        DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
+
+        return _userLoginLockoutCommands.AddFailedAttemptAsync(
+            userId,
+            _options.MaxFailedAttempts,
+            now,
+            now.AddMinutes(_options.LockoutDurationMinutes),
+            ct);
+    }
+
     public async Task ResetAttemptsAsync(Guid userId, CancellationToken ct)
     {
         await _userLoginLockoutCommands.ResetAttemptsAsync(userId, ct);

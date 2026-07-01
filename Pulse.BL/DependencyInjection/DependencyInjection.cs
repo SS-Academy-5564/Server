@@ -17,6 +17,7 @@ public static class DependencyInjection
         services.AddSingleton(TimeProvider.System);
         services.AddTransient<IPasswordHasher, PasswordHasher>();
         services.AddTransient<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<ILoginLockoutService, LoginLockoutService>();
 
         services.AddSingleton<IValidateOptions<LoginLockoutOptions>, LoginLockoutOptionsValidator>();
         services.AddOptions<LoginLockoutOptions>()
