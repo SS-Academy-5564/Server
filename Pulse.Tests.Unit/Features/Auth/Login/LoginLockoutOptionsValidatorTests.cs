@@ -9,10 +9,14 @@ public class LoginLockoutOptionsValidatorTests
     private readonly LoginLockoutOptionsValidator _sut = new();
 
     [Fact]
-    public void Validate_WhenOptionsValid_ReturnsSuccess()
+    public void Validate_WhenAllRequiredFieldsSet_ReturnsSuccess()
     {
         // Arrange
-        LoginLockoutOptions options = CreateOptions();
+        LoginLockoutOptions options = new()
+        {
+            MaxFailedAttempts = 5,
+            LockoutDurationMinutes = 15
+        };
 
         // Act
         ValidateOptionsResult result = _sut.Validate(null, options);
@@ -24,12 +28,15 @@ public class LoginLockoutOptionsValidatorTests
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public void Validate_WhenMaxFailedAttemptsNotPositive_ReturnsFailure(
+    public void Validate_WhenMaxFailedAttemptsZeroOrNegative_ReturnsFail(
         int maxFailedAttempts)
     {
         // Arrange
-        LoginLockoutOptions options = CreateOptions(
-            maxFailedAttempts: maxFailedAttempts);
+        LoginLockoutOptions options = new()
+        {
+            MaxFailedAttempts = maxFailedAttempts,
+            LockoutDurationMinutes = 15
+        };
 
         // Act
         ValidateOptionsResult result = _sut.Validate(null, options);
@@ -43,12 +50,15 @@ public class LoginLockoutOptionsValidatorTests
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
-    public void Validate_WhenLockoutDurationNotPositive_ReturnsFailure(
+    public void Validate_WhenLockoutDurationMinutesZeroOrNegative_ReturnsFail(
         int lockoutDurationMinutes)
     {
         // Arrange
-        LoginLockoutOptions options = CreateOptions(
-            lockoutDurationMinutes: lockoutDurationMinutes);
+        LoginLockoutOptions options = new()
+        {
+            MaxFailedAttempts = 5,
+            LockoutDurationMinutes = lockoutDurationMinutes
+        };
 
         // Act
         ValidateOptionsResult result = _sut.Validate(null, options);
@@ -60,28 +70,23 @@ public class LoginLockoutOptionsValidatorTests
     }
 
     [Fact]
-    public void Validate_WhenBothValuesInvalid_ReturnsBothFailures()
+    public void Validate_WhenMultipleErrorsExist_ReturnsAllErrors()
     {
         // Arrange
-        LoginLockoutOptions options = CreateOptions(
-            maxFailedAttempts: 0,
-            lockoutDurationMinutes: 0);
+        LoginLockoutOptions options = new()
+        {
+            MaxFailedAttempts = 0,
+            LockoutDurationMinutes = 0
+        };
 
         // Act
         ValidateOptionsResult result = _sut.Validate(null, options);
 
         // Assert
-        result.Failures.Should().HaveCount(2);
-    }
-
-    private static LoginLockoutOptions CreateOptions(
-        int maxFailedAttempts = 5,
-        int lockoutDurationMinutes = 15)
-    {
-        return new LoginLockoutOptions
-        {
-            MaxFailedAttempts = maxFailedAttempts,
-            LockoutDurationMinutes = lockoutDurationMinutes
-        };
+        result.Succeeded.Should().BeFalse();
+        result.Failures.Should().Contain(
+            $"{LoginLockoutOptions.SectionName}:MaxFailedAttempts must be greater than zero.");
+        result.Failures.Should().Contain(
+            $"{LoginLockoutOptions.SectionName}:LockoutDurationMinutes must be greater than zero.");
     }
 }
