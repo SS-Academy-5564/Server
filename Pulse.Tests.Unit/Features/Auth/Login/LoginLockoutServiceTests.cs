@@ -1,4 +1,3 @@
-using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Pulse.BL.Features.Auth.Login.LoginLockout;
