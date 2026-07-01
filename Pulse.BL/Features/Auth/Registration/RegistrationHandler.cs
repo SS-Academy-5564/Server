@@ -1,5 +1,6 @@
 using FluentResults;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Users;
@@ -10,7 +11,7 @@ using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.Registration;
 
-public class RegistrationHandler : IRegistrationHandler
+public class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result>
 {
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IUserCommands _userCommands;
@@ -32,8 +33,14 @@ public class RegistrationHandler : IRegistrationHandler
         _passwordHasher = passwordHasher;
         _memberCommands = memberCommands;
     }
-    /// <inheritdoc/>
-    public async Task<Result> RegisterAsync(RegistrationCommand command, CancellationToken ct)
+
+    /// <summary>
+    /// Registers a new user with the provided registration details.
+    /// </summary>
+    /// <param name="request">The command containing the user's registration data.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A <see cref="Result"/> indicating success or a failure with error details.</returns>
+    public async Task<Result> HandleAsync(RegistrationCommand command, CancellationToken ct)
     {
         bool userExists = await _userQueries.EmailExistsAsync(command.Email, ct);
 
