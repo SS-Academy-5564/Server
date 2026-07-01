@@ -10,7 +10,7 @@ public sealed class LoginLockoutOptionsValidator : IValidateOptions<LoginLockout
 
         if (options.MaxFailedAttempts <= 0)
         {
-            errors.Add($"{LoginLockoutOptions.SectionName}:MaxAttempts must be greater than zero.");
+            errors.Add($"{LoginLockoutOptions.SectionName}:MaxFailedAttempts must be greater than zero.");
         }
 
         if (options.LockoutDurationMinutes <= 0)

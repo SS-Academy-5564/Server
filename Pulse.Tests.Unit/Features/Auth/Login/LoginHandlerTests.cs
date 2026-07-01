@@ -68,7 +68,7 @@ public class LoginHandlerTests
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
 
         _loginLockoutServiceMock
-            .Setup(x => x.TryReserveLoginAttemptAsync(userId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.IsUserAllowedAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -126,7 +126,7 @@ public class LoginHandlerTests
             .ReturnsAsync(userRecord);
 
         _loginLockoutServiceMock
-            .Setup(x => x.TryReserveLoginAttemptAsync(userRecord.Id, ct: CancellationToken.None))
+            .Setup(x => x.IsUserAllowedAsync(userRecord.Id, ct: CancellationToken.None))
             .ReturnsAsync(true);
 
         _passwordHasherMock
@@ -160,7 +160,7 @@ public class LoginHandlerTests
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
         _loginLockoutServiceMock
-            .Setup(x => x.TryReserveLoginAttemptAsync(userId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.IsUserAllowedAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         Result<LoginResult> result = await _sut.LoginAsync(
