@@ -4,9 +4,9 @@ namespace Pulse.DAL.Commands.LoginAttempts;
 
 public interface IUserLoginAttemptsCommands : ICommands
 {
-    Task AddFailedAttemptAsync(
+    Task<bool> TryReserveLoginAttemptAsync(
         Guid userId,
-        int maxFailedAttempts,
+        int maxAttempts,
         DateTime now,
         DateTime lockedUntil,
         CancellationToken ct);

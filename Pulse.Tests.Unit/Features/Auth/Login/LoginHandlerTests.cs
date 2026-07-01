@@ -68,7 +68,7 @@ public class LoginHandlerTests
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
 
         _loginLockoutServiceMock
-            .Setup(x => x.IsUserAllowedAsync(userId, It.IsAny<CancellationToken>()))
+            .Setup(x => x.TryReserveLoginAttemptAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -126,7 +126,7 @@ public class LoginHandlerTests
             .ReturnsAsync(userRecord);
 
         _loginLockoutServiceMock
-            .Setup(x => x.IsUserAllowedAsync(userRecord.Id, ct: CancellationToken.None))
+            .Setup(x => x.TryReserveLoginAttemptAsync(userRecord.Id, ct: CancellationToken.None))
             .ReturnsAsync(true);
 
         _passwordHasherMock
@@ -142,5 +142,35 @@ public class LoginHandlerTests
 
         UnauthorizedError error = result.Errors.First().Should().BeOfType<UnauthorizedError>().Subject;
         error.Message.Should().Be("Invalid email or password.");
+    }
+
+    [Fact]
+    public async Task LoginAsync_WhenUserLocked_ReturnsGenericUnauthorizedErrorAsync()
+    {
+        Guid userId = Guid.NewGuid();
+        const string email = "user@example.com";
+        UserAuthRecord userRecord = new(
+            userId,
+            email,
+            "hash",
+            Guid.NewGuid(),
+            "User");
+
+        _userQueriesMock
+            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userRecord);
+        _loginLockoutServiceMock
+            .Setup(x => x.TryReserveLoginAttemptAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
+        Result<LoginResult> result = await _sut.LoginAsync(
+            new LoginCommand(email, "Password123"),
+            CancellationToken.None);
+
+        result.Errors.Single().Should().BeOfType<UnauthorizedError>()
+            .Which.Message.Should().Be("Invalid email or password.");
+        _passwordHasherMock.Verify(
+            x => x.VerifyHashedPassword(It.IsAny<string>(), It.IsAny<string>()),
+            Times.Never);
     }
 }

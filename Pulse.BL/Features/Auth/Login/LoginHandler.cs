@@ -43,7 +43,7 @@ public class LoginHandler : ILoginHandler
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
-        bool isAllowed = await _loginLockoutService.IsUserAllowedAsync(user.Id, ct);
+        bool isAllowed = await _loginLockoutService.TryReserveLoginAttemptAsync(user.Id, ct);
         if (!isAllowed)
         {
             LogFailure("user not allowed", command.Email);
@@ -55,7 +55,6 @@ public class LoginHandler : ILoginHandler
 
         if (!passwordValid)
         {
-            await _loginLockoutService.AddFailedAttemptAsync(user.Id, ct);
             LogFailure("invalid password", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }

@@ -1,7 +1,7 @@
 namespace Pulse.BL.Features.Auth.Login.LoginLockout;
 
 /// <summary>
-/// Defines account lockout options for failed login attempts.
+/// Defines account lockout options for login attempts.
 /// </summary>
 public sealed class LoginLockoutOptions
 {
@@ -11,9 +11,9 @@ public sealed class LoginLockoutOptions
     public const string SectionName = "Authentication:LoginLockout";
 
     /// <summary>
-    /// Gets the maximum number of failed login attempts before lockout.
+    /// Gets the maximum number of login attempts before lockout.
     /// </summary>
-    public int MaxFailedAttempts { get; init; }
+    public int MaxAttempts { get; init; }
 
     /// <summary>
     /// Gets the lockout duration, in minutes.

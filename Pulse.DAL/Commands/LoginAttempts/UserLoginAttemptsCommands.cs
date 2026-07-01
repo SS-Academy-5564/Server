@@ -12,9 +12,9 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
         _dbConnectionFactory = dbConnectionFactory;
     }
 
-    public async Task AddFailedAttemptAsync(
+    public async Task<bool> TryReserveLoginAttemptAsync(
         Guid userId,
-        int maxFailedAttempts,
+        int maxAttempts,
         DateTime now,
         DateTime lockedUntil,
         CancellationToken ct)
@@ -28,40 +28,54 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
             BEGIN TRY
                 BEGIN TRANSACTION;
 
-                UPDATE UserLoginAttempts WITH (UPDLOCK, HOLDLOCK)
-                SET
-                    FailedAttempts =
-                        CASE
-                            WHEN LockedUntil IS NOT NULL AND LockedUntil <= @Now
-                            THEN 1
-                            ELSE FailedAttempts + 1
-                        END,
-                    LockedUntil =
-                        CASE
-                            WHEN
-                                CASE
-                                    WHEN LockedUntil IS NOT NULL AND LockedUntil <= @Now
-                                    THEN 1
-                                    ELSE FailedAttempts + 1
-                                END >= @MaxFailedAttempts
-                            THEN @LockedUntil
-                            ELSE NULL
-                        END
+                DECLARE @AttemptCount INT;
+                DECLARE @CurrentLockedUntil DATETIME2;
+                DECLARE @IsAllowed BIT = 0;
+
+                SELECT
+                    @AttemptCount = AttemptCount,
+                    @CurrentLockedUntil = LockedUntil
+                FROM UserLoginAttempts WITH (UPDLOCK, HOLDLOCK)
                 WHERE UserId = @UserId;
 
-                IF @@ROWCOUNT = 0
+                IF @AttemptCount IS NULL
                 BEGIN
-                    INSERT INTO UserLoginAttempts (UserId, FailedAttempts, LockedUntil)
+                    INSERT INTO UserLoginAttempts (UserId, AttemptCount, LockedUntil)
                     VALUES (
                         @UserId,
                         1,
                         CASE
-                            WHEN @MaxFailedAttempts <= 1 THEN @LockedUntil
+                            WHEN @MaxAttempts <= 1 THEN @LockedUntil
                             ELSE NULL
                         END);
+
+                    SET @IsAllowed = 1;
+                END
+                ELSE IF @CurrentLockedUntil IS NULL OR @CurrentLockedUntil <= @Now
+                BEGIN
+                    DECLARE @NextAttemptCount INT =
+                        CASE
+                            WHEN @CurrentLockedUntil IS NOT NULL THEN 1
+                            ELSE @AttemptCount + 1
+                        END;
+
+                    UPDATE UserLoginAttempts
+                    SET
+                        AttemptCount = @NextAttemptCount,
+                        LockedUntil =
+                            CASE
+                                WHEN @NextAttemptCount >= @MaxAttempts
+                                THEN @LockedUntil
+                                ELSE NULL
+                            END
+                    WHERE UserId = @UserId;
+
+                    SET @IsAllowed = 1;
                 END;
 
                 COMMIT TRANSACTION;
+
+                SELECT @IsAllowed;
             END TRY
             BEGIN CATCH
                 IF @@TRANCOUNT > 0
@@ -71,13 +85,13 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
             END CATCH;
             """;
 
-        await connection.ExecuteAsync(
+        return await connection.ExecuteScalarAsync<bool>(
             new CommandDefinition(
                 sql,
                 new
                 {
                     UserId = userId,
-                    MaxFailedAttempts = maxFailedAttempts,
+                    MaxAttempts = maxAttempts,
                     Now = now,
                     LockedUntil = lockedUntil
                 },
@@ -90,7 +104,7 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
         await connection.ExecuteAsync(
             new CommandDefinition(
                 "UPDATE UserLoginAttempts " +
-                "SET LockedUntil = NULL, FailedAttempts = 0 " +
+                "SET LockedUntil = NULL, AttemptCount = 0 " +
                 "WHERE UserId = @userId",
                 new { userId },
                 cancellationToken: ct)

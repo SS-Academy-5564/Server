@@ -8,9 +8,9 @@ public sealed class LoginLockoutOptionsValidator : IValidateOptions<LoginLockout
     {
         List<string> errors = new();
 
-        if (options.MaxFailedAttempts <= 0)
+        if (options.MaxAttempts <= 0)
         {
-            errors.Add($"{LoginLockoutOptions.SectionName}:MaxFailedAttempts must be greater than zero.");
+            errors.Add($"{LoginLockoutOptions.SectionName}:MaxAttempts must be greater than zero.");
         }
 
         if (options.LockoutDurationMinutes <= 0)
