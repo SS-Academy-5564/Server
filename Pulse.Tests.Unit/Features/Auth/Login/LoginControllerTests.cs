@@ -5,13 +5,14 @@ using Moq;
 using Pulse.API.Features.Auth.Login;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Auth.Login;
 
 namespace Pulse.Tests.Unit.Features.Auth.Login;
 
 public class LoginControllerTests
 {
-    private readonly Mock<ILoginHandler> _handlerMock;
+    private readonly Mock<IAsyncHandler<LoginCommand, Result<LoginResult>>> _handlerMock;
     private readonly LoginController _sut;
 
     public LoginControllerTests()
@@ -30,7 +31,7 @@ public class LoginControllerTests
         LoginResult loginResult = new("jwt_token_here", expiresAt);
 
         _handlerMock
-            .Setup(x => x.LoginAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.HandleAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(loginResult));
 
         // Act
@@ -53,7 +54,7 @@ public class LoginControllerTests
         LoginRequest request = new("invalid@example.com", "InvalidPassword");
 
         _handlerMock
-            .Setup(x => x.LoginAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.HandleAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail(new UnauthorizedError("Invalid email or password.")));
 
         // Act
@@ -79,7 +80,7 @@ public class LoginControllerTests
         LoginResult loginResult = new("token", DateTimeOffset.UtcNow.AddHours(1));
 
         _handlerMock
-            .Setup(x => x.LoginAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.HandleAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(loginResult));
 
         // Act
@@ -87,7 +88,7 @@ public class LoginControllerTests
 
         // Assert
         _handlerMock.Verify(
-            x => x.LoginAsync(
+            x => x.HandleAsync(
                 It.Is<LoginCommand>(cmd =>
                     cmd.Email == request.Email &&
                     cmd.Password == request.Password),

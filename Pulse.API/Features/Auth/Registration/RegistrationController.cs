@@ -2,6 +2,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Attributes;
 using Pulse.API.Controllers;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Auth.Registration;
 
 namespace Pulse.API.Features.Auth.Registration;
@@ -10,8 +11,8 @@ namespace Pulse.API.Features.Auth.Registration;
 [Route("api/auth")]
 public class RegistrationController : PulseControllerBase
 {
-    private readonly IRegistrationHandler _handler;
-    public RegistrationController(IRegistrationHandler handler)
+    private readonly IAsyncHandler<RegistrationCommand, Result> _handler;
+    public RegistrationController(IAsyncHandler<RegistrationCommand, Result> handler)
     {
         _handler = handler;
     }
@@ -26,7 +27,7 @@ public class RegistrationController : PulseControllerBase
     public async Task<IActionResult> RegisterAsync([Validate] RegistrationRequest request, CancellationToken ct)
     {
         RegistrationCommand command = new(request.Email, request.FirstName, request.LastName, request.Password);
-        Result result = await _handler.RegisterAsync(command, ct);
+        Result result = await _handler.HandleAsync(command, ct);
 
         return ToActionResult(result);
     }
