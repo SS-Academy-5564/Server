@@ -147,6 +147,7 @@ public class LoginHandlerTests
     [Fact]
     public async Task LoginAsync_WhenUserLocked_ReturnsGenericUnauthorizedErrorAsync()
     {
+        // Arrange
         Guid userId = Guid.NewGuid();
         const string email = "user@example.com";
         UserAuthRecord userRecord = new(
@@ -159,14 +160,17 @@ public class LoginHandlerTests
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
+
         _loginLockoutServiceMock
             .Setup(x => x.IsUserAllowedAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        Result<LoginResult> result = await _sut.LoginAsync(
+        // Act
+        Result<LoginResult> result = await _sut.HandleAsync(
             new LoginCommand(email, "Password123"),
             CancellationToken.None);
 
+        // Assert
         result.Errors.Single().Should().BeOfType<UnauthorizedError>()
             .Which.Message.Should().Be("Invalid email or password.");
         _passwordHasherMock.Verify(
