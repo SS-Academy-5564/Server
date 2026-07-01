@@ -1,3 +1,5 @@
+![CodeRabbit Pull Request Reviews](https://img.shields.io/coderabbit/prs/github/SS-Academy-5564/Server?utm_source=oss&utm_medium=github&utm_campaign=SS-Academy-5564%2FServer&labelColor=171717&color=FF570A&link=https%3A%2F%2Fcoderabbit.ai&label=CodeRabbit+Reviews)
+
 # Pulse
 
 Server-side monitoring solution built with .NET 10.

@@ -30,7 +30,7 @@ public class LoginHandlerTests
     }
 
     [Fact]
-    public async Task LoginAsync_WhenCredentialsValid_ReturnsTokenAsync()
+    public async Task HandleAsync_WhenCredentialsValid_ReturnsTokenAsync()
     {
         // Arrange
         string email = "user@example.com";
@@ -64,7 +64,7 @@ public class LoginHandlerTests
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
 
         // Act
-        Result<LoginResult> result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -73,7 +73,7 @@ public class LoginHandlerTests
     }
 
     [Fact]
-    public async Task LoginAsync_WhenUserDoesNotExist_ReturnsUnauthorizedErrorAsync()
+    public async Task HandleAsync_WhenUserDoesNotExist_ReturnsUnauthorizedErrorAsync()
     {
         // Arrange
         string email = "notfound@example.com";
@@ -85,7 +85,7 @@ public class LoginHandlerTests
             .ReturnsAsync((UserAuthRecord?)null);
 
         // Act
-        Result<LoginResult> result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -96,7 +96,7 @@ public class LoginHandlerTests
     }
 
     [Fact]
-    public async Task LoginAsync_WhenPasswordInvalid_ReturnsUnauthorizedErrorAsync()
+    public async Task HandleAsync_WhenPasswordInvalid_ReturnsUnauthorizedErrorAsync()
     {
         // Arrange
         string email = "user@example.com";
@@ -122,7 +122,7 @@ public class LoginHandlerTests
             .Returns(false);
 
         // Act
-        Result<LoginResult> result = await _sut.LoginAsync(command, CancellationToken.None);
+        Result<LoginResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();

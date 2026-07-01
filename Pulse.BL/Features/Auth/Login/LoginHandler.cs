@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
@@ -9,7 +10,7 @@ using Pulse.DAL.Queries.Users;
 namespace Pulse.BL.Features.Auth.Login;
 
 /// <inheritdoc/>
-public class LoginHandler : ILoginHandler
+public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
 {
     private readonly IUserQueries _userQueries;
     private readonly IPasswordHasher _passwordHasher;
@@ -28,8 +29,16 @@ public class LoginHandler : ILoginHandler
         _logger = logger;
     }
 
-    /// <inheritdoc/>
-    public async Task<Result<LoginResult>> LoginAsync(LoginCommand command, CancellationToken ct)
+    /// <summary>
+    /// Authenticates a user using provided credentials and returns a JWT token if successful.
+    /// </summary>
+    /// <param name="command">The login command containing email and password.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>
+    /// A result containing <see cref="LoginResult"/> on success,
+    /// or a failure result if authentication fails.
+    /// </returns>
+    public async Task<Result<LoginResult>> HandleAsync(LoginCommand command, CancellationToken ct)
     {
         UserAuthRecord? user = await _userQueries.GetByEmailForAuthAsync(command.Email, ct);
 
