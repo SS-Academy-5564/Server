@@ -1,0 +1,65 @@
+language: "en-US"
+reviews:
+  profile: "chill"
+  auto_review:
+    enabled: true
+    drafts: true
+  path_instructions:
+    - path: "Pulse.API/**/*.cs"
+      instructions: |
+        Follow Clean Architecture:
+        - Handle HTTP concerns only. No business logic. No direct DAL access.
+        - Use DTOs for requests and responses.
+        - Return appropriate HTTP status codes and ActionResult<T>.
+        - All controllers must extend PulseControllerBase.
+        - Do not apply [AutoValidate] directly to controllers (inherited from PulseControllerBase).
+        - Mark action parameters requiring validation with [Validate].
+        - Do not register FluentValidation validators manually in dependency injection.
+    - path: "Pulse.BL/**/*.cs"
+      instructions: |
+        Ensure business logic boundaries:
+        - Contains all business logic, services, DTOs, validation, authorization, and Result pattern error handling.
+        - Error handling: Use Result pattern (FluentResults). Return Result or Result<T> using specific AppError subclasses (NotFoundError, ValidationError, UnauthorizedError, ForbiddenError, ConflictError, InternalError) for failures. Do not throw exceptions for expected business errors. Do not use try/catch for business flow control.
+        - Performs entity-to-DTO mapping.
+        - Must not access the database directly (use DAL through repositories/abstractions).
+        - Must not reference Pulse.API or any HTTP/controller classes.
+    - path: "Pulse.DAL/**/*.cs"
+      instructions: |
+        Focus on persistence:
+        - Persistence logic only. Use Dapper and Microsoft.Data.SqlClient.
+        - Use parameterized SQL. Keep SQL inside DAL.
+        - Each query/command performs a single operation.
+        - Each file in Queries/ and Commands/ represents a single domain area.
+        - Create connections only through IDbConnectionFactory.
+    - path: "Pulse.DAL/Scripts/**/*.sql"
+      instructions: |
+        Migration script rules:
+        - Migrations must be additive and executed in sequence.
+        - Never modify an existing migration script already committed.
+        - Preserve the existing numbering/naming style.
+        - Development seed data belongs in Scripts/Dev/Seed.
+    - path: "Pulse.Worker/**/*.cs"
+      instructions: |
+        Background processing rules:
+        - Uses BL services only. No direct DAL or API reference.
+        - Support CancellationToken and propagate it.
+        - Log execution and failures.
+        - Worker must not execute migrations.
+    - path: "Pulse.Tests.Unit/**/*.cs"
+      instructions: |
+        Unit testing standards:
+        - Use xUnit. Follow Arrange-Act-Assert.
+        - Mock external dependencies using Moq or NSubstitute.
+        - Name test methods as MethodName_StateUnderTest_ExpectedBehavior (e.g. CreateMonitor_EmptyName_ShouldThrowValidationException).
+    - path: "**/*.cs"
+      instructions: |
+        Global C# standards:
+        - Use constructor injection for DI. No service locator or manual instantiation.
+        - Async: Use async/await for all I/O, end methods with Async, propagate CancellationToken, avoid blocking calls (.Result, .Wait(), .GetAwaiter().GetResult()).
+        - Error handling: Do not use try/catch for business flow control.
+        - Forbidden: No direct SqlConnection creation outside SqlConnectionFactory. No SQL outside DAL. No returning database entities from API. No cross-layer dependencies.
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - ".github/copilot-instructions.md"
