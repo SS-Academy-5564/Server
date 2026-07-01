@@ -12,15 +12,13 @@ public interface IUserLoginAttemptsCommands : ICommands
     /// </summary>
     /// <param name="userId">The user whose failed attempt should be recorded.</param>
     /// <param name="maxFailedAttempts">The maximum attempts allowed before lockout.</param>
-    /// <param name="now">The current UTC date and time.</param>
-    /// <param name="lockedUntil">The UTC expiration for a newly applied lockout.</param>
+    /// <param name="lockoutDurationMinutes">The configured lockout duration in minutes.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task AddFailedAttemptAsync(
         Guid userId,
         int maxFailedAttempts,
-        DateTime now,
-        DateTime lockedUntil,
+        int lockoutDurationMinutes,
         CancellationToken ct);
 
     /// <summary>

@@ -17,8 +17,7 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
     public async Task AddFailedAttemptAsync(
         Guid userId,
         int maxFailedAttempts,
-        DateTime now,
-        DateTime lockedUntil,
+        int lockoutDurationMinutes,
         CancellationToken ct)
     {
         using IDbConnection connection = _dbConnectionFactory.CreateConnection();
@@ -29,6 +28,10 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
 
             BEGIN TRY
                 BEGIN TRANSACTION;
+
+                DECLARE @Now DATETIME2 = SYSUTCDATETIME();
+                DECLARE @LockedUntil DATETIME2 =
+                    DATEADD(MINUTE, @LockoutDurationMinutes, @Now);
 
                 UPDATE UserLoginAttempts WITH (UPDLOCK, HOLDLOCK)
                 SET
@@ -80,8 +83,7 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
                 {
                     UserId = userId,
                     MaxFailedAttempts = maxFailedAttempts,
-                    Now = now,
-                    LockedUntil = lockedUntil
+                    LockoutDurationMinutes = lockoutDurationMinutes
                 },
                 cancellationToken: ct));
     }
