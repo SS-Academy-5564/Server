@@ -4,6 +4,7 @@ using Pulse.DAL.Connection;
 
 namespace Pulse.DAL.Commands.LoginAttempts;
 
+/// <inheritdoc cref="IUserLoginAttemptsCommands"/>
 public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
 {
     private readonly IDbConnectionFactory _dbConnectionFactory;
@@ -12,6 +13,7 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
         _dbConnectionFactory = dbConnectionFactory;
     }
 
+    /// <inheritdoc/>
     public async Task AddFailedAttemptAsync(
         Guid userId,
         int maxFailedAttempts,
@@ -84,6 +86,7 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
                 cancellationToken: ct));
     }
 
+    /// <inheritdoc/>
     public async Task ResetAttemptsAsync(Guid userId, CancellationToken ct)
     {
         using IDbConnection connection = _dbConnectionFactory.CreateConnection();
