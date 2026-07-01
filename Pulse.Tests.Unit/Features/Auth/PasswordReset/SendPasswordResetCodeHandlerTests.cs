@@ -12,16 +12,16 @@ using Pulse.DAL.Queries.Users;
 
 namespace Pulse.Tests.Unit.Features.Auth.PasswordReset;
 
-public class RequestPasswordResetHandlerTests
+public class SendPasswordResetCodeHandlerTests
 {
     private readonly Mock<IUserQueries> _userQueriesMock;
     private readonly Mock<IPasswordResetCodeCommands> _codeCommandsMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<IEmailService> _emailServiceMock;
     private readonly Mock<TimeProvider> _timeProviderMock;
-    private readonly RequestPasswordResetHandler _sut;
+    private readonly SendPasswordResetCodeHandler _sut;
 
-    public RequestPasswordResetHandlerTests()
+    public SendPasswordResetCodeHandlerTests()
     {
         _userQueriesMock = new Mock<IUserQueries>();
         _codeCommandsMock = new Mock<IPasswordResetCodeCommands>();
@@ -37,14 +37,14 @@ public class RequestPasswordResetHandlerTests
             ResetTokenLifetimeMinutes = 10
         });
 
-        _sut = new RequestPasswordResetHandler(
+        _sut = new SendPasswordResetCodeHandler(
             _userQueriesMock.Object,
             _codeCommandsMock.Object,
             _passwordHasherMock.Object,
             _emailServiceMock.Object,
             _timeProviderMock.Object,
             optionsMock.Object,
-            new Mock<ILogger<RequestPasswordResetHandler>>().Object);
+            new Mock<ILogger<SendPasswordResetCodeHandler>>().Object);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public class RequestPasswordResetHandlerTests
         // Arrange
         string email = "test@example.com";
         Guid userId = Guid.NewGuid();
-        RequestPasswordResetCommand command = new(email);
+        SendPasswordResetCodeCommand command = new(email);
 
         _userQueriesMock
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
@@ -90,7 +90,7 @@ public class RequestPasswordResetHandlerTests
     {
         // Arrange
         string email = "notfound@example.com";
-        RequestPasswordResetCommand command = new(email);
+        SendPasswordResetCodeCommand command = new(email);
 
         _userQueriesMock
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
@@ -112,7 +112,7 @@ public class RequestPasswordResetHandlerTests
         // Arrange
         string email = "test@example.com";
         Guid userId = Guid.NewGuid();
-        RequestPasswordResetCommand command = new(email);
+        SendPasswordResetCodeCommand command = new(email);
 
         _userQueriesMock
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))

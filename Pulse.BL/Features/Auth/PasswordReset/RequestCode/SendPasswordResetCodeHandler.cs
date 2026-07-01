@@ -11,7 +11,7 @@ using Pulse.DAL.Queries.Users;
 namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 
 /// <inheritdoc/>
-public class RequestPasswordResetHandler : IAsyncHandler<RequestPasswordResetCommand, Result>
+public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeCommand, Result>
 {
     private readonly IUserQueries _userQueries;
     private readonly IPasswordResetCodeCommands _codeCommands;
@@ -19,16 +19,16 @@ public class RequestPasswordResetHandler : IAsyncHandler<RequestPasswordResetCom
     private readonly IEmailService _emailService;
     private readonly TimeProvider _timeProvider;
     private readonly PasswordResetOptions _options;
-    private readonly ILogger<RequestPasswordResetHandler> _logger;
+    private readonly ILogger<SendPasswordResetCodeHandler> _logger;
 
-    public RequestPasswordResetHandler(
+    public SendPasswordResetCodeHandler(
         IUserQueries userQueries,
         IPasswordResetCodeCommands codeCommands,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
         TimeProvider timeProvider,
         IOptions<PasswordResetOptions> options,
-        ILogger<RequestPasswordResetHandler> logger)
+        ILogger<SendPasswordResetCodeHandler> logger)
     {
         _userQueries = userQueries;
         _codeCommands = codeCommands;
@@ -47,7 +47,7 @@ public class RequestPasswordResetHandler : IAsyncHandler<RequestPasswordResetCom
     /// <param name="command">The command containing the email address.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>Always a successful result.</returns>
-    public async Task<Result> HandleAsync(RequestPasswordResetCommand command, CancellationToken ct)
+    public async Task<Result> HandleAsync(SendPasswordResetCodeCommand command, CancellationToken ct)
     {
         Guid? userId = await _userQueries.GetIdByEmailAsync(command.Email, ct);
 

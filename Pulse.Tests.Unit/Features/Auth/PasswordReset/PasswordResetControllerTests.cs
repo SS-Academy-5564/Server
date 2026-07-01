@@ -14,14 +14,14 @@ namespace Pulse.Tests.Unit.Features.Auth.PasswordReset;
 
 public class PasswordResetControllerTests
 {
-    private readonly Mock<IAsyncHandler<RequestPasswordResetCommand, Result>> _requestHandlerMock;
+    private readonly Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result>> _requestHandlerMock;
     private readonly Mock<IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>>> _verifyHandlerMock;
     private readonly Mock<IAsyncHandler<ResetPasswordCommand, Result>> _resetHandlerMock;
     private readonly PasswordResetController _sut;
 
     public PasswordResetControllerTests()
     {
-        _requestHandlerMock = new Mock<IAsyncHandler<RequestPasswordResetCommand, Result>>();
+        _requestHandlerMock = new Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result>>();
         _verifyHandlerMock = new Mock<IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>>>();
         _resetHandlerMock = new Mock<IAsyncHandler<ResetPasswordCommand, Result>>();
 
@@ -38,7 +38,7 @@ public class PasswordResetControllerTests
         RequestPasswordResetRequest request = new("test@example.com");
 
         _requestHandlerMock
-            .Setup(x => x.HandleAsync(It.Is<RequestPasswordResetCommand>(c => c.Email == request.Email), It.IsAny<CancellationToken>()))
+            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
 
         // Act

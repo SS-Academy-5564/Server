@@ -67,7 +67,10 @@ public static class ServiceCollectionExtensions
 
             services.AddRateLimiter();
             services.AddOptions<RateLimiterOptions>()
-                .Configure<IOptionsMonitor<RateLimitRuleOptions>, IOptionsMonitor<SlidingWindowRateLimitRuleOptions>>((rateLimiterOptions, rateLimitRules, slidingWindowRules) =>
+                .Configure<
+                    IOptionsMonitor<RateLimitRuleOptions>,
+                    IOptionsMonitor<SlidingWindowRateLimitRuleOptions>>(
+                    (rateLimiterOptions, rateLimitRules, slidingWindowRules) =>
                 {
                     rateLimiterOptions.AddPolicy(RateLimitPolicies.Login, context =>
                     {
