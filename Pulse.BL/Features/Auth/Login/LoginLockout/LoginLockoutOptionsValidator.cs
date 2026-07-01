@@ -2,17 +2,13 @@ using Microsoft.Extensions.Options;
 
 namespace Pulse.BL.Features.Auth.Login.LoginLockout;
 
-/// <summary>
-/// Validates account login lockout configuration.
-/// </summary>
 public sealed class LoginLockoutOptionsValidator : IValidateOptions<LoginLockoutOptions>
 {
-    /// <inheritdoc/>
     public ValidateOptionsResult Validate(string? name, LoginLockoutOptions options)
     {
         List<string> errors = new();
 
-        if (options.MaxAttempts <= 0)
+        if (options.MaxFailedAttempts <= 0)
         {
             errors.Add($"{LoginLockoutOptions.SectionName}:MaxAttempts must be greater than zero.");
         }

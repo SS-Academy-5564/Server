@@ -1,6 +1,6 @@
 Create table UserLoginAttempts(
     UserId UniqueIdentifier NOT NULL,
-    AttemptCount INT NOT NULL CONSTRAINT DF_UserLoginAttempts_AttemptCount DEFAULT(0),
+    FailedAttempts INT NOT NULL CONSTRAINT DF_UserLoginAttempts_FailedAttempts DEFAULT(0),
     LockedUntil DateTime2 NULL,
 
     CONSTRAINT PK_UserLoginAttempts PRIMARY KEY(UserId),

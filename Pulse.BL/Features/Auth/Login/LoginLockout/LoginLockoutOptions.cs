@@ -13,7 +13,7 @@ public sealed class LoginLockoutOptions
     /// <summary>
     /// Gets the maximum number of login attempts before lockout.
     /// </summary>
-    public int MaxAttempts { get; init; }
+    public int MaxFailedAttempts { get; init; }
 
     /// <summary>
     /// Gets the lockout duration, in minutes.
