@@ -9,6 +9,12 @@ public class LoginLockoutService : ILoginLockoutService
     private readonly TimeProvider _timeProvider;
     private readonly LoginLockoutOptions _options;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LoginLockoutService"/> class.
+    /// </summary>
+    /// <param name="userLoginLockoutCommands">The login attempt database commands.</param>
+    /// <param name="timeProvider">The provider used to obtain the current UTC time.</param>
+    /// <param name="options">The configured login lockout options.</param>
     public LoginLockoutService(
         IUserLoginAttemptsCommands userLoginLockoutCommands,
         TimeProvider timeProvider,
@@ -18,6 +24,7 @@ public class LoginLockoutService : ILoginLockoutService
         _options = options.Value;
         _userLoginLockoutCommands = userLoginLockoutCommands;
     }
+    /// <inheritdoc/>
     public Task<bool> TryReserveLoginAttemptAsync(Guid userId, CancellationToken ct)
     {
         DateTime now = _timeProvider.GetUtcNow().UtcDateTime;
@@ -30,6 +37,7 @@ public class LoginLockoutService : ILoginLockoutService
             ct);
     }
 
+    /// <inheritdoc/>
     public async Task ResetAttemptsAsync(Guid userId, CancellationToken ct)
     {
         await _userLoginLockoutCommands.ResetAttemptsAsync(userId, ct);

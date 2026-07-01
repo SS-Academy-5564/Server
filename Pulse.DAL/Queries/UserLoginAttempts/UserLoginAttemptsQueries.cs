@@ -12,6 +12,7 @@ public class UserLoginAttemptsQueries : IUserLoginAttemptsQueries
         _dbConnectionFactory = dbConnectionFactory;
     }
 
+    /// <inheritdoc/>
     public async Task<UserLoginAttemptsRecord?> GetUserLoginAttemptsAsync(Guid userId, CancellationToken ct)
     {
         using IDbConnection connection = _dbConnectionFactory.CreateConnection();

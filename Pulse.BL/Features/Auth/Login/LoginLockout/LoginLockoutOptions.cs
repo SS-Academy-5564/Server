@@ -6,7 +6,7 @@ namespace Pulse.BL.Features.Auth.Login.LoginLockout;
 public sealed class LoginLockoutOptions
 {
     /// <summary>
-    ///  Configuration section for login Lockout.
+    /// Gets the configuration section containing login lockout settings.
     /// </summary>
     public const string SectionName = "Authentication:LoginLockout";
 
@@ -17,6 +17,6 @@ public sealed class LoginLockoutOptions
 
     /// <summary>
     /// Gets the lockout duration, in minutes.
-    /// /// </summary>
+    /// </summary>
     public int LockoutDurationMinutes { get; init; }
 }
