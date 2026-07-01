@@ -6,6 +6,6 @@ IF OBJECT_ID(N'dbo.HttpMethods', N'U') IS NULL
             Name NVARCHAR(20)     NOT NULL,
 
             CONSTRAINT PK_HttpMethods_Id PRIMARY KEY (Id),
-            CONSTRAINT UQ_HttpMethods_Name UNIQUE (Name),
+            CONSTRAINT UQ_HttpMethods_Name UNIQUE (Name)
         );
     END;

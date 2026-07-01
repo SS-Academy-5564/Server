@@ -18,6 +18,6 @@ IF OBJECT_ID(N'dbo.Monitors', N'U') IS NULL
             CONSTRAINT CK_Monitors_PollingIntervalSeconds CHECK (PollingIntervalSeconds BETWEEN 60 AND 24 * 60 * 60),
             CONSTRAINT CK_Monitors_PollingTimeoutSeconds CHECK (PollingTimeoutSeconds BETWEEN 5 AND 30),
             CONSTRAINT CK_Monitors_ResultPath CHECK (LEN(ResultPath) BETWEEN 1 AND 255),
-            CONSTRAINT FK_Monitors_HttpMethod FOREIGN KEY (HttpMethod) REFERENCES dbo.HttpMethods (Id),
+            CONSTRAINT FK_Monitors_HttpMethod FOREIGN KEY (HttpMethod) REFERENCES dbo.HttpMethods (Id)
         );
     END;
