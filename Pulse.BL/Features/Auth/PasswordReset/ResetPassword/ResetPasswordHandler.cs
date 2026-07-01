@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.DAL.Commands.Users;
@@ -8,7 +9,7 @@ using Pulse.DAL.Commands.Users;
 namespace Pulse.BL.Features.Auth.PasswordReset.ResetPassword;
 
 /// <inheritdoc/>
-public class ResetPasswordHandler : IResetPasswordHandler
+public class ResetPasswordHandler : IAsyncHandler<ResetPasswordCommand, Result>
 {
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IPasswordHasher _passwordHasher;
@@ -27,8 +28,13 @@ public class ResetPasswordHandler : IResetPasswordHandler
         _logger = logger;
     }
 
-    /// <inheritdoc/>
-    public async Task<Result> ResetAsync(ResetPasswordCommand command, CancellationToken ct)
+    /// <summary>
+    /// Validates the reset token and updates the user's password.
+    /// </summary>
+    /// <param name="command">The command containing the reset token and new password.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A successful result, or a failure if the token is invalid or expired.</returns>
+    public async Task<Result> HandleAsync(ResetPasswordCommand command, CancellationToken ct)
     {
         (Guid UserId, string Jti)? tokenData = await _jwtTokenGenerator.ValidatePasswordResetTokenAsync(command.ResetToken);
 

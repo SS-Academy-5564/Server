@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Pulse.API.Attributes;
 using Pulse.API.Constants;
 using Pulse.API.Controllers;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 using Pulse.BL.Features.Auth.PasswordReset.ResetPassword;
 using Pulse.BL.Features.Auth.PasswordReset.VerifyCode;
@@ -15,14 +16,14 @@ namespace Pulse.API.Features.Auth.PasswordReset;
 [AutoValidate]
 public class PasswordResetController : PulseControllerBase
 {
-    private readonly IRequestPasswordResetHandler _requestHandler;
-    private readonly IVerifyPasswordResetCodeHandler _verifyHandler;
-    private readonly IResetPasswordHandler _resetHandler;
+    private readonly IAsyncHandler<RequestPasswordResetCommand, Result> _requestHandler;
+    private readonly IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>> _verifyHandler;
+    private readonly IAsyncHandler<ResetPasswordCommand, Result> _resetHandler;
 
     public PasswordResetController(
-        IRequestPasswordResetHandler requestHandler,
-        IVerifyPasswordResetCodeHandler verifyHandler,
-        IResetPasswordHandler resetHandler)
+        IAsyncHandler<RequestPasswordResetCommand, Result> requestHandler,
+        IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>> verifyHandler,
+        IAsyncHandler<ResetPasswordCommand, Result> resetHandler)
     {
         _requestHandler = requestHandler;
         _verifyHandler = verifyHandler;
@@ -42,7 +43,7 @@ public class PasswordResetController : PulseControllerBase
         [Validate] RequestPasswordResetRequest request, CancellationToken ct)
     {
         RequestPasswordResetCommand command = new(request.Email);
-        Result result = await _requestHandler.RequestAsync(command, ct);
+        Result result = await _requestHandler.HandleAsync(command, ct);
         return ToActionResult(result);
     }
 
@@ -57,7 +58,7 @@ public class PasswordResetController : PulseControllerBase
         [Validate] VerifyPasswordResetCodeRequest request, CancellationToken ct)
     {
         VerifyPasswordResetCodeCommand command = new(request.Email, request.Code);
-        Result<VerifyCodeResult> result = await _verifyHandler.VerifyAsync(command, ct);
+        Result<VerifyCodeResult> result = await _verifyHandler.HandleAsync(command, ct);
         return ToActionResult(result);
     }
 
@@ -72,7 +73,7 @@ public class PasswordResetController : PulseControllerBase
         [Validate] ResetPasswordRequest request, CancellationToken ct)
     {
         ResetPasswordCommand command = new(request.ResetToken, request.NewPassword);
-        Result result = await _resetHandler.ResetAsync(command, ct);
+        Result result = await _resetHandler.HandleAsync(command, ct);
         return ToActionResult(result);
     }
 }

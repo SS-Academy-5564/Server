@@ -74,7 +74,7 @@ public class VerifyPasswordResetCodeHandlerTests
         VerifyPasswordResetCodeCommand command = new(email, code);
 
         // Act
-        Result<VerifyCodeResult> result = await _sut.VerifyAsync(command, CancellationToken.None);
+        Result<VerifyCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -105,7 +105,7 @@ public class VerifyPasswordResetCodeHandlerTests
         VerifyPasswordResetCodeCommand command = new(email, code);
 
         // Act
-        Result<VerifyCodeResult> result = await _sut.VerifyAsync(command, CancellationToken.None);
+        Result<VerifyCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -125,7 +125,7 @@ public class VerifyPasswordResetCodeHandlerTests
         _userQueriesMock.Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>())).ReturnsAsync((Guid?)null);
 
         // Act
-        Result<VerifyCodeResult> result = await _sut.VerifyAsync(command, CancellationToken.None);
+        Result<VerifyCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -143,7 +143,7 @@ public class VerifyPasswordResetCodeHandlerTests
         _codeQueriesMock.Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync((PasswordResetCodeRecord?)null);
 
         // Act
-        Result<VerifyCodeResult> result = await _sut.VerifyAsync(command, CancellationToken.None);
+        Result<VerifyCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -163,7 +163,7 @@ public class VerifyPasswordResetCodeHandlerTests
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
 
         // Act
-        Result<VerifyCodeResult> result = await _sut.VerifyAsync(command, CancellationToken.None);
+        Result<VerifyCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -188,7 +188,7 @@ public class VerifyPasswordResetCodeHandlerTests
         _codeCommandsMock.Setup(x => x.IncrementFailedAttemptsAsync(codeId, It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         // Act
-        Result<VerifyCodeResult> result = await _sut.VerifyAsync(command, CancellationToken.None);
+        Result<VerifyCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -215,7 +215,7 @@ public class VerifyPasswordResetCodeHandlerTests
         _codeCommandsMock.Setup(x => x.IncrementFailedAttemptsAsync(codeId, It.IsAny<CancellationToken>())).ReturnsAsync(5); // Returns max attempts
 
         // Act
-        Result<VerifyCodeResult> result = await _sut.VerifyAsync(command, CancellationToken.None);
+        Result<VerifyCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -223,3 +223,4 @@ public class VerifyPasswordResetCodeHandlerTests
         _codeCommandsMock.Verify(x => x.DeleteByIdAsync(record.Id, It.IsAny<CancellationToken>()), Times.Once);
     }
 }
+

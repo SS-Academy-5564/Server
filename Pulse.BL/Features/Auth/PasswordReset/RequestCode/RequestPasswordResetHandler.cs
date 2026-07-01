@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Features.Email;
@@ -10,7 +11,7 @@ using Pulse.DAL.Queries.Users;
 namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 
 /// <inheritdoc/>
-public class RequestPasswordResetHandler : IRequestPasswordResetHandler
+public class RequestPasswordResetHandler : IAsyncHandler<RequestPasswordResetCommand, Result>
 {
     private readonly IUserQueries _userQueries;
     private readonly IPasswordResetCodeCommands _codeCommands;
@@ -38,8 +39,15 @@ public class RequestPasswordResetHandler : IRequestPasswordResetHandler
         _logger = logger;
     }
 
-    /// <inheritdoc/>
-    public async Task<Result> RequestAsync(RequestPasswordResetCommand command, CancellationToken ct)
+    /// <summary>
+    /// Processes a password reset request for the given email.
+    /// Always returns success to prevent email enumeration.
+    /// If the email exists, a 6-digit OTP code is generated and sent via email.
+    /// </summary>
+    /// <param name="command">The command containing the email address.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>Always a successful result.</returns>
+    public async Task<Result> HandleAsync(RequestPasswordResetCommand command, CancellationToken ct)
     {
         Guid? userId = await _userQueries.GetIdByEmailAsync(command.Email, ct);
 

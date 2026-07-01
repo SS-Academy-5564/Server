@@ -71,7 +71,7 @@ public class RequestPasswordResetHandlerTests
             .ReturnsAsync(Result.Ok());
 
         // Act
-        Result result = await _sut.RequestAsync(command, CancellationToken.None);
+        Result result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -97,7 +97,7 @@ public class RequestPasswordResetHandlerTests
             .ReturnsAsync((Guid?)null);
 
         // Act
-        Result result = await _sut.RequestAsync(command, CancellationToken.None);
+        Result result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -125,7 +125,7 @@ public class RequestPasswordResetHandlerTests
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
 
         // Act
-        Result result = await _sut.RequestAsync(command, CancellationToken.None);
+        Result result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue(); // Endpoint should still succeed to avoid enumeration
@@ -133,3 +133,4 @@ public class RequestPasswordResetHandlerTests
         _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
+

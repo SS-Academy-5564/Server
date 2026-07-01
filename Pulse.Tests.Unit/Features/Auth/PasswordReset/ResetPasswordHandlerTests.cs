@@ -49,7 +49,7 @@ public class ResetPasswordHandlerTests
         _userCommandsMock.Setup(x => x.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, "new_hashed_password", It.IsAny<CancellationToken>())).ReturnsAsync(true);
 
         // Act
-        Result result = await _sut.ResetAsync(command, CancellationToken.None);
+        Result result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -66,7 +66,7 @@ public class ResetPasswordHandlerTests
         _jwtTokenGeneratorMock.Setup(x => x.ValidatePasswordResetTokenAsync(token)).ReturnsAsync(((Guid, string)?)null);
 
         // Act
-        Result result = await _sut.ResetAsync(command, CancellationToken.None);
+        Result result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -91,7 +91,7 @@ public class ResetPasswordHandlerTests
         _userCommandsMock.Setup(x => x.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, "new_hashed_password", It.IsAny<CancellationToken>())).ReturnsAsync(false);
 
         // Act
-        Result result = await _sut.ResetAsync(command, CancellationToken.None);
+        Result result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsFailed.Should().BeTrue();
@@ -100,3 +100,4 @@ public class ResetPasswordHandlerTests
         _userCommandsMock.Verify(x => x.ConsumeResetTokenAndUpdatePasswordAsync(userId, jti, "new_hashed_password", It.IsAny<CancellationToken>()), Times.Once);
     }
 }
+

@@ -2,6 +2,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
@@ -11,8 +12,7 @@ using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.PasswordReset.VerifyCode;
 
-/// <inheritdoc/>
-public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
+public class VerifyPasswordResetCodeHandler : IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>>
 {
     private readonly IUserQueries _userQueries;
     private readonly IPasswordResetCodeQueries _codeQueries;
@@ -43,8 +43,16 @@ public class VerifyPasswordResetCodeHandler : IVerifyPasswordResetCodeHandler
         _logger = logger;
     }
 
-    /// <inheritdoc/>
-    public async Task<Result<VerifyCodeResult>> VerifyAsync(
+    /// <summary>
+    /// Verifies the 6-digit OTP code for a password reset request.
+    /// </summary>
+    /// <param name="command">The command containing the email and code.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>
+    /// A result containing a <see cref="VerifyCodeResult"/> with a short-lived reset token on success,
+    /// or a failure result with an <c>InvalidCode</c> or <c>Timeout</c> error.
+    /// </returns>
+    public async Task<Result<VerifyCodeResult>> HandleAsync(
         VerifyPasswordResetCodeCommand command, CancellationToken ct)
     {
         Guid? userId = await _userQueries.GetIdByEmailAsync(command.Email, ct);
