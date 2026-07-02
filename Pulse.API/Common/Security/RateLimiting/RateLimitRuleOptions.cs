@@ -3,7 +3,7 @@ namespace Pulse.API.Common.Security.RateLimiting;
 /// <summary>
 /// Defines options for a rate limiting rule.
 /// </summary>
-public sealed class RateLimitRuleOptions
+public class RateLimitRuleOptions
 {
     /// <summary>
     /// Gets or sets the maximum number of allowed attempts.
