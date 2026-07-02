@@ -6,12 +6,27 @@ namespace Pulse.API.Common.Security;
 
 public sealed class CurrentUserService : ICurrentUserService
 {
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
     public CurrentUserService(IHttpContextAccessor httpContextAccessor)
     {
-        Claim? sub = httpContextAccessor.HttpContext?.User.FindFirst(JwtRegisteredClaimNames.Sub)
-                    ?? httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
-        UserId = sub is not null && Guid.TryParse(sub.Value, out Guid id) ? id : null;
+        _httpContextAccessor = httpContextAccessor;
     }
 
-    public Guid? UserId { get; }
+    public Guid? UserId
+    {
+        get
+        {
+            try
+            {
+                Claim? sub = _httpContextAccessor.HttpContext?.User.FindFirst(JwtRegisteredClaimNames.Sub)
+                            ?? _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier);
+                return sub is not null && Guid.TryParse(sub.Value, out Guid id) ? id : null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
 }

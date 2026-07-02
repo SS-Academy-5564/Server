@@ -52,7 +52,8 @@ public class UserQueries : IUserQueries
                 "SELECT Id, Email, FirstName, LastName, CreatedAt, UpdatedAt FROM Users WHERE Id = @Id",
                 new { Id = id },
                 cancellationToken: ct));
-                
+    }
+
     /// <inheritdoc/>
     public async Task<Guid?> GetIdByEmailAsync(string email, CancellationToken ct)
     {
