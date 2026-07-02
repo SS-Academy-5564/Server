@@ -42,6 +42,7 @@ public class UserQueries : IUserQueries
                 cancellationToken: ct));
     }
 
+    /// <inheritdoc/>
     public async Task<UserProfileRecord?> GetByIdAsync(Guid id, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
@@ -51,5 +52,18 @@ public class UserQueries : IUserQueries
                 "SELECT Id, Email, FirstName, LastName, CreatedAt, UpdatedAt FROM Users WHERE Id = @Id",
                 new { Id = id },
                 cancellationToken: ct));
+                
+    /// <inheritdoc/>
+    public async Task<Guid?> GetIdByEmailAsync(string email, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        Guid result = await connection.ExecuteScalarAsync<Guid>(
+            new CommandDefinition(
+                "SELECT TOP(1) Id FROM Users WHERE Email = @Email",
+                new { Email = email },
+                cancellationToken: ct));
+
+        return result == Guid.Empty ? null : result;
     }
 }

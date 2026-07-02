@@ -64,13 +64,22 @@ public static class ServiceCollectionExtensions
         public IServiceCollection AddPulseRateLimiting(IConfiguration configuration)
         {
             services.AddSingleton<IValidateOptions<RateLimitRuleOptions>, RateLimitRuleOptionsValidator>();
+            services.AddSingleton<IValidateOptions<SlidingWindowRateLimitRuleOptions>, SlidingWindowRateLimitRuleOptionsValidator>();
+
             services.AddOptions<RateLimitRuleOptions>(RateLimitSections.Login)
                 .Bind(configuration.GetRequiredSection(RateLimitSections.Login))
                 .ValidateOnStart();
 
+            services.AddOptions<SlidingWindowRateLimitRuleOptions>(RateLimitSections.PasswordReset)
+                .Bind(configuration.GetRequiredSection(RateLimitSections.PasswordReset))
+                .ValidateOnStart();
+
             services.AddRateLimiter();
             services.AddOptions<RateLimiterOptions>()
-                .Configure<IOptionsMonitor<RateLimitRuleOptions>>((rateLimiterOptions, rateLimitRules) =>
+                .Configure<
+                    IOptionsMonitor<RateLimitRuleOptions>,
+                    IOptionsMonitor<SlidingWindowRateLimitRuleOptions>>(
+                    (rateLimiterOptions, rateLimitRules, slidingWindowRules) =>
                 {
                     rateLimiterOptions.AddPolicy(RateLimitPolicies.Login, context =>
                     {
@@ -84,6 +93,22 @@ public static class ServiceCollectionExtensions
                                 TokensPerPeriod = 1,
                                 ReplenishmentPeriod = TimeSpan.FromSeconds(
                                     loginRateLimit.PeriodMinutes * 60.0 / loginRateLimit.MaxAttempts),
+                                QueueLimit = 0,
+                                AutoReplenishment = true
+                            });
+                    });
+
+                    rateLimiterOptions.AddPolicy(RateLimitPolicies.PasswordReset, context =>
+                    {
+                        SlidingWindowRateLimitRuleOptions resetRateLimit = slidingWindowRules.Get(RateLimitSections.PasswordReset);
+
+                        return RateLimitPartition.GetSlidingWindowLimiter(
+                            partitionKey: GetClientIdentifier(context),
+                            factory: _ => new SlidingWindowRateLimiterOptions
+                            {
+                                PermitLimit = resetRateLimit.MaxAttempts,
+                                Window = TimeSpan.FromMinutes(resetRateLimit.PeriodMinutes),
+                                SegmentsPerWindow = resetRateLimit.Segments,
                                 QueueLimit = 0,
                                 AutoReplenishment = true
                             });

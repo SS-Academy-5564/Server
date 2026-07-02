@@ -8,14 +8,15 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
     {
+        Type handlerType = typeof(IAsyncHandler<,>);
+
         IEnumerable<(Type Interface, Type Implementation)> registrations = assembly.GetTypes()
-            .Where(t => t.IsClass && !t.IsAbstract &&
-                (typeof(IAsyncHandler).IsAssignableFrom(t) || typeof(IHandler).IsAssignableFrom(t)))
+            .Where(t => t.IsClass && !t.IsAbstract)
             .SelectMany(t => t.GetInterfaces()
-            .Where(i => i.Assembly == assembly && i != typeof(IAsyncHandler) && i != typeof(IHandler))
+            .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerType)
             .Select(i => (Interface: i, Implementation: t)));
 
-        foreach ((Type? iface, Type? impl) in registrations)
+        foreach ((Type iface, Type impl) in registrations)
         {
             services.AddScoped(iface, impl);
         }
