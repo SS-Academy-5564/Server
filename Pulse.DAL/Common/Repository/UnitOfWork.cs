@@ -1,43 +1,72 @@
 using System.Data;
+using System.Data.Common;
 
 namespace Pulse.DAL.Common.Repository;
 
-public class UnitOfWork : IUnitOfWork
+public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
 {
     private bool _committed;
+    private readonly DbConnection _connection;
+    private readonly DbTransaction _transaction;
 
     /// <inheritdoc/>
-    public IDbConnection Connection { get; }
+    IDbConnection IDbSession.Connection => _connection;
 
     /// <inheritdoc/>
-    public IDbTransaction Transaction { get; }
+    IDbTransaction IDbSession.Transaction => _transaction;
 
-    public UnitOfWork(IDbConnection connection, IDbTransaction transaction)
+    /// <summary>
+    /// Initializes a new instance with an already-open connection and an active transaction.
+    /// </summary>
+    /// <param name="connection">An open database connection.</param>
+    /// <param name="transaction">An active transaction on <paramref name="connection"/>.</param>
+    public UnitOfWork(DbConnection connection, DbTransaction transaction)
     {
-        Connection = connection;
-        Transaction = transaction;
+        _connection = connection;
+        _transaction = transaction;
     }
 
     /// <inheritdoc/>
-    public Task CommitAsync(CancellationToken ct = default)
+    public async Task CommitAsync(CancellationToken ct = default)
     {
-        Transaction.Commit();
+        await _transaction.CommitAsync(ct);
         _committed = true;
-        return Task.CompletedTask;
     }
 
     /// <summary>
     /// Rolls back the transaction if it was not committed, then disposes the transaction and connection.
     /// </summary>
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (!_committed)
         {
-            Transaction.Rollback();
+            try
+            {
+                await _transaction.RollbackAsync();
+            }
+            catch { }
         }
 
-        Transaction.Dispose();
-        Connection.Dispose();
-        return ValueTask.CompletedTask;
+        await _transaction.DisposeAsync();
+        await _connection.DisposeAsync();
+    }
+
+    /// <summary>
+    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection.
+    /// </summary>
+    public void Dispose()
+    {
+        if (!_committed)
+        {
+            try
+            {
+                _transaction.Rollback();
+            }
+            catch { }
+        }
+
+        _transaction.Dispose();
+        _connection.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

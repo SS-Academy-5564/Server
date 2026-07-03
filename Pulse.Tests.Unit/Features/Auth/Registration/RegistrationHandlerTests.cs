@@ -1,3 +1,4 @@
+using System.Data;
 using FluentAssertions;
 using FluentResults;
 using Moq;
@@ -25,9 +26,10 @@ public class RegistrationHandlerTests
 
     public RegistrationHandlerTests()
     {
+        _unitOfWork.As<IDbSession>();
         _unitOfWork.Setup(u => u.DisposeAsync()).Returns(ValueTask.CompletedTask);
         _unitOfWorkFactory
-            .Setup(f => f.CreateAsync(It.IsAny<CancellationToken>()))
+            .Setup(f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(_unitOfWork.Object);
 
         _handler = new RegistrationHandler(
@@ -48,7 +50,7 @@ public class RegistrationHandlerTests
         Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
-        _userCommands.Verify(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()), Times.Never);
+        _userCommands.Verify(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IDbSession>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -61,14 +63,14 @@ public class RegistrationHandlerTests
             .Setup(h => h.HashPassword(It.IsAny<string>()))
             .Returns("hashed");
         _userCommands
-            .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IDbSession>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DuplicateKeyException("Email"));
 
         Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ConflictError);
-        _memberCommands.Verify(m => m.CreateMemberAsync(It.IsAny<CreateMemberInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()), Times.Never);
+        _memberCommands.Verify(m => m.CreateMemberAsync(It.IsAny<CreateMemberInput>(), It.IsAny<IDbSession>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -85,7 +87,7 @@ public class RegistrationHandlerTests
             .Setup(h => h.HashPassword(command.Password))
             .Returns(hashedPassword);
         _userCommands
-            .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<IDbSession>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userId);
 
         Result result = await _handler.HandleAsync(command, CancellationToken.None);
@@ -98,14 +100,14 @@ public class RegistrationHandlerTests
                 u.FirstName == command.FirstName &&
                 u.LastName == command.LastName &&
                 u.PasswordHash == hashedPassword),
-            It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<IDbSession>(), It.IsAny<CancellationToken>()), Times.Once);
 
         _memberCommands.Verify(m => m.CreateMemberAsync(
             It.Is<CreateMemberInput>(mi =>
                 mi.UserId == userId &&
                 mi.OrganizationId == SeededIds.Organizations.Default &&
                 mi.RoleId == SeededIds.Roles.User),
-            It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()), Times.Once);
+            It.IsAny<IDbSession>(), It.IsAny<CancellationToken>()), Times.Once);
 
         _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
