@@ -62,4 +62,21 @@ public class UnitOfWorkTests
         _transaction.Verify(t => t.DisposeAsync(), Times.Once);
         _connection.Verify(c => c.DisposeAsync(), Times.Once);
     }
+
+    [Fact]
+    public void Dispose_WhenNotCommitted_RollsBack()
+    {
+        _uow.Dispose();
+
+        _transaction.Verify(t => t.Rollback(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Dispose_WhenCommitted_DoesNotRollBack()
+    {
+        await _uow.CommitAsync();
+        _uow.Dispose();
+
+        _transaction.Verify(t => t.Rollback(), Times.Never);
+    }
 }

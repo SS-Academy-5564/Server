@@ -17,8 +17,16 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
     public async Task<IUnitOfWork> CreateAsync(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted, CancellationToken ct = default)
     {
         DbConnection connection = _connectionFactory.CreateConnection();
-        await connection.OpenAsync(ct);
-        DbTransaction transaction = await connection.BeginTransactionAsync(isolationLevel, ct);
-        return new UnitOfWork(connection, transaction);
+        try
+        {
+            await connection.OpenAsync(ct);
+            DbTransaction transaction = await connection.BeginTransactionAsync(isolationLevel, ct);
+            return new UnitOfWork(connection, transaction);
+        }
+        catch
+        {
+            await connection.DisposeAsync();
+            throw;
+        }
     }
 }
