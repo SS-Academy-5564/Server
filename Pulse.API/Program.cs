@@ -19,6 +19,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
+builder.Services.AddCurrentUserService();
 
 builder.Services.AddCors(options =>
 {
