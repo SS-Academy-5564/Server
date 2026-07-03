@@ -1,5 +1,6 @@
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Pulse.DAL.Commands.Organization;
 using Pulse.DAL.Common.Repository;
 using Pulse.DAL.Connection;
 
@@ -12,6 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
         services.AddCommandsAndQueriesFromAssembly(Assembly.GetExecutingAssembly());
         services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
+        services.AddScoped<IOrganizationCommands, CreateOrganizationCommands>();
 
         return services;
     }

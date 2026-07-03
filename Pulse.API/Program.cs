@@ -1,12 +1,16 @@
+using System.IdentityModel.Tokens.Jwt;
 using FluentValidation;
 using Pulse.API.Extensions;
 using Pulse.BL;
+using Pulse.BL.Common.Security.CurrentUser;
 using Pulse.BL.DependencyInjection;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
 builder.Services.AddDataAccess()
     .AddBusinessLogic(builder.Configuration);
@@ -19,7 +23,12 @@ builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
+<<<<<<< HEAD
 builder.Services.AddCurrentUserService();
+=======
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+>>>>>>> 6ab1aaf (feat: create organization endpoint)
 
 builder.Services.AddCors(options =>
 {
