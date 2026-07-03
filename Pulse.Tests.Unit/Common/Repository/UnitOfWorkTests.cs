@@ -75,7 +75,9 @@ public class UnitOfWorkTests
     public async Task Dispose_WhenCommitted_DoesNotRollBack()
     {
         await _uow.CommitAsync();
+#pragma warning disable CA1849 // intentionally testing the sync Dispose() path
         _uow.Dispose();
+#pragma warning restore CA1849
 
         _transaction.Verify(t => t.Rollback(), Times.Never);
     }
