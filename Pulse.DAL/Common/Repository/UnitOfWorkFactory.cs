@@ -7,10 +7,12 @@ namespace Pulse.DAL.Common.Repository;
 public class UnitOfWorkFactory : IUnitOfWorkFactory
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IDbSessionAccessor _sessionAccessor;
 
-    public UnitOfWorkFactory(IDbConnectionFactory connectionFactory)
+    public UnitOfWorkFactory(IDbConnectionFactory connectionFactory, IDbSessionAccessor sessionAccessor)
     {
         _connectionFactory = connectionFactory;
+        _sessionAccessor = sessionAccessor;
     }
 
     /// <inheritdoc/>
@@ -21,7 +23,9 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
         {
             await connection.OpenAsync(ct);
             DbTransaction transaction = await connection.BeginTransactionAsync(isolationLevel, ct);
-            return new UnitOfWork(connection, transaction);
+            var uow = new UnitOfWork(connection, transaction);
+            _sessionAccessor.Session = uow;
+            return uow;
         }
         catch
         {

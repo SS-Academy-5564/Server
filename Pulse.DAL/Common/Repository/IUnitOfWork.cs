@@ -1,6 +1,6 @@
 namespace Pulse.DAL.Common.Repository;
 
-public interface IUnitOfWork : IDbSession, IAsyncDisposable
+public interface IUnitOfWork : IAsyncDisposable
 {
     /// <summary>
     /// Commits the active transaction, persisting all changes made within this unit of work.

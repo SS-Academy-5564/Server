@@ -60,13 +60,13 @@ public class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result>
                 command.FirstName,
                 command.LastName,
                 passwordHash
-            ), uow, ct);
+            ), ct);
             await _memberCommands.CreateMemberAsync(new CreateMemberInput
             (
                 userId,
                 SeededIds.Organizations.Default,
                 SeededIds.Roles.User
-            ), uow, ct);
+            ), ct);
             await uow.CommitAsync(ct);
         }
         catch (DuplicateKeyException ex)

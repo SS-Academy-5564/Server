@@ -8,7 +8,6 @@ public interface IMemberCommands : ICommands
     /// Inserts a new member record linking a user to an organization with a given role.
     /// </summary>
     /// <param name="input">The data required to create the member.</param>
-    /// <param name="session">The session providing the connection and transaction.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    Task CreateMemberAsync(CreateMemberInput input, IDbSession session, CancellationToken ct);
+    Task CreateMemberAsync(CreateMemberInput input, CancellationToken ct);
 }

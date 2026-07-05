@@ -44,7 +44,7 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
             {
                 await _transaction.RollbackAsync();
             }
-            catch (DbException) { }
+            catch (Exception ex) when (ex is DbException or InvalidOperationException or ObjectDisposedException) { }
         }
 
         await _transaction.DisposeAsync();
@@ -62,7 +62,7 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
             {
                 _transaction.Rollback();
             }
-            catch (DbException) { }
+            catch (Exception ex) when (ex is DbException or InvalidOperationException or ObjectDisposedException) { }
         }
 
         _transaction.Dispose();

@@ -9,11 +9,10 @@ public interface IUserCommands : ICommands
     /// Inserts a new user record and returns the generated user ID.
     /// </summary>
     /// <param name="input">The data required to create the user.</param>
-    /// <param name="session">The session providing the connection and transaction.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The <see cref="Guid"/> of the newly created user.</returns>
     /// <exception cref="Pulse.DAL.Exceptions.DuplicateKeyException">Thrown when a user with the same email already exists.</exception>
-    Task<Guid> CreateUserAsync(CreateUserInput input, IDbSession session, CancellationToken ct);
+    Task<Guid> CreateUserAsync(CreateUserInput input, CancellationToken ct);
 
     /// <summary>
     /// Atomically consumes a one-time password reset token (JTI) and updates the password hash if valid.
