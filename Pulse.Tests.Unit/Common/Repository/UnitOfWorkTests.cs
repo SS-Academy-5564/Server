@@ -74,6 +74,15 @@ public class UnitOfWorkTests
     }
 
     [Fact]
+    public void Constructor_WhenSessionAlreadyActive_Throws()
+    {
+        Action act = () => _ = new UnitOfWork(_connection.Object, _transaction.Object, _sessionAccessor);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("A unit of work is already active in this scope.");
+    }
+
+    [Fact]
     public void Dispose_WhenNotCommitted_RollsBack()
     {
         _uow.Dispose();

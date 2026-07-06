@@ -28,6 +28,12 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
         _connection = connection;
         _transaction = transaction;
         _sessionAccessor = sessionAccessor;
+
+        if (_sessionAccessor.Session is not null)
+        {
+            throw new InvalidOperationException("A unit of work is already active in this scope.");
+        }
+
         _sessionAccessor.Session = this;
     }
 
@@ -55,7 +61,10 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
 
         await _transaction.DisposeAsync();
         await _connection.DisposeAsync();
-        _sessionAccessor.Session = null;
+        if (ReferenceEquals(_sessionAccessor.Session, this))
+        {
+            _sessionAccessor.Session = null;
+        }
     }
 
     /// <summary>
@@ -75,7 +84,11 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
 
         _transaction.Dispose();
         _connection.Dispose();
-        _sessionAccessor.Session = null;
+        if (ReferenceEquals(_sessionAccessor.Session, this))
+        {
+            _sessionAccessor.Session = null;
+        }
+
         GC.SuppressFinalize(this);
     }
 }
