@@ -1,4 +1,5 @@
 using System.Data.Common;
+using FluentAssertions;
 using Moq;
 using Pulse.DAL.Common.Repository;
 
@@ -8,6 +9,7 @@ public class UnitOfWorkTests
 {
     private readonly Mock<DbConnection> _connection = new();
     private readonly Mock<DbTransaction> _transaction = new();
+    private readonly DbSessionAccessor _sessionAccessor = new();
     private readonly UnitOfWork _uow;
 
     public UnitOfWorkTests()
@@ -16,7 +18,7 @@ public class UnitOfWorkTests
         _transaction.Setup(t => t.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _transaction.Setup(t => t.DisposeAsync()).Returns(ValueTask.CompletedTask);
         _connection.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
-        _uow = new UnitOfWork(_connection.Object, _transaction.Object);
+        _uow = new UnitOfWork(_connection.Object, _transaction.Object, _sessionAccessor);
     }
 
     [Fact]
@@ -61,6 +63,14 @@ public class UnitOfWorkTests
 
         _transaction.Verify(t => t.DisposeAsync(), Times.Once);
         _connection.Verify(c => c.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_ClearsAmbientSession()
+    {
+        await _uow.DisposeAsync();
+
+        _sessionAccessor.Session.Should().BeNull();
     }
 
     [Fact]

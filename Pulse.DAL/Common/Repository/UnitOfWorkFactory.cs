@@ -23,9 +23,7 @@ public class UnitOfWorkFactory : IUnitOfWorkFactory
         {
             await connection.OpenAsync(ct);
             DbTransaction transaction = await connection.BeginTransactionAsync(isolationLevel, ct);
-            var uow = new UnitOfWork(connection, transaction);
-            _sessionAccessor.Session = uow;
-            return uow;
+            return new UnitOfWork(connection, transaction, _sessionAccessor);
         }
         catch
         {

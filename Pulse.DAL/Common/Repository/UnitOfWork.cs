@@ -8,6 +8,7 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
     private bool _committed;
     private readonly DbConnection _connection;
     private readonly DbTransaction _transaction;
+    private readonly IDbSessionAccessor _sessionAccessor;
 
     /// <inheritdoc/>
     IDbConnection IDbSession.Connection => _connection;
@@ -17,13 +18,17 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
 
     /// <summary>
     /// Initializes a new instance with an already-open connection and an active transaction.
+    /// Sets itself as the ambient session on <paramref name="sessionAccessor"/>.
     /// </summary>
     /// <param name="connection">An open database connection.</param>
     /// <param name="transaction">An active transaction on <paramref name="connection"/>.</param>
-    public UnitOfWork(DbConnection connection, DbTransaction transaction)
+    /// <param name="sessionAccessor">The scoped accessor used to expose this session to repositories.</param>
+    public UnitOfWork(DbConnection connection, DbTransaction transaction, IDbSessionAccessor sessionAccessor)
     {
         _connection = connection;
         _transaction = transaction;
+        _sessionAccessor = sessionAccessor;
+        _sessionAccessor.Session = this;
     }
 
     /// <inheritdoc/>
@@ -34,7 +39,8 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
     }
 
     /// <summary>
-    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection.
+    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection,
+    /// and clears the ambient session.
     /// </summary>
     public async ValueTask DisposeAsync()
     {
@@ -49,10 +55,12 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
 
         await _transaction.DisposeAsync();
         await _connection.DisposeAsync();
+        _sessionAccessor.Session = null;
     }
 
     /// <summary>
-    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection.
+    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection,
+    /// and clears the ambient session.
     /// </summary>
     public void Dispose()
     {
@@ -67,6 +75,7 @@ public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
 
         _transaction.Dispose();
         _connection.Dispose();
+        _sessionAccessor.Session = null;
         GC.SuppressFinalize(this);
     }
 }
