@@ -23,12 +23,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
-<<<<<<< HEAD
 builder.Services.AddCurrentUserService();
-=======
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
->>>>>>> 6ab1aaf (feat: create organization endpoint)
 
 builder.Services.AddCors(options =>
 {

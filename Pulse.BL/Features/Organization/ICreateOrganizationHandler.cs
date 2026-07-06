@@ -3,8 +3,7 @@ using Pulse.BL.Common.Handlers;
 
 namespace Pulse.BL.Features.Organization;
 
-public interface ICreateOrganizationHandler : IAsyncHandler
+public interface ICreateOrganizationHandler
+    : IAsyncHandler<CreateOrganizationCommand, Result<CreateOrganizationResult>>
 {
-    Task<Result<CreateOrganizationResult>> CreateOrganizationAsync(CreateOrganizationCommand command, CancellationToken ct);
 }
-

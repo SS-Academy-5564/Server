@@ -2,8 +2,10 @@ using FluentAssertions;
 using Moq;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Organization;
+using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Organization;
 using Pulse.DAL.Common.Repository;
+using Pulse.BL.Common.Security.CurrentUser;
 
 namespace Pulse.Tests.Unit.Features.Organization;
 
@@ -13,6 +15,8 @@ public class CreateOrganizationHandlerTests
     private readonly Mock<IUnitOfWork> _uowMock = new();
     private readonly Mock<IOrganizationCommands> _commandsMock = new();
     private readonly Mock<IJwtTokenGenerator> _jwtMock = new();
+    private readonly Mock<ICurrentUserService> _currentUserMock = new();
+    private readonly Mock<IMemberCommands> _memberCommandsMock = new();
 
     private readonly CreateOrganizationHandler _handler;
 
@@ -33,7 +37,9 @@ public class CreateOrganizationHandlerTests
         _handler = new CreateOrganizationHandler(
             _uowFactoryMock.Object,
             _commandsMock.Object,
-            _jwtMock.Object
+            _jwtMock.Object,
+            _currentUserMock.Object,
+            _memberCommandsMock.Object
         );
 
     }
@@ -44,7 +50,7 @@ public class CreateOrganizationHandlerTests
         CreateOrganizationCommand command = new("Test Org");
 
         CreateOrganizationResult result =
-            (await _handler.CreateOrganizationAsync(command, CancellationToken.None)).Value;
+            (await _handler.HandleAsync(command, CancellationToken.None)).Value;
 
         result.OrganizationId.Should().NotBeEmpty();
         result.AccessToken.Should().Be("test-token");
@@ -62,7 +68,7 @@ public class CreateOrganizationHandlerTests
         CreateOrganizationCommand command = new("Test Org");
 
         CreateOrganizationResult result =
-            (await _handler.CreateOrganizationAsync(command, CancellationToken.None)).Value;
+            (await _handler.HandleAsync(command, CancellationToken.None)).Value;
 
         result.OrganizationId.Should().Be(expectedId);
     }
@@ -72,7 +78,7 @@ public class CreateOrganizationHandlerTests
     {
         var command = new CreateOrganizationCommand("Test Org");
 
-        await _handler.CreateOrganizationAsync(command, CancellationToken.None);
+        await _handler.HandleAsync(command, CancellationToken.None);
 
         _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

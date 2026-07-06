@@ -23,7 +23,7 @@ public class CreateOrganizationsController : PulseControllerBase
     public async Task<IActionResult> CreateOrganizationAsync(CreateOrganizationRequest request, CancellationToken ct)
     {
         CreateOrganizationCommand command = new(request.Name);
-        Result<CreateOrganizationResult> result = await _handler.CreateOrganizationAsync(command, ct);
+        Result<CreateOrganizationResult> result = await _handler.HandleAsync(command, ct);
         return ToActionResult(result);
     }
 }
