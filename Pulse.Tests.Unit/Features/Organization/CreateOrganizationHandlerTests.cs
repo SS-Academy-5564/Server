@@ -1,11 +1,11 @@
 using FluentAssertions;
 using Moq;
+using Pulse.BL.Common.Security.CurrentUser;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Organization;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Organization;
 using Pulse.DAL.Common.Repository;
-using Pulse.BL.Common.Security.CurrentUser;
 
 namespace Pulse.Tests.Unit.Features.Organization;
 

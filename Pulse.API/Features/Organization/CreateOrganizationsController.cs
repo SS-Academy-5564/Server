@@ -1,8 +1,8 @@
 using FluentResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Controllers;
 using Pulse.BL.Features.Organization;
-using Microsoft.AspNetCore.Authorization;
 
 namespace Pulse.API.Features.Organization;
 
