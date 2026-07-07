@@ -12,9 +12,11 @@ public class CurrentUserService : ICurrentUserService
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public Guid UserId => Guid.Parse(GetClaim(ClaimTypes.NameIdentifier) ?? GetClaim("sub")!);
+    public Guid UserId => Guid.TryParse(GetClaim(ClaimTypes.NameIdentifier) ?? GetClaim("sub"), out Guid id)
+        ? id
+        : throw new InvalidOperationException("Missing or invalid user id claim.");
 
-    public string Role => GetClaim("role")!;
+    public string Role => GetClaim("role") ?? throw new InvalidOperationException("Missing role claim.");
 
     public Guid? OrganizationId
     {

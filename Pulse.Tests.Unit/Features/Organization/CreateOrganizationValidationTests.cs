@@ -9,7 +9,7 @@ public class CreateOrganizationValidationTests
 
     // Name
     [Fact]
-    public void Should_fail_when_name_is_empty()
+    public void CreateOrganizationRequestValidator_EmptyName_ShouldHaveValidationError()
     {
         CreateOrganizationRequest model = new() { Name = "" };
 
@@ -21,7 +21,7 @@ public class CreateOrganizationValidationTests
     }
 
     [Fact]
-    public void Should_fail_when_name_is_too_short()
+    public void CreateOrganizationRequestValidator_NameTooShort_ShouldHaveValidationError()
     {
         CreateOrganizationRequest model = new() { Name = "ab" };
 
@@ -33,7 +33,7 @@ public class CreateOrganizationValidationTests
     }
 
     [Fact]
-    public void Should_fail_when_name_is_too_long()
+    public void CreateOrganizationRequestValidator_NameTooLong_ShouldHaveValidationError()
     {
         CreateOrganizationRequest model = new() { Name = new string('a', 51) };
 
@@ -45,7 +45,7 @@ public class CreateOrganizationValidationTests
     }
 
     [Fact]
-    public void Should_pass_when_name_is_valid()
+    public void CreateOrganizationRequestValidator_ValidName_ShouldNotHaveValidationErrors()
     {
         CreateOrganizationRequest model = new() { Name = "Valid Org" };
 

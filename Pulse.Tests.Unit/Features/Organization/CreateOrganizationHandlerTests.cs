@@ -45,7 +45,7 @@ public class CreateOrganizationHandlerTests
     }
 
     [Fact]
-    public async Task Should_create_organization_successfully()
+    public async Task HandleAsync_ValidCommand_ShouldCreateOrganizationSuccessfully()
     {
         CreateOrganizationCommand command = new("Test Org");
 
@@ -57,7 +57,7 @@ public class CreateOrganizationHandlerTests
     }
 
     [Fact]
-    public async Task Should_return_organization_id()
+    public async Task HandleAsync_ValidCommand_ShouldReturnOrganizationId()
     {
         var expectedId = Guid.NewGuid();
 
@@ -74,7 +74,7 @@ public class CreateOrganizationHandlerTests
     }
 
     [Fact]
-    public async Task Should_commit_unit_of_work()
+    public async Task HandleAsync_ValidCommand_ShouldCommitUnitOfWork()
     {
         var command = new CreateOrganizationCommand("Test Org");
 
