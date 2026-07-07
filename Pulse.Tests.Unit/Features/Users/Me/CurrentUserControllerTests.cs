@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Pulse.API.Features.Users.Me;
 using Pulse.API.Responses;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Features.Users.Me;
 
@@ -11,7 +12,7 @@ namespace Pulse.Tests.Unit.Features.Users.Me;
 
 public class CurrentUserControllerTests
 {
-    private readonly Mock<IGetCurrentUserQueryHandler> _queryMock;
+    private readonly Mock<IAsyncQueryHandler<Result<UserProfileResult>>> _queryMock;
     private readonly CurrentUserController _sut;
 
     public CurrentUserControllerTests()

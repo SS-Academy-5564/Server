@@ -1,11 +1,12 @@
 using FluentResults;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Users.Me;
 
-public sealed class GetCurrentUserQueryHandler : IGetCurrentUserQueryHandler
+public sealed class GetCurrentUserQueryHandler : IAsyncQueryHandler<Result<UserProfileResult>>
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IUserQueries _userQueries;
