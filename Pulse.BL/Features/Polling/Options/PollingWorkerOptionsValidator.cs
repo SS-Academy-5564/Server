@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 
-namespace Pulse.Worker.Polling;
+namespace Pulse.BL.Features.Polling;
 
 /// <summary>
 /// Validates polling worker configuration values.
