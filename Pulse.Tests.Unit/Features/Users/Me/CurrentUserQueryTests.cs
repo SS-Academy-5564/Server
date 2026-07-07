@@ -22,7 +22,7 @@ public class CurrentUserQueryTests
     }
 
     [Fact]
-    public async Task Handle_WhenUserIdIsNull_ReturnsUnauthorized()
+    public async Task HandleAsync_WhenUserIdIsNull_ReturnsUnauthorized()
     {
         _currentUserServiceMock.Setup(x => x.UserId).Returns((Guid?)null);
 
@@ -33,7 +33,7 @@ public class CurrentUserQueryTests
     }
 
     [Fact]
-    public async Task Handle_WhenUserNotFound_ReturnsNotFound()
+    public async Task HandleAsync_WhenUserNotFound_ReturnsNotFound()
     {
         _currentUserServiceMock.Setup(x => x.UserId).Returns(Guid.NewGuid());
         _userQueriesMock.Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -46,7 +46,7 @@ public class CurrentUserQueryTests
     }
 
     [Fact]
-    public async Task Handle_WhenUserExists_ReturnsProfile()
+    public async Task HandleAsync_WhenUserExists_ReturnsProfile()
     {
         Guid userId = Guid.NewGuid();
         var record = new UserProfileRecord(userId, "user@example.com", "John", "Doe", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
