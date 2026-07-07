@@ -2,7 +2,6 @@ using System.IdentityModel.Tokens.Jwt;
 using FluentValidation;
 using Pulse.API.Extensions;
 using Pulse.BL;
-using Pulse.BL.Common.Security.CurrentUser;
 using Pulse.BL.DependencyInjection;
 using Pulse.DAL.Database;
 using Pulse.DAL.DependencyInjection;
