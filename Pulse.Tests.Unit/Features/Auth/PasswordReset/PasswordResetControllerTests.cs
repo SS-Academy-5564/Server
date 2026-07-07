@@ -36,10 +36,11 @@ public class PasswordResetControllerTests
     {
         // Arrange
         RequestPasswordResetRequest request = new("test@example.com");
+        SendCodeResult sendCodeResult = new(60);
 
         _requestHandlerMock
             .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok(new SendCodeResult(60)));
+            .ReturnsAsync(Result.Ok(sendCodeResult));
 
         // Act
         IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
@@ -47,7 +48,7 @@ public class PasswordResetControllerTests
         // Assert
         result.Should().BeOfType<OkObjectResult>()
             .Which.Value.Should().BeOfType<ApiResponse<SendCodeResult>>()
-            .Which.Success.Should().BeTrue();
+            .Which.Data.Should().Be(sendCodeResult);
     }
 
     [Fact]
