@@ -10,16 +10,16 @@ namespace Pulse.API.Features.Users.Me;
 [Authorize]
 public sealed class CurrentUserController : PulseControllerBase
 {
-    private readonly ICurrentUserHandler _handler;
+    private readonly ICurrentUserQuery _query;
 
-    public CurrentUserController(ICurrentUserHandler handler)
+    public CurrentUserController(ICurrentUserQuery query)
     {
-        _handler = handler;
+        _query = query;
     }
 
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUserAsync(CancellationToken ct)
     {
-        return ToActionResult(await _handler.GetCurrentUserAsync(ct));
+        return ToActionResult(await _query.HandleAsync(ct));
     }
 }

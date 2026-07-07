@@ -1,22 +1,23 @@
 using FluentResults;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Users.Me;
 
-public sealed class CurrentUserHandler : ICurrentUserHandler
+public sealed class CurrentUserQuery : ICurrentUserQuery
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IUserQueries _userQueries;
 
-    public CurrentUserHandler(ICurrentUserService currentUserService, IUserQueries userQueries)
+    public CurrentUserQuery(ICurrentUserService currentUserService, IUserQueries userQueries)
     {
         _currentUserService = currentUserService;
         _userQueries = userQueries;
     }
 
-    public async Task<Result<UserProfileResult>> GetCurrentUserAsync(CancellationToken ct)
+    public async Task<Result<UserProfileResult>> HandleAsync(CancellationToken ct = default)
     {
         Guid? userId = _currentUserService.UserId;
 

@@ -11,13 +11,13 @@ namespace Pulse.Tests.Unit.Features.Users.Me;
 
 public class CurrentUserControllerTests
 {
-    private readonly Mock<ICurrentUserHandler> _handlerMock;
+    private readonly Mock<ICurrentUserQuery> _queryMock;
     private readonly CurrentUserController _sut;
 
     public CurrentUserControllerTests()
     {
-        _handlerMock = new();
-        _sut = new CurrentUserController(_handlerMock.Object);
+        _queryMock = new();
+        _sut = new CurrentUserController(_queryMock.Object);
     }
 
     [Fact]
@@ -25,7 +25,7 @@ public class CurrentUserControllerTests
     {
         var profile = new UserProfileResult(Guid.NewGuid(), "user@example.com", "John", "Doe", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
 
-        _handlerMock.Setup(x => x.GetCurrentUserAsync(It.IsAny<CancellationToken>()))
+        _queryMock.Setup(x => x.HandleAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(profile));
 
         IActionResult result = await _sut.GetCurrentUserAsync(CancellationToken.None);
@@ -41,7 +41,7 @@ public class CurrentUserControllerTests
     [Fact]
     public async Task GetCurrentUser_WhenUnauthorized_Returns401()
     {
-        _handlerMock.Setup(x => x.GetCurrentUserAsync(It.IsAny<CancellationToken>()))
+        _queryMock.Setup(x => x.HandleAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail(new UnauthorizedError("User identity not found.")));
 
         IActionResult result = await _sut.GetCurrentUserAsync(CancellationToken.None);
@@ -57,7 +57,7 @@ public class CurrentUserControllerTests
     [Fact]
     public async Task GetCurrentUser_WhenNotFound_Returns404()
     {
-        _handlerMock.Setup(x => x.GetCurrentUserAsync(It.IsAny<CancellationToken>()))
+        _queryMock.Setup(x => x.HandleAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail(new NotFoundError("User not found.")));
 
         IActionResult result = await _sut.GetCurrentUserAsync(CancellationToken.None);
