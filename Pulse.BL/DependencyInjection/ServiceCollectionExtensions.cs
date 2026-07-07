@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
         IEnumerable<(Type Interface, Type Implementation)> registrations = assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract)
             .SelectMany(t => t.GetInterfaces()
-            .Where(i => i.IsGenericType && 
+            .Where(i => i.IsGenericType &&
                 (i.GetGenericTypeDefinition() == handlerType || i.GetGenericTypeDefinition() == queryType))
             .Select(i => (Interface: i, Implementation: t)));
 
