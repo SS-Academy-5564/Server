@@ -13,7 +13,6 @@ namespace Pulse.API.Features.Auth.PasswordReset;
 
 [ApiController]
 [Route("api/auth/password-reset")]
-[AutoValidate]
 public class PasswordResetController : PulseControllerBase
 {
     private readonly IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>> _requestHandler;
