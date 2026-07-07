@@ -1,6 +1,8 @@
+using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Controllers;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Users.Me;
 
 namespace Pulse.API.Features.Users.Me;
@@ -10,16 +12,16 @@ namespace Pulse.API.Features.Users.Me;
 [Authorize]
 public sealed class CurrentUserController : PulseControllerBase
 {
-    private readonly ICurrentUserHandler _handler;
+    private readonly IAsyncQueryHandler<Result<UserProfileResult>> _query;
 
-    public CurrentUserController(ICurrentUserHandler handler)
+    public CurrentUserController(IAsyncQueryHandler<Result<UserProfileResult>> query)
     {
-        _handler = handler;
+        _query = query;
     }
 
     [HttpGet("me")]
     public async Task<IActionResult> GetCurrentUserAsync(CancellationToken ct)
     {
-        return ToActionResult(await _handler.GetCurrentUserAsync(ct));
+        return ToActionResult(await _query.HandleAsync(ct));
     }
 }
