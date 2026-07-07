@@ -5,6 +5,7 @@ using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
+using Pulse.BL.Features.Auth.Login.LoginLockout;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.Login;
@@ -15,17 +16,20 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
     private readonly IUserQueries _userQueries;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly ILoginLockoutService _loginLockoutService;
     private readonly ILogger<LoginHandler> _logger;
 
     public LoginHandler(
         IUserQueries userQueries,
         IPasswordHasher passwordHasher,
         IJwtTokenGenerator jwtTokenGenerator,
+        ILoginLockoutService loginLockoutService,
         ILogger<LoginHandler> logger)
     {
         _userQueries = userQueries;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _loginLockoutService = loginLockoutService;
         _logger = logger;
     }
 
@@ -48,15 +52,25 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
+        bool isAllowed = await _loginLockoutService.IsUserAllowedAsync(user.Id, ct);
+        if (!isAllowed)
+        {
+            LogFailure("user not allowed", command.Email);
+            return Result.Fail(new UnauthorizedError("Invalid email or password."));
+        }
+
         bool passwordValid =
             _passwordHasher.VerifyHashedPassword(user.PasswordHash, command.Password);
 
         if (!passwordValid)
         {
+            await _loginLockoutService.AddFailedAttemptAsync(user.Id, ct);
+
             LogFailure("invalid password", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
+        await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
         GeneratedJwtToken generatedToken =
             _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId);
 
