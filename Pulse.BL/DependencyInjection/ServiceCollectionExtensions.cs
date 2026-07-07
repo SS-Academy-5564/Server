@@ -9,13 +9,13 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddHandlersFromAssembly(this IServiceCollection services, Assembly assembly)
     {
         Type handlerType = typeof(IAsyncHandler<,>);
-        Type queryType = typeof(IAsyncQuery<>);
+        Type queryHandlerType = typeof(IAsyncQueryHandler<>);
 
         IEnumerable<(Type Interface, Type Implementation)> registrations = assembly.GetTypes()
             .Where(t => t.IsClass && !t.IsAbstract)
             .SelectMany(t => t.GetInterfaces()
             .Where(i => i.IsGenericType &&
-                (i.GetGenericTypeDefinition() == handlerType || i.GetGenericTypeDefinition() == queryType))
+                (i.GetGenericTypeDefinition() == handlerType || i.GetGenericTypeDefinition() == queryHandlerType))
             .Select(i => (Interface: i, Implementation: t)));
 
         foreach ((Type iface, Type impl) in registrations)

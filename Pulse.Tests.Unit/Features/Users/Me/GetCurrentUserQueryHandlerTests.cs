@@ -8,17 +8,17 @@ using Pulse.DAL.Queries.Users;
 
 namespace Pulse.Tests.Unit.Features.Users.Me;
 
-public class CurrentUserQueryTests
+public class GetCurrentUserQueryHandlerTests
 {
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
     private readonly Mock<IUserQueries> _userQueriesMock;
-    private readonly CurrentUserQuery _sut;
+    private readonly GetCurrentUserQueryHandler _sut;
 
-    public CurrentUserQueryTests()
+    public GetCurrentUserQueryHandlerTests()
     {
         _currentUserServiceMock = new();
         _userQueriesMock = new();
-        _sut = new CurrentUserQuery(_currentUserServiceMock.Object, _userQueriesMock.Object);
+        _sut = new GetCurrentUserQueryHandler(_currentUserServiceMock.Object, _userQueriesMock.Object);
     }
 
     [Fact]

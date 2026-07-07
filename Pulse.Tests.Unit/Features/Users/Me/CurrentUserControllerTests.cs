@@ -11,7 +11,7 @@ namespace Pulse.Tests.Unit.Features.Users.Me;
 
 public class CurrentUserControllerTests
 {
-    private readonly Mock<ICurrentUserQuery> _queryMock;
+    private readonly Mock<IGetCurrentUserQueryHandler> _queryMock;
     private readonly CurrentUserController _sut;
 
     public CurrentUserControllerTests()

@@ -5,12 +5,12 @@ using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Users.Me;
 
-public sealed class CurrentUserQuery : ICurrentUserQuery
+public sealed class GetCurrentUserQueryHandler : IGetCurrentUserQueryHandler
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IUserQueries _userQueries;
 
-    public CurrentUserQuery(ICurrentUserService currentUserService, IUserQueries userQueries)
+    public GetCurrentUserQueryHandler(ICurrentUserService currentUserService, IUserQueries userQueries)
     {
         _currentUserService = currentUserService;
         _userQueries = userQueries;

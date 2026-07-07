@@ -10,9 +10,9 @@ namespace Pulse.API.Features.Users.Me;
 [Authorize]
 public sealed class CurrentUserController : PulseControllerBase
 {
-    private readonly ICurrentUserQuery _query;
+    private readonly IGetCurrentUserQueryHandler _query;
 
-    public CurrentUserController(ICurrentUserQuery query)
+    public CurrentUserController(IGetCurrentUserQueryHandler query)
     {
         _query = query;
     }

@@ -1,6 +1,6 @@
 namespace Pulse.BL.Common.Handlers;
 
-public interface IAsyncQuery<TResult>
+public interface IAsyncQueryHandler<TResult>
 {
     Task<TResult> HandleAsync(CancellationToken ct = default);
 }
