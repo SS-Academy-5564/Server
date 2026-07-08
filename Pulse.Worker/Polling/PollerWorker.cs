@@ -28,6 +28,10 @@ public class PollerWorker : BackgroundService
         {
             try
             {
+                using IServiceScope scope = _scopeFactory.CreateScope();
+                IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
+
+                await pollingService.ProcessDueMonitorsAsync(stoppingToken);
             }
             catch (SqlException ex)
             {
