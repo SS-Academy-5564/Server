@@ -18,7 +18,13 @@ public sealed class JsonPathReader : IJsonPathReader
             current = current?[segment];
         }
 
-        return current?.GetValue<string>();
+        return current switch
+        {
+            null => null,
+            JsonValue value when value.TryGetValue(out string? s) => s,
+            JsonValue value => value.ToJsonString(),
+            _ => current.ToString()
+        };
     }
 
     private static IEnumerable<string> GetSegments(string path)
