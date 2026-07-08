@@ -5,6 +5,5 @@ public sealed record UserProfileRecord(
     string Email,
     string FirstName,
     string LastName,
-    Guid? OrganizationId,
     DateTimeOffset CreatedAt,
     DateTimeOffset UpdatedAt);

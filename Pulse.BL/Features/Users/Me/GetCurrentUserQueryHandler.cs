@@ -33,6 +33,6 @@ public sealed class GetCurrentUserQueryHandler : IAsyncQueryHandler<Result<UserP
             return Result.Fail(new NotFoundError("User not found."));
         }
 
-        return Result.Ok(new UserProfileResult(user.Id, user.Email, user.FirstName, user.LastName, user.OrganizationId, user.CreatedAt, user.UpdatedAt));
+        return Result.Ok(new UserProfileResult(user.Id, user.Email, user.FirstName, user.LastName, user.CreatedAt, user.UpdatedAt));
     }
 }

@@ -49,7 +49,7 @@ public class UserQueries : IUserQueries
 
         return await connection.QuerySingleOrDefaultAsync<UserProfileRecord>(
             new CommandDefinition(
-                 "SELECT TOP(1)  u.Id,    u.Email,   u.FirstName,    u.LastName,    m.OrganizationId,    u.CreatedAt,   u.UpdatedAt FROM Users u LEFT JOIN Members m ON m.UserId = u.Id WHERE u.Id = @Id ORDER BY m.JoinedAt DESC;",
+                 "SELECT Id, Email, FirstName, LastName, CreatedAt, UpdatedAt  FROM Users WHERE Id = @Id;",
                  new { Id = id },
                  cancellationToken: ct));
     }

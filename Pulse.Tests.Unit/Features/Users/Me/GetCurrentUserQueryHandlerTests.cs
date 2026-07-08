@@ -49,7 +49,7 @@ public class GetCurrentUserQueryHandlerTests
     public async Task HandleAsync_WhenUserExists_ReturnsProfile()
     {
         Guid userId = Guid.NewGuid();
-        var record = new UserProfileRecord(userId, "user@example.com", "John", "Doe", null, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
+        var record = new UserProfileRecord(userId, "user@example.com", "John", "Doe", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow);
 
         _currentUserServiceMock.Setup(x => x.UserId).Returns(userId);
         _userQueriesMock.Setup(x => x.GetByIdAsync(userId, It.IsAny<CancellationToken>()))
