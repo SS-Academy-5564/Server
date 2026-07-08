@@ -1,6 +1,6 @@
 using System.Text.Json.Nodes;
 
-namespace Pulse.BL.Features.Polling.Json;
+namespace Pulse.BL.Common.Helpers.Json;
 
 public sealed class JsonPathReader : IJsonPathReader
 {

@@ -1,8 +1,8 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
-using Pulse.BL.Features.Polling.Json;
 using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Commands.MonitorPollResults;
 using Pulse.DAL.Commands.Monitors;
@@ -66,8 +66,22 @@ public class PollingService : IPollingService
         try
         {
             HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
-            value = TryReadMonitorValue(response, monitor);
-            resultInput = CreatePollResultInput(monitor, response, value, checkedAt);
+
+            if (response.IsSuccess && string.IsNullOrWhiteSpace(response.Body))
+            {
+                value =  _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
+            }
+
+
+            resultInput = new (
+                value,
+                checkedAt,
+                response.IsSuccess,
+                response.ResponseTimeMs,
+                response.StatusCode,
+                response.ErrorMessage,
+                monitor.Id,
+                response.RequestStatus);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -77,7 +91,7 @@ public class PollingService : IPollingService
         {
             _logger.LogError(exception, "Unexpected monitor polling error. MonitorId: {MonitorId}", monitor.Id);
 
-            resultInput = new CreateMonitorPollResultsInput(
+            resultInput = new (
                 Value: null,
                 CheckedAt: checkedAt,
                 IsSuccess: false,
@@ -88,43 +102,6 @@ public class PollingService : IPollingService
                 RequestStatus: RequestStatusNames.UnexpectedError);
         }
 
-        await PersistPollResultAsync(monitor, resultInput, value, checkedAt, ct);
-    }
-
-    private string? TryReadMonitorValue(HttpMonitorResponse response, MonitorRecord monitor)
-    {
-        if (!response.IsSuccess || string.IsNullOrWhiteSpace(response.Body))
-        {
-            return null;
-        }
-
-        return _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
-    }
-
-    private static CreateMonitorPollResultsInput CreatePollResultInput(
-        MonitorRecord monitor,
-        HttpMonitorResponse response,
-        string? value,
-        DateTime checkedAt)
-    {
-        return new CreateMonitorPollResultsInput(
-            value,
-            checkedAt,
-            response.IsSuccess,
-            response.ResponseTimeMs,
-            response.StatusCode,
-            response.ErrorMessage,
-            monitor.Id,
-            response.RequestStatus);
-    }
-
-    private async Task PersistPollResultAsync(
-        MonitorRecord monitor,
-        CreateMonitorPollResultsInput resultInput,
-        string? value,
-        DateTime checkedAt,
-        CancellationToken ct)
-    {
         DateTime nextExecutionAt = checkedAt.AddSeconds(monitor.PollingIntervalSeconds);
 
         UpdateMonitorAfterPollInput monitorInput = new(
@@ -137,5 +114,6 @@ public class PollingService : IPollingService
         await _monitorPollResultCommands.CreateAsync(resultInput, uof, ct);
         await _monitorCommands.UpdateAfterPollAsync(monitorInput, uof, ct);
         await uof.CommitAsync(ct);
+
     }
 }

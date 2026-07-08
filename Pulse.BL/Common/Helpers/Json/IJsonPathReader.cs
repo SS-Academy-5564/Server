@@ -1,4 +1,4 @@
-namespace Pulse.BL.Features.Polling.Json;
+namespace Pulse.BL.Common.Helpers.Json;
 
 public interface IJsonPathReader
 {
