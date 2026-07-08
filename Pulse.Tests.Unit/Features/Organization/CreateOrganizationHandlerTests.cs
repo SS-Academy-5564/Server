@@ -26,22 +26,32 @@ public class CreateOrganizationHandlerTests
             .Setup(x => x.CreateAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(_uowMock.Object);
 
+        _currentUserMock
+            .SetupGet(x => x.UserId)
+            .Returns(Guid.NewGuid());
+
         _commandsMock
-          .Setup(x => x.CreateOrganizationAsync(It.IsAny<CreateOrganizationInput>(), _uowMock.Object, It.IsAny<CancellationToken>()))
-          .ReturnsAsync(Guid.NewGuid());
+            .Setup(x => x.CreateOrganizationAsync(
+                It.IsAny<CreateOrganizationInput>(),
+                _uowMock.Object,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Guid.NewGuid());
 
         _jwtMock
-           .Setup(x => x.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<Guid>()))
-           .Returns(new GeneratedJwtToken("test-token", DateTimeOffset.UtcNow.AddMinutes(30)));
+            .Setup(x => x.GenerateToken(
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<Guid>()))
+            .Returns(new GeneratedJwtToken(
+                "test-token",
+                DateTimeOffset.UtcNow.AddMinutes(30)));
 
         _handler = new CreateOrganizationHandler(
             _uowFactoryMock.Object,
             _commandsMock.Object,
             _jwtMock.Object,
             _currentUserMock.Object,
-            _memberCommandsMock.Object
-        );
-
+            _memberCommandsMock.Object);
     }
 
     [Fact]
