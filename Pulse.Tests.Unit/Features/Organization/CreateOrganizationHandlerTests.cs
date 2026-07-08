@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Moq;
-using Pulse.BL.Common.Security.CurrentUser;
+using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Organization;
 using Pulse.DAL.Commands.Members;

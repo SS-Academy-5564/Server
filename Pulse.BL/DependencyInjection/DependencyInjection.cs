@@ -2,7 +2,6 @@ using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Pulse.BL.Common.Security.CurrentUser;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login.LoginLockout;
@@ -39,8 +38,7 @@ public static class DependencyInjection
             .Bind(configuration.GetRequiredSection(PasswordResetOptions.SectionName))
             .ValidateOnStart();
         services.AddEmailing(configuration);
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
-        services.AddScoped<ICreateOrganizationHandler, CreateOrganizationHandler>();
+        services.AddScoped<CreateOrganizationHandler>();
         return services;
     }
 }

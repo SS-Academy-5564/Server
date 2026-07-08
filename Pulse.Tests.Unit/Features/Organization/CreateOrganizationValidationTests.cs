@@ -7,11 +7,10 @@ public class CreateOrganizationValidationTests
 {
     private readonly CreateOrganizationRequestValidator _validator = new();
 
-    // Name
     [Fact]
     public void CreateOrganizationRequestValidator_EmptyName_ShouldHaveValidationError()
     {
-        CreateOrganizationRequest model = new() { Name = "" };
+        CreateOrganizationRequest model = new("");
 
         TestValidationResult<CreateOrganizationRequest> result =
             _validator.TestValidate(model);
@@ -23,7 +22,8 @@ public class CreateOrganizationValidationTests
     [Fact]
     public void CreateOrganizationRequestValidator_NameTooShort_ShouldHaveValidationError()
     {
-        CreateOrganizationRequest model = new() { Name = "ab" };
+        CreateOrganizationRequest model = new("ab");
+        ;
 
         TestValidationResult<CreateOrganizationRequest> result =
            _validator.TestValidate(model);
@@ -35,7 +35,7 @@ public class CreateOrganizationValidationTests
     [Fact]
     public void CreateOrganizationRequestValidator_NameTooLong_ShouldHaveValidationError()
     {
-        CreateOrganizationRequest model = new() { Name = new string('a', 51) };
+        CreateOrganizationRequest model = new(new string('a', 51));
 
         TestValidationResult<CreateOrganizationRequest> result =
             _validator.TestValidate(model);
@@ -47,7 +47,7 @@ public class CreateOrganizationValidationTests
     [Fact]
     public void CreateOrganizationRequestValidator_ValidName_ShouldNotHaveValidationErrors()
     {
-        CreateOrganizationRequest model = new() { Name = "Valid Org" };
+        CreateOrganizationRequest model = new("Valid Org");
 
         TestValidationResult<CreateOrganizationRequest> result =
             _validator.TestValidate(model);

@@ -1,5 +1,6 @@
 using FluentResults;
-using Pulse.BL.Common.Security.CurrentUser;
+using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Organization;
@@ -8,7 +9,7 @@ using Pulse.DAL.Common.Repository;
 
 namespace Pulse.BL.Features.Organization;
 
-public class CreateOrganizationHandler : ICreateOrganizationHandler
+public class CreateOrganizationHandler
 {
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IOrganizationCommands _organizationCommands;
@@ -37,7 +38,14 @@ public class CreateOrganizationHandler : ICreateOrganizationHandler
         await using IUnitOfWork uow =
             await _unitOfWorkFactory.CreateAsync(ct);
 
-        Guid userId = _currentUserService.UserId;
+        Guid? userId = _currentUserService.UserId;
+
+        if (userId is null)
+        {
+            return Result.Fail(new UnauthorizedError("User identity not found."));
+        }
+
+        Guid currentUserId = userId.Value;
         string role = _currentUserService.Role;
 
         Guid organizationId =
@@ -48,7 +56,7 @@ public class CreateOrganizationHandler : ICreateOrganizationHandler
 
         await _memberCommands.CreateMemberAsync(
             new CreateMemberInput(
-                userId,
+                currentUserId,
                 organizationId,
                 SeededIds.Roles.User
             ),
@@ -57,7 +65,7 @@ public class CreateOrganizationHandler : ICreateOrganizationHandler
 
         await uow.CommitAsync(ct);
 
-        GeneratedJwtToken jwt = _jwtTokenGenerator.GenerateToken(userId, role, organizationId);
+        GeneratedJwtToken jwt = _jwtTokenGenerator.GenerateToken(currentUserId, role, organizationId);
 
         string accessToken = jwt.Token;
 

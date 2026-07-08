@@ -12,9 +12,9 @@ namespace Pulse.API.Features.Organization;
 public class CreateOrganizationsController : PulseControllerBase
 {
 
-    private readonly ICreateOrganizationHandler _handler;
+    private readonly CreateOrganizationHandler _handler;
 
-    public CreateOrganizationsController(ICreateOrganizationHandler handler)
+    public CreateOrganizationsController(CreateOrganizationHandler handler)
     {
         _handler = handler;
     }

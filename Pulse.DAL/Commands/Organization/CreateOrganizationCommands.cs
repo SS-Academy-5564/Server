@@ -10,19 +10,9 @@ public class CreateOrganizationCommands : IOrganizationCommands
         return await uow.Connection.ExecuteScalarAsync<Guid>(
             new CommandDefinition(
                 """
-                INSERT INTO Organizations
-                (
-                    Name,
-                    CreatedAt,
-                    UpdatedAt
-                )
+                INSERT INTO Organizations (Name, CreatedAt, UpdatedAt)
                 OUTPUT INSERTED.Id
-                VALUES
-                (
-                    @Name,
-                    @Now,
-                    @Now
-                )
+                VALUES (@Name, @Now, @Now)
                 """,
                 new
                 {
