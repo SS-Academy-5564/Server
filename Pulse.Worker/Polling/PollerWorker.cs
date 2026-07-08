@@ -1,6 +1,7 @@
-using Microsoft.Data.SqlClient;
+
 using Microsoft.Extensions.Options;
 using Pulse.BL.Features.Polling;
+using Pulse.BL.Features.Polling.Options;
 
 namespace Pulse.Worker.Polling;
 
@@ -32,11 +33,6 @@ public sealed class PollerWorker : BackgroundService
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
 
                 await pollingService.ProcessDueMonitorsAsync(stoppingToken);
-            }
-            catch (SqlException ex)
-            {
-                _logger.LogError(ex, "SQL error occurred during polling");
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             }
             catch (OperationCanceledException) when (
                 stoppingToken.IsCancellationRequested)

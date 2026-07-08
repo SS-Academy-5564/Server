@@ -1,4 +1,4 @@
-namespace Pulse.BL.Features.Polling;
+namespace Pulse.BL.Features.Polling.Options;
 
 /// <summary>
 /// Defines options for Polling worker configuration

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Http;
+using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.DependencyInjection;
 using Pulse.Worker.Polling;
 

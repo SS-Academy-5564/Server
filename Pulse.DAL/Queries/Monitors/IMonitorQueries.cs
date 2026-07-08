@@ -4,5 +4,5 @@ namespace Pulse.DAL.Queries.Monitors;
 
 public interface IMonitorQueries : IQueries
 {
-    Task<IEnumerable<MonitorRecord>> GetDueEnabledAsync(int max,CancellationToken ct =default);
+    Task<IEnumerable<MonitorRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
 }

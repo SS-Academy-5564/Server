@@ -1,3 +1,4 @@
+using System.Data;
 using Dapper;
 using Pulse.DAL.Connection;
 
@@ -12,9 +13,9 @@ public class MonitorQueries : IMonitorQueries
         _connectionFactory = factory;
     }
 
-    public async Task<IEnumerable<MonitorRecord>> GetDueEnabledAsync(int max,CancellationToken ct)
+    public async Task<IEnumerable<MonitorRecord>> GetDueEnabledAsync(int max, CancellationToken ct)
     {
-        using var connection = _connectionFactory.CreateConnection();
+        using IDbConnection connection = _connectionFactory.CreateConnection();
 
         return await connection.QueryAsync<MonitorRecord>(
             new CommandDefinition(

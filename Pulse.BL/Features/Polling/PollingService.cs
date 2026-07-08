@@ -3,9 +3,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
-using Pulse.DAL.Common.Constants;
+using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.Commands.MonitorPollResults;
 using Pulse.DAL.Commands.Monitors;
+using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Common.Repository;
 using Pulse.DAL.Queries.Monitors;
 
@@ -44,7 +45,7 @@ public class PollingService : IPollingService
 
     public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
-        var monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+        IEnumerable<MonitorRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
 
         ParallelOptions options = new()
         {
@@ -69,11 +70,10 @@ public class PollingService : IPollingService
 
             if (response.IsSuccess && string.IsNullOrWhiteSpace(response.Body))
             {
-                value =  _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
+                value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
             }
 
-
-            resultInput = new (
+            resultInput = new(
                 value,
                 checkedAt,
                 response.IsSuccess,
@@ -91,7 +91,7 @@ public class PollingService : IPollingService
         {
             _logger.LogError(exception, "Unexpected monitor polling error. MonitorId: {MonitorId}", monitor.Id);
 
-            resultInput = new (
+            resultInput = new(
                 Value: null,
                 CheckedAt: checkedAt,
                 IsSuccess: false,

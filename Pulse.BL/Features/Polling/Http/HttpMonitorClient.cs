@@ -46,8 +46,8 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
 
         try
         {
-            using var httpClient = _httpClientFactory.CreateClient(ClientName);
-            using var request = new HttpRequestMessage(new HttpMethod(monitor.HttpMethod), monitor.Url);
+            using HttpClient httpClient = _httpClientFactory.CreateClient(ClientName);
+            using HttpRequestMessage request = new(new HttpMethod(monitor.HttpMethod), monitor.Url);
 
             using HttpResponseMessage response = await httpClient.SendAsync(request, timeoutCts.Token);
             string body = await response.Content.ReadAsStringAsync(timeoutCts.Token);
