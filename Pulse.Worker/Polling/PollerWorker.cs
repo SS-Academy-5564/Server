@@ -4,7 +4,7 @@ using Pulse.BL.Features.Polling;
 
 namespace Pulse.Worker.Polling;
 
-public class PollerWorker : BackgroundService
+public sealed class PollerWorker : BackgroundService
 {
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<PollerWorker> _logger;

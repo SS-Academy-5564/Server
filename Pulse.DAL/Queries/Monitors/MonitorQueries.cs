@@ -30,12 +30,3 @@ public class MonitorQueries : IMonitorQueries
 
     }
 }
-
-public record MonitorRecord(
-    Guid Id,
-    string Url,
-    string HttpMethod,
-    string ResultPath,
-    int PollingIntervalSeconds,
-    int PollingTimeoutSeconds
-    );
