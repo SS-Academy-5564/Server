@@ -6,8 +6,18 @@ namespace Pulse.DAL.Commands.MonitorPollResults;
 
 public class MonitorPollResultsCommands : IMonitorPollResultsCommands
 {
-    public async Task CreateAsync(CreateMonitorPollResultsInput monitorPollResultsInput, IUnitOfWork uow, CancellationToken ct)
+    private readonly IDbSessionAccessor _sessionAccessor;
+
+    public MonitorPollResultsCommands(IDbSessionAccessor sessionAccessor)
     {
+        _sessionAccessor = sessionAccessor;
+    }
+
+    public async Task CreateAsync(CreateMonitorPollResultsInput monitorPollResultsInput, CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
         const string sql =
             """
             INSERT INTO dbo.MonitorPollResults
@@ -24,11 +34,11 @@ public class MonitorPollResultsCommands : IMonitorPollResultsCommands
                 );
             """;
 
-        await uow.Connection.ExecuteAsync(
+        await session.Connection.ExecuteAsync(
             new CommandDefinition(
                 sql,
                 monitorPollResultsInput,
-                transaction: uow.Transaction,
+                transaction: session.Transaction,
                 cancellationToken: ct));
     }
 }

@@ -5,8 +5,18 @@ namespace Pulse.DAL.Commands.Monitors;
 
 public class MonitorCommands : IMonitorCommands
 {
-    public async Task UpdateAfterPollAsync(UpdateMonitorAfterPollInput input, IUnitOfWork uow, CancellationToken ct)
+    private readonly IDbSessionAccessor _sessionAccessor;
+
+    public MonitorCommands(IDbSessionAccessor sessionAccessor)
     {
+        _sessionAccessor = sessionAccessor;
+    }
+
+    public async Task UpdateAfterPollAsync(UpdateMonitorAfterPollInput input, CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
         const string sql =
             """
             UPDATE dbo.Monitors
@@ -17,11 +27,11 @@ public class MonitorCommands : IMonitorCommands
             WHERE Id = @MonitorId;
             """;
 
-        await uow.Connection.ExecuteAsync(
+        await session.Connection.ExecuteAsync(
             new CommandDefinition(
                 sql,
                 input,
-                transaction: uow.Transaction,
+                transaction: session.Transaction,
                 cancellationToken: ct));
     }
 }

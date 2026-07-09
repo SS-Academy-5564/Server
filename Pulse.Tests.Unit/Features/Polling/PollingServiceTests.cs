@@ -1,3 +1,4 @@
+using System.Data;
 using System.Text.Json;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -38,13 +39,13 @@ public class PollingServiceTests
     public PollingServiceTests()
     {
         _monitorPollResultsCommands
-            .Setup(c => c.CreateAsync(It.IsAny<CreateMonitorPollResultsInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()))
-            .Callback<CreateMonitorPollResultsInput, IUnitOfWork, CancellationToken>((input, _, _) => _createdMonitorPollResults = input)
+            .Setup(c => c.CreateAsync(It.IsAny<CreateMonitorPollResultsInput>(), It.IsAny<CancellationToken>()))
+            .Callback<CreateMonitorPollResultsInput, CancellationToken>((input, _) => _createdMonitorPollResults = input)
             .Returns(Task.CompletedTask);
 
         _monitorCommands
-            .Setup(c => c.UpdateAfterPollAsync(It.IsAny<UpdateMonitorAfterPollInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()))
-            .Callback<UpdateMonitorAfterPollInput, IUnitOfWork, CancellationToken>((input, _, _) => _updatedMonitor = input)
+            .Setup(c => c.UpdateAfterPollAsync(It.IsAny<UpdateMonitorAfterPollInput>(), It.IsAny<CancellationToken>()))
+            .Callback<UpdateMonitorAfterPollInput, CancellationToken>((input, _) => _updatedMonitor = input)
             .Returns(Task.CompletedTask);
 
         _unitOfWork
@@ -55,7 +56,7 @@ public class PollingServiceTests
             .Returns(ValueTask.CompletedTask);
 
         _unitOfWorkFactory
-            .Setup(f => f.CreateAsync(It.IsAny<CancellationToken>()))
+            .Setup(f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(_unitOfWork.Object);
 
         _service = new PollingService(
@@ -233,7 +234,7 @@ public class PollingServiceTests
             c => c.SendAsync(It.IsAny<MonitorRecord>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _monitorPollResultsCommands.Verify(
-            c => c.CreateAsync(It.IsAny<CreateMonitorPollResultsInput>(), It.IsAny<IUnitOfWork>(), It.IsAny<CancellationToken>()),
+            c => c.CreateAsync(It.IsAny<CreateMonitorPollResultsInput>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 

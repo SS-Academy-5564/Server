@@ -54,11 +54,34 @@ public class PollingService : IPollingService
             CancellationToken = ct
         };
 
-        await Parallel.ForEachAsync(monitors, options, ProcessMonitorAsync);
+        await Parallel.ForEachAsync(monitors, options, async (monitor, token) =>
+        {
+            try
+            {
+                await ProcessMonitorAsync(monitor, token);
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(
+                    exception,
+                    "Failed to process monitor. MonitorId: {MonitorId}",
+                    monitor.Id);
+            }
+        });
 
         return Result.Ok();
     }
 
+    /// <summary>
+    /// Executes one monitor check and persists the resulting poll record.
+    /// </summary>
+    /// <remarks>
+    /// HTTP/extraction failures become poll-result statuses when possible. Worker cancellation is rethrown.
+    /// </remarks>
     private async ValueTask ProcessMonitorAsync(MonitorRecord monitor, CancellationToken ct)
     {
         string? value = null;
@@ -125,20 +148,9 @@ public class PollingService : IPollingService
             completedAt,
             nextExecutionAt);
 
-        try
-        {
-            await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct);
-            await _monitorPollResultCommands.CreateAsync(resultInput, uof, ct);
-            await _monitorCommands.UpdateAfterPollAsync(monitorInput, uof, ct);
-            await uof.CommitAsync(ct);
-        }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Failed to persist poll result. MonitorId: {MonitorId}", monitor.Id);
-        }
+        await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
+        await _monitorPollResultCommands.CreateAsync(resultInput, ct);
+        await _monitorCommands.UpdateAfterPollAsync(monitorInput, ct);
+        await uof.CommitAsync(ct);
     }
 }

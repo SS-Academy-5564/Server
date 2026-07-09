@@ -4,5 +4,5 @@ namespace Pulse.DAL.Commands.Monitors;
 
 public interface IMonitorCommands : ICommands
 {
-    Task UpdateAfterPollAsync(UpdateMonitorAfterPollInput input, IUnitOfWork uow, CancellationToken ct);
+    Task UpdateAfterPollAsync(UpdateMonitorAfterPollInput input, CancellationToken ct);
 }
