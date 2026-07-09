@@ -74,52 +74,22 @@ public class PollingService : IPollingService
 
     private async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorRecord monitor, CancellationToken ct)
     {
-        try
+        HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
+        string? value = null;
+
+        if (response.IsSuccess && !string.IsNullOrWhiteSpace(response.Body))
         {
-            HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
-            bool isSuccess = response.IsSuccess;
-            string requestStatus = response.RequestStatus;
-
-            if (!response.IsSuccess || string.IsNullOrWhiteSpace(response.Body))
-            {
-                return new(
-                    Value: null,
-                    CheckedAt: DateTime.UtcNow,
-                    isSuccess,
-                    response.ResponseTimeMs,
-                    response.StatusCode,
-                    monitor.Id,
-                    requestStatus);
-            }
-
-            string? value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
-
-            return new(
-                value,
-                DateTime.UtcNow,
-                isSuccess,
-                response.ResponseTimeMs,
-                response.StatusCode,
-                monitor.Id,
-                requestStatus);
+             value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
         }
-        catch (OperationCanceledException) when (ct.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception)
-        {
-            _logger.LogError(exception, "Unexpected monitor polling error. MonitorId: {MonitorId}", monitor.Id);
 
-            return new(
-                Value: null,
-                CheckedAt: DateTime.UtcNow,
-                IsSuccess: false,
-                ResponseTimeMs: 0,
-                StatusCode: null,
-                MonitorId: monitor.Id,
-                RequestStatus: RequestStatusNames.UnexpectedError);
-        }
+        return new(
+            Value: value,
+            CheckedAt: DateTime.UtcNow,
+            response.IsSuccess,
+            response.ResponseTimeMs,
+            response.StatusCode,
+            monitor.Id,
+            response.RequestStatus);
     }
 
     private async Task SavePollResultAsync(MonitorRecord monitor, CreateMonitorPollResultsInput resultInput, CancellationToken ct)

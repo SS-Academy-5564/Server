@@ -1,4 +1,3 @@
-
 using Microsoft.Extensions.Options;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Options;
