@@ -1,5 +1,5 @@
 using FluentValidation;
-using Pulse.DAL.Queries.Monitors;
+using Pulse.BL.Features.Monitors;
 
 namespace Pulse.API.Features.Monitors.GetMonitors;
 
@@ -12,3 +12,4 @@ public class GetMonitorsRequestValidator : AbstractValidator<GetMonitorsRequest>
             .WithMessage("Status must be one of: Enabled, Disabled, Error.");
     }
 }
+
