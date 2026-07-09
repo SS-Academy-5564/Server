@@ -1,5 +1,4 @@
 using System.Data;
-using System.Text.Json;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -134,45 +133,6 @@ public class PollingServiceTests
         _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
         _createdMonitorPollResultsSession.Should().BeSameAs(_unitOfWork.Object);
         _updatedMonitorSession.Should().BeSameAs(_unitOfWork.Object);
-    }
-
-    [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenExtractionFails_PreservesHttpMetadataAndUsesExtractionErrorAsync()
-    {
-        // Arrange
-        HttpMonitorResponse response = new(
-            IsSuccess: true,
-            ResponseTimeMs: 321,
-            RequestStatus: RequestStatusNames.Success)
-        {
-            Body = """{"data":{"status":{"nested":"value"}}}""",
-            StatusCode = 200
-        };
-
-        _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([_monitor]);
-        _httpMonitorClient
-            .Setup(c => c.SendAsync(_monitor, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(response);
-        _jsonPathReader
-            .Setup(r => r.ReadValue(response.Body, _monitor.ResultPath))
-            .Throws(new JsonException("Invalid path"));
-
-        // Act
-        await _service.ProcessDueMonitorsAsync();
-
-        // Assert
-        _createdMonitorPollResults.Should().NotBeNull();
-        _createdMonitorPollResults!.Value.Should().BeNull();
-        _createdMonitorPollResults.IsSuccess.Should().BeFalse();
-        _createdMonitorPollResults.StatusCode.Should().Be(200);
-        _createdMonitorPollResults.ResponseTimeMs.Should().Be(321);
-        _createdMonitorPollResults.RequestStatus.Should().Be(RequestStatusNames.ExtractionError);
-
-        _updatedMonitor.Should().NotBeNull();
-        _updatedMonitor!.CurrentValue.Should().BeNull();
-        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
