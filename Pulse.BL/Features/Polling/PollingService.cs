@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -60,29 +61,45 @@ public class PollingService : IPollingService
 
     private async ValueTask ProcessMonitorAsync(MonitorRecord monitor, CancellationToken ct)
     {
-        DateTime checkedAt = DateTime.UtcNow;
         string? value = null;
         CreateMonitorPollResultsInput resultInput;
 
         try
         {
-
             HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
+            bool isSuccess = response.IsSuccess;
+            string? errorMessage = response.ErrorMessage;
+            string requestStatus = response.RequestStatus;
 
             if (response.IsSuccess && !string.IsNullOrWhiteSpace(response.Body))
             {
-                value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
+                try
+                {
+                    value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
+                }
+                catch (Exception exception) when (exception is JsonException or InvalidOperationException or ArgumentException)
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "Failed to extract monitor value. MonitorId: {MonitorId}, ResultPath: {ResultPath}",
+                        monitor.Id,
+                        monitor.ResultPath);
+
+                    isSuccess = false;
+                    errorMessage = exception.Message;
+                    requestStatus = RequestStatusNames.ExtractionError;
+                }
             }
 
             resultInput = new(
                 value,
-                checkedAt,
-                response.IsSuccess,
+                DateTime.UtcNow,
+                isSuccess,
                 response.ResponseTimeMs,
                 response.StatusCode,
-                response.ErrorMessage,
+                errorMessage,
                 monitor.Id,
-                response.RequestStatus);
+                requestStatus);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -94,7 +111,7 @@ public class PollingService : IPollingService
 
             resultInput = new(
                 Value: null,
-                CheckedAt: checkedAt,
+                CheckedAt: DateTime.UtcNow,
                 IsSuccess: false,
                 ResponseTimeMs: 0,
                 StatusCode: null,
@@ -112,10 +129,20 @@ public class PollingService : IPollingService
             completedAt,
             nextExecutionAt);
 
-        await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct);
-        await _monitorPollResultCommands.CreateAsync(resultInput, uof, ct);
-        await _monitorCommands.UpdateAfterPollAsync(monitorInput, uof, ct);
-        await uof.CommitAsync(ct);
-
+        try
+        {
+            await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct);
+            await _monitorPollResultCommands.CreateAsync(resultInput, uof, ct);
+            await _monitorCommands.UpdateAfterPollAsync(monitorInput, uof, ct);
+            await uof.CommitAsync(ct);
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Failed to persist poll result. MonitorId: {MonitorId}", monitor.Id);
+        }
     }
 }
