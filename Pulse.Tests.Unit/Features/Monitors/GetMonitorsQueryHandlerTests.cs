@@ -53,7 +53,6 @@ public class GetMonitorsQueryHandlerTests
         _queriesMock.Verify(q => q.GetAllAsync(DAL.Queries.Monitors.MonitorStatus.Disabled, It.IsAny<CancellationToken>()), Times.Once);
     }
 
-
     [Fact]
     public async Task HandleAsync_WhenNoMonitors_ReturnsEmptyList()
     {

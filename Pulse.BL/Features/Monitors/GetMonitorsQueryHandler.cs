@@ -28,5 +28,4 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<IR
 
         return Result.Ok(results);
     }
-
 }

@@ -4,7 +4,6 @@ using Pulse.BL.Features.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
 
-
 public class GetMonitorsRequestValidatorTests
 {
     private readonly GetMonitorsRequestValidator _validator = new();

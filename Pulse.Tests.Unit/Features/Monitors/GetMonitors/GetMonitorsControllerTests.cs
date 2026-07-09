@@ -9,7 +9,6 @@ using Pulse.BL.Features.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
 
-
 public class GetMonitorsControllerTests
 {
     private readonly Mock<IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorResult>>>> _handlerMock;
