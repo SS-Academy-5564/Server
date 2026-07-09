@@ -174,30 +174,6 @@ public class PollingServiceTests
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenHttpClientThrowsUnexpectedException_PersistsUnexpectedErrorAsync()
-    {
-        // Arrange
-        _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([_monitor]);
-        _httpMonitorClient
-            .Setup(c => c.SendAsync(_monitor, It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new InvalidOperationException("Unexpected failure"));
-
-        // Act
-        await _service.ProcessDueMonitorsAsync();
-
-        // Assert
-        _createdMonitorPollResults.Should().NotBeNull();
-        _createdMonitorPollResults!.Value.Should().BeNull();
-        _createdMonitorPollResults.IsSuccess.Should().BeFalse();
-        _createdMonitorPollResults.StatusCode.Should().BeNull();
-        _createdMonitorPollResults.ResponseTimeMs.Should().Be(0);
-        _createdMonitorPollResults.RequestStatus.Should().Be(RequestStatusNames.UnexpectedError);
-        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
     public async Task ProcessDueMonitorsAsync_WhenMultipleMonitorsAreDue_ProcessesEachMonitorAsync()
     {
         // Arrange

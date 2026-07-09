@@ -74,7 +74,7 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
                 ResponseTimeMs: (int)stopwatch.ElapsedMilliseconds,
                 RequestStatus: response.IsSuccessStatusCode ? RequestStatusNames.Success : RequestStatusNames.Failed
             )
-            { Body = body, StatusCode = (int?)response.StatusCode, };
+            { Body = body, StatusCode = (int?)response.StatusCode };
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {

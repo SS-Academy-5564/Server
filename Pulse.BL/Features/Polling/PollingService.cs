@@ -6,7 +6,6 @@ using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.Commands.MonitorPollResults;
 using Pulse.DAL.Commands.Monitors;
-using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Common.Repository;
 using Pulse.DAL.Queries.Monitors;
 
@@ -72,17 +71,17 @@ public class PollingService : IPollingService
         return Result.Ok();
     }
 
-    private async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorRecord monitor, CancellationToken ct)
+    public async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorRecord monitor, CancellationToken ct)
     {
         HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
         string? value = null;
 
         if (response.IsSuccess && !string.IsNullOrWhiteSpace(response.Body))
         {
-             value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
+            value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
         }
 
-        return new(
+        return new CreateMonitorPollResultsInput(
             Value: value,
             CheckedAt: DateTime.UtcNow,
             response.IsSuccess,
@@ -101,8 +100,10 @@ public class PollingService : IPollingService
 
         await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
         IDbSession session = (IDbSession)uof;
+
         await _monitorPollResultCommands.CreateAsync(resultInput, session, ct);
         await _monitorCommands.UpdateAfterPollAsync(monitorInput, session, ct);
+
         await uof.CommitAsync(ct);
     }
 }
