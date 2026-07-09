@@ -75,7 +75,7 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
                 RequestStatus: RequestStatusNames.Timeout
             )
             {
-                ErrorMessage= "Request timed out.",
+                ErrorMessage = "Request timed out.",
             };
         }
         catch (HttpRequestException exception)
@@ -101,7 +101,7 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
                 RequestStatus: RequestStatusNames.UnexpectedError
             )
             {
-                ErrorMessage= exception.Message,
+                ErrorMessage = exception.Message,
             };
         }
     }

@@ -1,6 +1,5 @@
 namespace Pulse.BL.Features.Polling.Http;
 
-
 public sealed record HttpMonitorResponse(
     bool IsSuccess,
     int ResponseTimeMs,
