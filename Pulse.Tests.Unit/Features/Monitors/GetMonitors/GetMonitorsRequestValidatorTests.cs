@@ -1,8 +1,9 @@
 using FluentValidation.TestHelper;
 using Pulse.API.Features.Monitors.GetMonitors;
-using Pulse.DAL.Queries.Monitors;
+using Pulse.BL.Features.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
+
 
 public class GetMonitorsRequestValidatorTests
 {

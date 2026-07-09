@@ -22,7 +22,7 @@ public class GetMonitorsQueryHandlerTests
     {
         IReadOnlyList<MonitorRecord> records = new List<MonitorRecord>
         {
-            new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, MonitorStatus.Enabled, 60)
+            new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, DAL.Queries.Monitors.MonitorStatus.Enabled, 60)
         }.AsReadOnly();
 
         _queriesMock.Setup(q => q.GetAllAsync(null, It.IsAny<CancellationToken>()))
@@ -33,7 +33,7 @@ public class GetMonitorsQueryHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
         result.Value[0].Name.Should().Be("Billing API");
-        result.Value[0].Status.Should().Be(MonitorStatus.Enabled);
+        result.Value[0].Status.Should().Be(BL.Features.Monitors.MonitorStatus.Enabled);
         result.Value[0].Interval.Should().Be(60);
     }
 
@@ -42,16 +42,17 @@ public class GetMonitorsQueryHandlerTests
     {
         IReadOnlyList<MonitorRecord> records = new List<MonitorRecord>().AsReadOnly();
 
-        _queriesMock.Setup(q => q.GetAllAsync(MonitorStatus.Disabled, It.IsAny<CancellationToken>()))
+        _queriesMock.Setup(q => q.GetAllAsync(DAL.Queries.Monitors.MonitorStatus.Disabled, It.IsAny<CancellationToken>()))
             .ReturnsAsync(records);
 
-        Result<IReadOnlyList<MonitorResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(MonitorStatus.Disabled));
+        Result<IReadOnlyList<MonitorResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(BL.Features.Monitors.MonitorStatus.Disabled));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
 
-        _queriesMock.Verify(q => q.GetAllAsync(MonitorStatus.Disabled, It.IsAny<CancellationToken>()), Times.Once);
+        _queriesMock.Verify(q => q.GetAllAsync(DAL.Queries.Monitors.MonitorStatus.Disabled, It.IsAny<CancellationToken>()), Times.Once);
     }
+
 
     [Fact]
     public async Task HandleAsync_WhenNoMonitors_ReturnsEmptyList()

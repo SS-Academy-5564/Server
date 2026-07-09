@@ -6,9 +6,9 @@ using Pulse.API.Features.Monitors.GetMonitors;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Monitors;
-using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
+
 
 public class GetMonitorsControllerTests
 {
