@@ -1,4 +1,4 @@
-using System.Data;
+using System.Data.Common;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 
@@ -13,7 +13,7 @@ public class SqlConnectionFactory : IDbConnectionFactory
         _configuration = configuration;
     }
 
-    public IDbConnection CreateConnection()
+    public DbConnection CreateConnection()
     {
         string? connectionString =
             _configuration.GetConnectionString("DefaultConnection");
