@@ -15,7 +15,9 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
         "POST",
         "PUT",
         "PATCH",
-        "DELETE"
+        "DELETE",
+        "HEAD",
+        "OPTIONS",
     };
 
     private readonly IHttpClientFactory _httpClientFactory;

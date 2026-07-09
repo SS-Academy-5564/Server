@@ -48,19 +48,15 @@ public class PollingService : IPollingService
     {
         IEnumerable<MonitorRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
 
-        ParallelOptions options = new()
-        {
-            MaxDegreeOfParallelism = _options.MaxConcurrentRequests,
-            CancellationToken = ct
-        };
-
-        await Parallel.ForEachAsync(monitors, options, async (monitor, token) =>
+        foreach (MonitorRecord monitor in monitors)
         {
             try
             {
-                await ProcessMonitorAsync(monitor, token);
+                ct.ThrowIfCancellationRequested();
+                CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
+                await SavePollResultAsync(monitor, monitorPollResults, ct);
             }
-            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
                 throw;
             }
@@ -71,48 +67,51 @@ public class PollingService : IPollingService
                     "Failed to process monitor. MonitorId: {MonitorId}",
                     monitor.Id);
             }
-        });
+        }
 
         return Result.Ok();
     }
 
-    /// <summary>
-    /// Executes one monitor check and persists the resulting poll record.
-    /// </summary>
-    /// <remarks>
-    /// HTTP/extraction failures become poll-result statuses when possible. Worker cancellation is rethrown.
-    /// </remarks>
-    private async ValueTask ProcessMonitorAsync(MonitorRecord monitor, CancellationToken ct)
+    private async Task<CreateMonitorPollResultsInput> GetPollResultAsync(
+        MonitorRecord monitor,
+        CancellationToken ct)
     {
-        string? value = null;
-        CreateMonitorPollResultsInput resultInput;
-
         try
         {
             HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
             bool isSuccess = response.IsSuccess;
             string requestStatus = response.RequestStatus;
+            string? value = null;
 
-            if (response.IsSuccess && !string.IsNullOrWhiteSpace(response.Body))
+            if (!response.IsSuccess || string.IsNullOrWhiteSpace(response.Body))
             {
-                try
-                {
-                    value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
-                }
-                catch (Exception exception) when (exception is JsonException or InvalidOperationException or ArgumentException)
-                {
-                    _logger.LogWarning(
-                        exception,
-                        "Failed to extract monitor value. MonitorId: {MonitorId}, ResultPath: {ResultPath}",
-                        monitor.Id,
-                        monitor.ResultPath);
-
-                    isSuccess = false;
-                    requestStatus = RequestStatusNames.ExtractionError;
-                }
+                return new(
+                    value,
+                    DateTime.UtcNow,
+                    isSuccess,
+                    response.ResponseTimeMs,
+                    response.StatusCode,
+                    monitor.Id,
+                    requestStatus);
             }
 
-            resultInput = new(
+            try
+            {
+                value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
+            }
+            catch (Exception exception) when (exception is JsonException or InvalidOperationException or ArgumentException)
+            {
+                _logger.LogWarning(
+                    exception,
+                    "Failed to extract monitor value. MonitorId: {MonitorId}, ResultPath: {ResultPath}",
+                    monitor.Id,
+                    monitor.ResultPath);
+
+                isSuccess = false;
+                requestStatus = RequestStatusNames.ExtractionError;
+            }
+
+            return new(
                 value,
                 DateTime.UtcNow,
                 isSuccess,
@@ -120,6 +119,7 @@ public class PollingService : IPollingService
                 response.StatusCode,
                 monitor.Id,
                 requestStatus);
+            ;
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -129,7 +129,7 @@ public class PollingService : IPollingService
         {
             _logger.LogError(exception, "Unexpected monitor polling error. MonitorId: {MonitorId}", monitor.Id);
 
-            resultInput = new(
+            return new(
                 Value: null,
                 CheckedAt: DateTime.UtcNow,
                 IsSuccess: false,
@@ -138,19 +138,26 @@ public class PollingService : IPollingService
                 MonitorId: monitor.Id,
                 RequestStatus: RequestStatusNames.UnexpectedError);
         }
+    }
 
+    private async Task SavePollResultAsync(
+        MonitorRecord monitor,
+        CreateMonitorPollResultsInput resultInput,
+        CancellationToken ct)
+    {
         DateTime completedAt = DateTime.UtcNow;
         DateTime nextExecutionAt = completedAt.AddSeconds(monitor.PollingIntervalSeconds);
 
         UpdateMonitorAfterPollInput monitorInput = new(
             monitor.Id,
-            value,
+            resultInput.Value,
             completedAt,
             nextExecutionAt);
 
         await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
-        await _monitorPollResultCommands.CreateAsync(resultInput, ct);
-        await _monitorCommands.UpdateAfterPollAsync(monitorInput, ct);
+        IDbSession session = (IDbSession)uof;
+        await _monitorPollResultCommands.CreateAsync(resultInput, session, ct);
+        await _monitorCommands.UpdateAfterPollAsync(monitorInput, session, ct);
         await uof.CommitAsync(ct);
     }
 }

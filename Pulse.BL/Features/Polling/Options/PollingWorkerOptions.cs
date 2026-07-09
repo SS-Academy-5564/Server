@@ -17,9 +17,4 @@ public class PollingWorkerOptions
     /// Limits the number of monitors selected per worker iteration.
     /// </summary>
     public int BatchSize { get; init; }
-
-    /// <summary>
-    /// Limits the number of parallel HTTP requests
-    /// </summary>
-    public int MaxConcurrentRequests { get; init; }
 }

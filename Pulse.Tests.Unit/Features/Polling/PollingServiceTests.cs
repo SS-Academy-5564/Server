@@ -35,17 +35,35 @@ public class PollingServiceTests
     private readonly PollingService _service;
     private CreateMonitorPollResultsInput? _createdMonitorPollResults;
     private UpdateMonitorAfterPollInput? _updatedMonitor;
+    private IDbSession? _createdMonitorPollResultsSession;
+    private IDbSession? _updatedMonitorSession;
 
     public PollingServiceTests()
     {
+        _unitOfWork.As<IDbSession>();
+
         _monitorPollResultsCommands
-            .Setup(c => c.CreateAsync(It.IsAny<CreateMonitorPollResultsInput>(), It.IsAny<CancellationToken>()))
-            .Callback<CreateMonitorPollResultsInput, CancellationToken>((input, _) => _createdMonitorPollResults = input)
+            .Setup(c => c.CreateAsync(
+                It.IsAny<CreateMonitorPollResultsInput>(),
+                It.IsAny<IDbSession>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<CreateMonitorPollResultsInput, IDbSession, CancellationToken>((input, session, _) =>
+            {
+                _createdMonitorPollResults = input;
+                _createdMonitorPollResultsSession = session;
+            })
             .Returns(Task.CompletedTask);
 
         _monitorCommands
-            .Setup(c => c.UpdateAfterPollAsync(It.IsAny<UpdateMonitorAfterPollInput>(), It.IsAny<CancellationToken>()))
-            .Callback<UpdateMonitorAfterPollInput, CancellationToken>((input, _) => _updatedMonitor = input)
+            .Setup(c => c.UpdateAfterPollAsync(
+                It.IsAny<UpdateMonitorAfterPollInput>(),
+                It.IsAny<IDbSession>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<UpdateMonitorAfterPollInput, IDbSession, CancellationToken>((input, session, _) =>
+            {
+                _updatedMonitor = input;
+                _updatedMonitorSession = session;
+            })
             .Returns(Task.CompletedTask);
 
         _unitOfWork
@@ -64,8 +82,7 @@ public class PollingServiceTests
             Options.Create(new PollingWorkerOptions
             {
                 BatchSize = 50,
-                LoopIntervalSeconds = 10,
-                MaxConcurrentRequests = 1
+                LoopIntervalSeconds = 10
             }),
             _httpMonitorClient.Object,
             _jsonPathReader.Object,
@@ -115,6 +132,8 @@ public class PollingServiceTests
             .Be(_updatedMonitor.LastCheckedAt.AddSeconds(_monitor.PollingIntervalSeconds));
 
         _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _createdMonitorPollResultsSession.Should().BeSameAs(_unitOfWork.Object);
+        _updatedMonitorSession.Should().BeSameAs(_unitOfWork.Object);
     }
 
     [Fact]
@@ -219,6 +238,39 @@ public class PollingServiceTests
     }
 
     [Fact]
+    public async Task ProcessDueMonitorsAsync_WhenMultipleMonitorsAreDue_ProcessesEachMonitorAsync()
+    {
+        // Arrange
+        MonitorRecord secondMonitor = _monitor with { Id = Guid.NewGuid() };
+        HttpMonitorResponse response = new(
+            IsSuccess: false,
+            ResponseTimeMs: 222,
+            RequestStatus: RequestStatusNames.Failed)
+        {
+            StatusCode = 500
+        };
+
+        _monitorQueries
+            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([_monitor, secondMonitor]);
+        _httpMonitorClient
+            .Setup(c => c.SendAsync(It.IsAny<MonitorRecord>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        // Act
+        await _service.ProcessDueMonitorsAsync();
+
+        // Assert
+        _httpMonitorClient.Verify(
+            c => c.SendAsync(It.IsAny<MonitorRecord>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+        _unitOfWorkFactory.Verify(
+            f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()),
+            Times.Exactly(2));
+        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
     public async Task ProcessDueMonitorsAsync_WhenNoMonitorsAreDue_DoesNotProcessAnythingAsync()
     {
         // Arrange
@@ -234,7 +286,10 @@ public class PollingServiceTests
             c => c.SendAsync(It.IsAny<MonitorRecord>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _monitorPollResultsCommands.Verify(
-            c => c.CreateAsync(It.IsAny<CreateMonitorPollResultsInput>(), It.IsAny<CancellationToken>()),
+            c => c.CreateAsync(
+                It.IsAny<CreateMonitorPollResultsInput>(),
+                It.IsAny<IDbSession>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 

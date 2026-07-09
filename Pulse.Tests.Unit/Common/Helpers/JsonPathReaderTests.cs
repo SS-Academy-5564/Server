@@ -107,7 +107,7 @@ public class JsonPathReaderTests
     }
 
     [Fact]
-    public void ReadValue_WhenPathIsEmpty_ThrowsArgumentNullException()
+    public void ReadValue_WhenPathIsEmpty_ReturnsNull()
     {
         // Arrange
         JsonPathReader reader = new();

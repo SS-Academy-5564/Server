@@ -15,8 +15,7 @@ public class PollingOptionsValidatorTests
         PollingWorkerOptions options = new()
         {
             BatchSize = 50,
-            LoopIntervalSeconds = 10,
-            MaxConcurrentRequests = 5
+            LoopIntervalSeconds = 10
         };
 
         // Act
@@ -33,8 +32,7 @@ public class PollingOptionsValidatorTests
         PollingWorkerOptions options = new()
         {
             BatchSize = 0,
-            LoopIntervalSeconds = 10,
-            MaxConcurrentRequests = 2
+            LoopIntervalSeconds = 10
         };
 
         // Act
@@ -54,8 +52,7 @@ public class PollingOptionsValidatorTests
         PollingWorkerOptions options = new()
         {
             BatchSize = 10,
-            LoopIntervalSeconds = loopIntervalSeconds,
-            MaxConcurrentRequests = 2
+            LoopIntervalSeconds = loopIntervalSeconds
         };
 
         // Act
@@ -67,39 +64,19 @@ public class PollingOptionsValidatorTests
     }
 
     [Fact]
-    public void Validate_WhenMaxConcurrentRequestsIsZero_ReturnsFailure()
-    {
-        // Arrange
-        PollingWorkerOptions options = new()
-        {
-            BatchSize = 10,
-            LoopIntervalSeconds = 10,
-            MaxConcurrentRequests = 0
-        };
-
-        // Act
-        ValidateOptionsResult result = _validator.Validate("CustomPolling", options);
-
-        // Assert
-        result.Failed.Should().BeTrue();
-        result.Failures.Should().Contain("CustomPolling:MaxConcurrentRequests must be greater than zero.");
-    }
-
-    [Fact]
     public void Validate_WhenMultipleValuesAreInvalid_ReturnsAllFailures()
     {
         // Arrange
         PollingWorkerOptions options = new()
         {
             BatchSize = 0,
-            LoopIntervalSeconds = 100,
-            MaxConcurrentRequests = 0
+            LoopIntervalSeconds = 100
         };
 
         // Act
         ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
-        result.Failures.Should().HaveCount(3);
+        result.Failures.Should().HaveCount(2);
     }
 }
