@@ -1,5 +1,3 @@
-using Pulse.DAL.Queries.Monitors;
-
 namespace Pulse.BL.Features.Monitors;
 
 public sealed record MonitorResult(
@@ -10,3 +8,4 @@ public sealed record MonitorResult(
     DateTimeOffset? LastCheckedAt,
     MonitorStatus Status,
     int Interval);
+

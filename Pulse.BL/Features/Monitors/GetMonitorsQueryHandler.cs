@@ -15,13 +15,18 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<IR
 
     public async Task<Result<IReadOnlyList<MonitorResult>>> HandleAsync(GetMonitorsQuery query, CancellationToken ct = default)
     {
-        IReadOnlyList<MonitorRecord> records = await _monitorQueries.GetAllAsync(query.Status, ct);
+        DAL.Queries.Monitors.MonitorStatus? dalStatus = query.Status is null
+            ? null
+            : (DAL.Queries.Monitors.MonitorStatus)query.Status.Value;
+
+        IReadOnlyList<MonitorRecord> records = await _monitorQueries.GetAllAsync(dalStatus, ct);
 
         IReadOnlyList<MonitorResult> results = records
-            .Select(r => new MonitorResult(r.Id, r.Name, r.Url, r.CurrentValue, r.LastCheckedAt, r.Status, r.Interval))
+            .Select(r => new MonitorResult(r.Id, r.Name, r.Url, r.CurrentValue, r.LastCheckedAt, (MonitorStatus)r.Status, r.Interval))
             .ToList()
             .AsReadOnly();
 
         return Result.Ok(results);
     }
+
 }
