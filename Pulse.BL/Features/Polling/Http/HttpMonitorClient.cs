@@ -71,11 +71,7 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
                 IsSuccess: response.IsSuccessStatusCode,
                 ResponseTimeMs: (int)stopwatch.ElapsedMilliseconds,
                 RequestStatus: response.IsSuccessStatusCode ? RequestStatusNames.Success : RequestStatusNames.Failed
-            )
-            {
-                Body = body,
-                StatusCode = (int?)response.StatusCode,
-            };
+            ) { Body = body, StatusCode = (int?)response.StatusCode, };
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
@@ -89,6 +85,10 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
                 IsSuccess: false,
                 ResponseTimeMs: (int)stopwatch.ElapsedMilliseconds,
                 RequestStatus: RequestStatusNames.Timeout);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (HttpRequestException exception)
         {
