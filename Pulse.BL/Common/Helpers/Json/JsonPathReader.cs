@@ -8,7 +8,7 @@ public sealed class JsonPathReader : IJsonPathReader
     {
         if (string.IsNullOrWhiteSpace(path))
         {
-            throw new ArgumentNullException(nameof(path));
+            return null;
         }
 
         JsonNode? current = JsonNode.Parse(json);
