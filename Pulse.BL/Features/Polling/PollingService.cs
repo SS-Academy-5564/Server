@@ -66,9 +66,10 @@ public class PollingService : IPollingService
 
         try
         {
+
             HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
 
-            if (response.IsSuccess && string.IsNullOrWhiteSpace(response.Body))
+            if (response.IsSuccess && !string.IsNullOrWhiteSpace(response.Body))
             {
                 value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
             }
@@ -102,12 +103,13 @@ public class PollingService : IPollingService
                 RequestStatus: RequestStatusNames.UnexpectedError);
         }
 
-        DateTime nextExecutionAt = checkedAt.AddSeconds(monitor.PollingIntervalSeconds);
+        DateTime completedAt = DateTime.UtcNow;
+        DateTime nextExecutionAt = completedAt.AddSeconds(monitor.PollingIntervalSeconds);
 
         UpdateMonitorAfterPollInput monitorInput = new(
             monitor.Id,
             value,
-            checkedAt,
+            completedAt,
             nextExecutionAt);
 
         await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct);
