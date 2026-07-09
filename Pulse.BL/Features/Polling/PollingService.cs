@@ -68,7 +68,6 @@ public class PollingService : IPollingService
         {
             HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
             bool isSuccess = response.IsSuccess;
-            string? errorMessage = response.ErrorMessage;
             string requestStatus = response.RequestStatus;
 
             if (response.IsSuccess && !string.IsNullOrWhiteSpace(response.Body))
@@ -86,7 +85,6 @@ public class PollingService : IPollingService
                         monitor.ResultPath);
 
                     isSuccess = false;
-                    errorMessage = exception.Message;
                     requestStatus = RequestStatusNames.ExtractionError;
                 }
             }
@@ -97,7 +95,6 @@ public class PollingService : IPollingService
                 isSuccess,
                 response.ResponseTimeMs,
                 response.StatusCode,
-                errorMessage,
                 monitor.Id,
                 requestStatus);
         }
@@ -115,7 +112,6 @@ public class PollingService : IPollingService
                 IsSuccess: false,
                 ResponseTimeMs: 0,
                 StatusCode: null,
-                ErrorMessage: exception.Message,
                 MonitorId: monitor.Id,
                 RequestStatus: RequestStatusNames.UnexpectedError);
         }

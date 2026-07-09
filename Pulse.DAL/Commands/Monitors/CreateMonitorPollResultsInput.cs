@@ -6,6 +6,5 @@ public sealed record CreateMonitorPollResultsInput(
     bool IsSuccess,
     int ResponseTimeMs,
     int? StatusCode,
-    string? ErrorMessage,
     Guid MonitorId,
     string RequestStatus);

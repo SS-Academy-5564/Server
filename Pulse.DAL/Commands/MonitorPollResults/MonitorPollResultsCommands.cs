@@ -11,7 +11,7 @@ public class MonitorPollResultsCommands : IMonitorPollResultsCommands
         const string sql =
             """
             INSERT INTO dbo.MonitorPollResults
-                (Value, CheckedAt, IsSuccess, ResponseTimeMs, StatusCode, ErrorMessage, MonitorId, RequestStatusId)
+                (Value, CheckedAt, IsSuccess, ResponseTimeMs, StatusCode, MonitorId, RequestStatusId)
             VALUES
                 (
                     @Value,
@@ -19,7 +19,6 @@ public class MonitorPollResultsCommands : IMonitorPollResultsCommands
                     @IsSuccess,
                     @ResponseTimeMs,
                     @StatusCode,
-                    @ErrorMessage,
                     @MonitorId,
                     (SELECT Id FROM dbo.RequestStatus WHERE Status = @RequestStatus)
                 );

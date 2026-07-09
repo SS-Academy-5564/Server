@@ -7,5 +7,4 @@ public sealed record HttpMonitorResponse(
 {
     public string? Body { get; set; }
     public int? StatusCode { get; set; }
-    public string? ErrorMessage { get; set; }
 }

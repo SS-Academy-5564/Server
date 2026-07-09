@@ -8,7 +8,6 @@ IF OBJECT_ID(N'dbo.MonitorPollResults', N'U') IS NULL
             IsSuccess       BIT              NOT NULL,
             ResponseTimeMs  INT              NOT NULL,
             StatusCode      SMALLINT,
-            ErrorMessage    NVARCHAR(50),
             MonitorId       UNIQUEIDENTIFIER NOT NULL,
             RequestStatusId UNIQUEIDENTIFIER NOT NULL,
 

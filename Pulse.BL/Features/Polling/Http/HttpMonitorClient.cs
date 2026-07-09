@@ -33,14 +33,15 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
     {
         if (!AllowedMethods.Contains(monitor.HttpMethod))
         {
+            _logger.LogWarning(
+                "Unsupported HTTP method configured for monitor. MonitorId: {MonitorId}, HttpMethod: {HttpMethod}",
+                monitor.Id,
+                monitor.HttpMethod);
+
             return new HttpMonitorResponse(
                 IsSuccess: false,
                 ResponseTimeMs: 0,
-                RequestStatus: RequestStatusNames.Failed
-            )
-            {
-                ErrorMessage = $"Unsupported HTTP method: {monitor.HttpMethod}",
-            };
+                RequestStatus: RequestStatusNames.Failed);
         }
 
         using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -56,6 +57,16 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
             using HttpResponseMessage response = await httpClient.SendAsync(request, timeoutCts.Token);
             string body = await response.Content.ReadAsStringAsync(timeoutCts.Token);
 
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Monitor HTTP request completed with non-success status. MonitorId: {MonitorId}, StatusCode: {StatusCode}, ReasonPhrase: {ReasonPhrase}, ResponseTimeMs: {ResponseTimeMs}",
+                    monitor.Id,
+                    (int)response.StatusCode,
+                    response.ReasonPhrase,
+                    stopwatch.ElapsedMilliseconds);
+            }
+
             return new HttpMonitorResponse(
                 IsSuccess: response.IsSuccessStatusCode,
                 ResponseTimeMs: (int)stopwatch.ElapsedMilliseconds,
@@ -64,19 +75,20 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
             {
                 Body = body,
                 StatusCode = (int?)response.StatusCode,
-                ErrorMessage = response.IsSuccessStatusCode ? null : response.ReasonPhrase,
             };
         }
         catch (OperationCanceledException) when (!ct.IsCancellationRequested)
         {
+            _logger.LogWarning(
+                "Monitor HTTP request timed out. MonitorId: {MonitorId}, TimeoutSeconds: {TimeoutSeconds}, ResponseTimeMs: {ResponseTimeMs}",
+                monitor.Id,
+                monitor.PollingTimeoutSeconds,
+                stopwatch.ElapsedMilliseconds);
+
             return new HttpMonitorResponse(
                 IsSuccess: false,
                 ResponseTimeMs: (int)stopwatch.ElapsedMilliseconds,
-                RequestStatus: RequestStatusNames.Timeout
-            )
-            {
-                ErrorMessage = "Request timed out.",
-            };
+                RequestStatus: RequestStatusNames.Timeout);
         }
         catch (HttpRequestException exception)
         {
@@ -85,11 +97,7 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
             return new HttpMonitorResponse(
                 IsSuccess: false,
                 ResponseTimeMs: (int)stopwatch.ElapsedMilliseconds,
-                RequestStatus: RequestStatusNames.NetworkError
-            )
-            {
-                ErrorMessage = exception.Message,
-            };
+                RequestStatus: RequestStatusNames.NetworkError);
         }
         catch (Exception exception)
         {
@@ -98,11 +106,7 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
             return new HttpMonitorResponse(
                 IsSuccess: false,
                 ResponseTimeMs: (int)stopwatch.ElapsedMilliseconds,
-                RequestStatus: RequestStatusNames.UnexpectedError
-            )
-            {
-                ErrorMessage = exception.Message,
-            };
+                RequestStatus: RequestStatusNames.UnexpectedError);
         }
     }
 }
