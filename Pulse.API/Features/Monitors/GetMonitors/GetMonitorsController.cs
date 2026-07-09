@@ -21,7 +21,7 @@ public sealed class GetMonitorsController : PulseControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetMonitorsAsync([FromQuery] [Validate] GetMonitorsRequest request, CancellationToken ct)
+    public async Task<IActionResult> GetMonitorsAsync([FromQuery][Validate] GetMonitorsRequest request, CancellationToken ct)
     {
         Result<IReadOnlyList<MonitorResult>> result = await _handler.HandleAsync(new GetMonitorsQuery(request.Status), ct);
         return ToActionResult(result);
