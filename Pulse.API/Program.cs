@@ -16,16 +16,20 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
+builder.Services.AddHealthChecks();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
 builder.Services.AddCurrentUserService();
 
+string[] allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -57,6 +61,10 @@ if (app.Environment.IsDevelopment())
 app.UseResponseLogging();
 app.UseExceptionHandling();
 app.UseRouting();
+
+// Liveness probe for Azure App Service health checks — anonymous and not rate-limited.
+app.MapHealthChecks("/health");
+
 app.UseCors("AngularPolicy");
 app.UseRateLimiter();
 
