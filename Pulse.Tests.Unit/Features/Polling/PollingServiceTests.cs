@@ -91,6 +91,41 @@ public class PollingServiceTests
             _unitOfWorkFactory.Object);
     }
 
+    private void SetupDueMonitors(params MonitorRecord[] monitors)
+        => _monitorQueries
+            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(monitors);
+
+    private void SetupHttpResponse(MonitorRecord monitor, HttpMonitorResponse response)
+        => _httpMonitorClient
+            .Setup(c => c.SendAsync(monitor, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+    private void SetupJsonExtraction(string json, string path, bool succeeds, string? extractedValue)
+    {
+        string? value = extractedValue;
+
+        _jsonPathReader
+            .Setup(r => r.TryReadValue(json, path, out value))
+            .Returns(succeeds);
+    }
+
+    private void AssertSavedPollResult(string? value, bool isSuccess, int? statusCode, int responseTimeMs, string requestStatus)
+    {
+        _createdMonitorPollResults.Should().NotBeNull();
+        _createdMonitorPollResults!.Value.Should().Be(value);
+        _createdMonitorPollResults.IsSuccess.Should().Be(isSuccess);
+        _createdMonitorPollResults.StatusCode.Should().Be(statusCode);
+        _createdMonitorPollResults.ResponseTimeMs.Should().Be(responseTimeMs);
+        _createdMonitorPollResults.RequestStatus.Should().Be(requestStatus);
+    }
+
+    private void AssertMonitorUpdateCommandReceived(string? currentValue)
+    {
+        _updatedMonitor.Should().NotBeNull();
+        _updatedMonitor!.CurrentValue.Should().Be(currentValue);
+    }
+
     [Fact]
     public async Task ProcessDueMonitorsAsync_WhenMonitorSucceeds_PersistsResultAndUpdatesMonitorAsync()
     {
@@ -100,36 +135,31 @@ public class PollingServiceTests
             ResponseTimeMs: 123,
             RequestStatus: RequestStatusNames.Success)
         {
-            Body = """{"data":{"status":"healthy"}}""",
+            Body = """
+                   {
+                    "data":
+                        {
+                            "status":"healthy"
+                        }
+                    }
+                   """,
             StatusCode = 200
         };
 
-        _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([_monitor]);
-        _httpMonitorClient
-            .Setup(c => c.SendAsync(_monitor, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(response);
-        _jsonPathReader
-            .Setup(r => r.ReadValue(response.Body, _monitor.ResultPath))
-            .Returns("healthy");
+        SetupDueMonitors(_monitor);
+        SetupHttpResponse(_monitor, response);
+        SetupJsonExtraction(response.Body, _monitor.ResultPath, succeeds: true, extractedValue: "healthy");
 
         // Act
         await _service.ProcessDueMonitorsAsync();
 
         // Assert
-        _createdMonitorPollResults.Should().NotBeNull();
-        _createdMonitorPollResults!.Value.Should().Be("healthy");
-        _createdMonitorPollResults.IsSuccess.Should().BeTrue();
-        _createdMonitorPollResults.StatusCode.Should().Be(200);
-        _createdMonitorPollResults.ResponseTimeMs.Should().Be(123);
-        _createdMonitorPollResults.RequestStatus.Should().Be(RequestStatusNames.Success);
+        AssertSavedPollResult("healthy", isSuccess: true, statusCode: 200, responseTimeMs: 123, RequestStatusNames.Success);
 
-        _updatedMonitor.Should().NotBeNull();
-        _updatedMonitor!.CurrentValue.Should().Be("healthy");
-        _updatedMonitor.NextExecutionAt.Should()
+        AssertMonitorUpdateCommandReceived("healthy");
+
+        _updatedMonitor!.NextExecutionAt.Should()
             .Be(_updatedMonitor.LastCheckedAt.AddSeconds(_monitor.PollingIntervalSeconds));
-
         _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
         _createdMonitorPollResultsSession.Should().BeSameAs(_unitOfWork.Object);
         _updatedMonitorSession.Should().BeSameAs(_unitOfWork.Object);
@@ -144,33 +174,111 @@ public class PollingServiceTests
             ResponseTimeMs: 222,
             RequestStatus: RequestStatusNames.Failed)
         {
-            Body = """{"data":{"status":"unhealthy"}}""",
+            Body = """
+                   {
+                    "data":
+                        {"status":"unhealthy"}
+                   }
+                   """,
             StatusCode = 500
         };
 
-        _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([_monitor]);
-        _httpMonitorClient
-            .Setup(c => c.SendAsync(_monitor, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(response);
+        SetupDueMonitors(_monitor);
+        SetupHttpResponse(_monitor, response);
 
         // Act
         await _service.ProcessDueMonitorsAsync();
 
         // Assert
         _jsonPathReader.Verify(
-            r => r.ReadValue(It.IsAny<string>(), It.IsAny<string>()),
+            r => r.TryReadValue(It.IsAny<string>(), It.IsAny<string>(), out It.Ref<string?>.IsAny),
             Times.Never);
-        _createdMonitorPollResults.Should().NotBeNull();
-        _createdMonitorPollResults!.Value.Should().BeNull();
-        _createdMonitorPollResults.IsSuccess.Should().BeFalse();
-        _createdMonitorPollResults.StatusCode.Should().Be(500);
-        _createdMonitorPollResults.ResponseTimeMs.Should().Be(222);
-        _createdMonitorPollResults.RequestStatus.Should().Be(RequestStatusNames.Failed);
 
-        _updatedMonitor.Should().NotBeNull();
-        _updatedMonitor!.CurrentValue.Should().BeNull();
+        AssertSavedPollResult(null, isSuccess: false, statusCode: 500, responseTimeMs: 222, RequestStatusNames.Failed);
+        AssertMonitorUpdateCommandReceived(null);
+    }
+
+    [Fact]
+    public async Task ProcessDueMonitorsAsync_WhenValueExtractionFails_PersistsExtractionErrorAndUpdatesMonitorAsync()
+    {
+        // Arrange
+        HttpMonitorResponse response = new(
+            IsSuccess: true,
+            ResponseTimeMs: 123,
+            RequestStatus: RequestStatusNames.Success)
+        {
+            Body = """{"data":"not-object"}""",
+            StatusCode = 200
+        };
+
+        SetupDueMonitors(_monitor);
+        SetupHttpResponse(_monitor, response);
+        SetupJsonExtraction(response.Body, _monitor.ResultPath, succeeds: false, extractedValue: null);
+
+        // Act
+        await _service.ProcessDueMonitorsAsync();
+
+        // Assert
+        AssertSavedPollResult(null, isSuccess: false, statusCode: 200, responseTimeMs: 123, RequestStatusNames.ExtractionError);
+        AssertMonitorUpdateCommandReceived(null);
+
+        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessDueMonitorsAsync_WhenExpectedValueIsMissing_PersistsExtractionErrorAndUpdatesMonitorAsync()
+    {
+        // Arrange
+        HttpMonitorResponse response = new(
+            IsSuccess: true,
+            ResponseTimeMs: 123,
+            RequestStatus: RequestStatusNames.Success)
+        {
+            Body = """{"status":"ok"}""",
+            StatusCode = 200
+        };
+
+        SetupDueMonitors(_monitor);
+        SetupHttpResponse(_monitor, response);
+        SetupJsonExtraction(response.Body, _monitor.ResultPath, succeeds: true, extractedValue: null);
+
+        // Act
+        await _service.ProcessDueMonitorsAsync();
+
+        // Assert
+        AssertSavedPollResult(null, isSuccess: false, statusCode: 200, responseTimeMs: 123, RequestStatusNames.ExtractionError);
+        AssertMonitorUpdateCommandReceived(null);
+
+        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessDueMonitorsAsync_WhenSuccessfulResponseBodyIsEmpty_PersistsExtractionErrorAndUpdatesMonitorAsync()
+    {
+        // Arrange
+        HttpMonitorResponse response = new(
+            IsSuccess: true,
+            ResponseTimeMs: 123,
+            RequestStatus: RequestStatusNames.Success)
+        {
+            Body = "",
+            StatusCode = 200
+        };
+
+        SetupDueMonitors(_monitor);
+        SetupHttpResponse(_monitor, response);
+
+        // Act
+        await _service.ProcessDueMonitorsAsync();
+
+        // Assert
+        _jsonPathReader.Verify(
+            r => r.TryReadValue(It.IsAny<string>(), It.IsAny<string>(), out It.Ref<string?>.IsAny),
+            Times.Never);
+
+        AssertSavedPollResult(null, isSuccess: false, statusCode: 200, responseTimeMs: 123, RequestStatusNames.ExtractionError);
+
+        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

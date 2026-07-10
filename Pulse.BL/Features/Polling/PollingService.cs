@@ -6,6 +6,7 @@ using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.Commands.MonitorPollResults;
 using Pulse.DAL.Commands.Monitors;
+using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Common.Repository;
 using Pulse.DAL.Queries.Monitors;
 
@@ -74,21 +75,37 @@ public class PollingService : IPollingService
     public async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorRecord monitor, CancellationToken ct)
     {
         HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
+        bool isSuccess = response.IsSuccess;
+        string requestStatus = response.RequestStatus;
         string? value = null;
 
-        if (response.IsSuccess && !string.IsNullOrWhiteSpace(response.Body))
+        if (isSuccess)
         {
-            value = _jsonPathReader.ReadValue(response.Body, monitor.ResultPath);
+            bool extractionSucceeded =
+                !string.IsNullOrWhiteSpace(response.Body) &&
+                _jsonPathReader.TryReadValue(response.Body, monitor.ResultPath, out value) &&
+                value is not null;
+
+            if (!extractionSucceeded)
+            {
+                _logger.LogWarning(
+                    "Failed to extract monitor value. MonitorId: {MonitorId}, ResultPath: {ResultPath}",
+                    monitor.Id,
+                    monitor.ResultPath);
+
+                isSuccess = false;
+                requestStatus = RequestStatusNames.ExtractionError;
+            }
         }
 
         return new CreateMonitorPollResultsInput(
             Value: value,
             CheckedAt: DateTime.UtcNow,
-            response.IsSuccess,
-            response.ResponseTimeMs,
-            response.StatusCode,
-            monitor.Id,
-            response.RequestStatus);
+            IsSuccess: isSuccess,
+            ResponseTimeMs: response.ResponseTimeMs,
+            StatusCode: response.StatusCode,
+            MonitorId: monitor.Id,
+            RequestStatus: requestStatus);
     }
 
     private async Task SavePollResultAsync(MonitorRecord monitor, CreateMonitorPollResultsInput resultInput, CancellationToken ct)

@@ -5,6 +5,7 @@ FROM (VALUES
     ('Failed'),
     ('Timeout'),
     ('NetworkError'),
+    ('ExtractionError'),
     ('UnexpectedError')
 ) AS v(Status)
 WHERE NOT EXISTS (

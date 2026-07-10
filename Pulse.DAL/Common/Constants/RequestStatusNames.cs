@@ -7,4 +7,5 @@ public static class RequestStatusNames
     public const string Timeout = nameof(Timeout);
     public const string NetworkError = nameof(NetworkError);
     public const string UnexpectedError = nameof(UnexpectedError);
+    public const string ExtractionError = nameof(ExtractionError);
 }

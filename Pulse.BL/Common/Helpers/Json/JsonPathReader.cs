@@ -1,12 +1,36 @@
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Pulse.BL.Common.Helpers.Json;
 
 public sealed class JsonPathReader : IJsonPathReader
 {
+    public bool TryReadValue(string json, string path, out string? value)
+    {
+        try
+        {
+            value = ReadValue(json, path);
+            return true;
+        }
+        catch (JsonException)
+        {
+            value = null;
+            return false;
+        }
+        catch (InvalidOperationException)
+        {
+            value = null;
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            value = null;
+            return false;
+        }
+    }
     public string? ReadValue(string json, string path)
     {
-        if (string.IsNullOrWhiteSpace(path) || string.IsNullOrWhiteSpace(json))
+        if (string.IsNullOrWhiteSpace(json) || string.IsNullOrWhiteSpace(path))
         {
             return null;
         }

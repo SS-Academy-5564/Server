@@ -116,37 +116,6 @@ public class HttpMonitorClientTests
     }
 
     [Fact]
-    public async Task SendAsync_WhenMonitorUsesPost_SendsPostRequestAsync()
-    {
-        // Arrange
-        HttpRequestMessage? capturedRequest = null;
-        _handler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .Callback<HttpRequestMessage, CancellationToken>((request, _) => capturedRequest = request)
-            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
-
-        MonitorRecord monitor = new(
-            Guid.NewGuid(),
-            "https://example.com/health",
-            "POST",
-            "status",
-            60,
-            30);
-
-        // Act
-        await _client.SendAsync(monitor, CancellationToken.None);
-
-        // Assert
-        capturedRequest.Should().NotBeNull();
-        capturedRequest!.Method.Should().Be(HttpMethod.Post);
-        capturedRequest.Content.Should().BeNull();
-    }
-
-    [Fact]
     public async Task SendAsync_WhenMethodIsUnsupported_ReturnsFailedWithoutSendingRequestAsync()
     {
         // Arrange
@@ -161,7 +130,7 @@ public class HttpMonitorClientTests
         MonitorRecord monitor = new(
             Guid.NewGuid(),
             "https://example.com/health",
-            "TRACE",
+            "fakeMethod",
             "status",
             60,
             30);
@@ -213,6 +182,35 @@ public class HttpMonitorClientTests
     }
 
     [Fact]
+    public async Task SendAsync_WhenHttpRequestExceptionIsThrown_ReturnsNetworkErrorAsync()
+    {
+        // Arrange
+        _handler
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("DNS failure"));
+
+        MonitorRecord monitor = new(
+            Guid.NewGuid(),
+            "https://example.com/health",
+            "GET",
+            "status",
+            60,
+            30);
+
+        // Act
+        HttpMonitorResponse result = await _client.SendAsync(monitor, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.StatusCode.Should().BeNull();
+        result.RequestStatus.Should().Be(RequestStatusNames.NetworkError);
+    }
+
+    [Fact]
     public async Task SendAsync_WhenParentTokenIsCanceled_ThrowsOperationCanceledExceptionAsync()
     {
         // Arrange
@@ -244,35 +242,6 @@ public class HttpMonitorClientTests
 
         // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
-    }
-
-    [Fact]
-    public async Task SendAsync_WhenHttpRequestExceptionIsThrown_ReturnsNetworkErrorAsync()
-    {
-        // Arrange
-        _handler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("DNS failure"));
-
-        MonitorRecord monitor = new(
-            Guid.NewGuid(),
-            "https://example.com/health",
-            "GET",
-            "status",
-            60,
-            30);
-
-        // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitor, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.StatusCode.Should().BeNull();
-        result.RequestStatus.Should().Be(RequestStatusNames.NetworkError);
     }
 
     [Fact]

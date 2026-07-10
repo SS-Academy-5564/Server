@@ -119,4 +119,82 @@ public class JsonPathReaderTests
         // Assert
         result.Should().BeNull();
     }
+
+    [Fact]
+    public void TryReadValue_WhenJsonIsMalformed_ReturnsFalseAndNullValue()
+    {
+        // Arrange
+        JsonPathReader reader = new();
+        string json = """
+                      {
+                        "status":"ok
+                      """;
+
+        // Act
+        bool result = reader.TryReadValue(json, "status", out string? value);
+
+        // Assert
+        result.Should().BeFalse();
+        value.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryReadValue_WhenPathWalksIntoValue_ReturnsFalseAndNullValue()
+    {
+        // Arrange
+        JsonPathReader reader = new();
+        string json =
+            """
+            {
+              "data": "healthy"
+            }
+            """;
+
+        // Act
+        bool result = reader.TryReadValue(json, "data.status", out string? value);
+
+        // Assert
+        result.Should().BeFalse();
+        value.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryReadValue_WhenPathDoesNotExist_ReturnsTrueAndNullValue()
+    {
+        // Arrange
+        JsonPathReader reader = new();
+        string json =
+            """
+            {
+              "status": "ok"
+            }
+            """;
+
+        // Act
+        bool result = reader.TryReadValue(json, "data.status", out string? value);
+
+        // Assert
+        result.Should().BeTrue();
+        value.Should().BeNull();
+    }
+
+    [Fact]
+    public void TryReadValue_WhenPathExists_ReturnsTrueAndValue()
+    {
+        // Arrange
+        JsonPathReader reader = new();
+        string json =
+            """
+            {
+              "status": "ok"
+            }
+            """;
+
+        // Act
+        bool result = reader.TryReadValue(json, "status", out string? value);
+
+        // Assert
+        result.Should().BeTrue();
+        value.Should().Be("ok");
+    }
 }
