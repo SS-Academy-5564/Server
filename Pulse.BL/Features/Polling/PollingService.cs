@@ -72,7 +72,7 @@ public class PollingService : IPollingService
         return Result.Ok();
     }
 
-    public async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorRecord monitor, CancellationToken ct)
+    private async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorRecord monitor, CancellationToken ct)
     {
         HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
         bool isSuccess = response.IsSuccess;
