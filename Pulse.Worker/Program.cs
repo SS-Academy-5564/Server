@@ -1,6 +1,6 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Pulse.DAL.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
 using Pulse.Worker;
 
 IHostBuilder builder = Host.CreateDefaultBuilder(args);
