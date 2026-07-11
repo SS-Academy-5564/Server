@@ -1,11 +1,8 @@
 name: Deploy to Azure
 
 on:
-  # TEMPORARY: run on PRs to test the pipeline without waiting for merge to main.
-  # Restore the `push` trigger below (and remove `pull_request`) once testing is done.
-  pull_request:
-  # push:
-  #   branches: [ main ]
+  push:
+    branches: [ main ]
   workflow_dispatch:
 
 env:
