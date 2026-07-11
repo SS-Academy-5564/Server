@@ -54,8 +54,8 @@ jobs:
 
       - name: Trigger API Webhook
         if: matrix.image == 'pulse-backend' 
-        run: curl -X POST -k "${{ secrets.AZURE_WEBHOOK_API }}"
+        run: curl -i -X POST -k '${{ secrets.AZURE_WEBHOOK_API }}'
 
       - name: Trigger Worker Webhook
         if: matrix.image == 'pulse-worker'
-        run: curl -X POST -k "${{ secrets.AZURE_WEBHOOK_WORKER }}"
+        run: curl -i -X POST -k '${{ secrets.AZURE_WEBHOOK_WORKER }}'
