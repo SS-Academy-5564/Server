@@ -1,11 +1,28 @@
+using Microsoft.AspNetCore.Hosting;
 using Pulse.DAL.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
 using Pulse.Worker;
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+IHostBuilder builder = Host.CreateDefaultBuilder(args);
 
-builder.Services.AddDataAccess();
+builder.ConfigureServices(services =>
+{
+    services.AddDataAccess();
+    services.AddHostedService<Worker>();
 
-builder.Services.AddHostedService<Worker>();
+    services.AddHealthChecks();
+});
+
+builder.ConfigureWebHostDefaults(webBuilder =>
+{
+    webBuilder.Configure(app =>
+    {
+        app.UseRouting();
+        app.UseEndpoints(endpoints =>
+            endpoints.MapHealthChecks("/health")
+        );
+    });
+});
 
 IHost host = builder.Build();
 host.Run();
