@@ -35,10 +35,18 @@ builder.Services.AddCors(options =>
     });
 });
 
-string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrWhiteSpace(connectionString))
+string defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+
+string? migrationConnectionString = builder.Configuration.GetConnectionString("MigrationConnection");
+
+if (builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(migrationConnectionString))
 {
-    throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+    migrationConnectionString = defaultConnectionString;
+}
+else if (string.IsNullOrWhiteSpace(migrationConnectionString))
+{
+    throw new InvalidOperationException("Connection string 'MigrationConnection' is required in Production environment, but is missing or empty.");
 }
 
 WebApplication app = builder.Build();
@@ -49,7 +57,7 @@ ILogger migrationLogger = app.Services
 
 bool seedDevData = builder.Configuration.GetValue<bool>("Database:SeedDevData");
 
-await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, seedDevData);
+await DatabaseMigration.RunWithRetryAsync(migrationConnectionString, migrationLogger, seedDevData);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -62,7 +70,7 @@ app.UseResponseLogging();
 app.UseExceptionHandling();
 app.UseRouting();
 
-// Liveness probe for Azure App Service health checks — anonymous and not rate-limited.
+// Liveness probe for Azure App Service health checks
 app.MapHealthChecks("/health");
 
 app.UseCors("AngularPolicy");

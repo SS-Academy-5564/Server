@@ -30,10 +30,12 @@ Define the database connection string in `appsettings.json` (inside both **Pulse
 ```
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost,1433;Database=Pulse;User ID=your_user_id;Password=your_password;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True"
+    "DefaultConnection": "Server=localhost,1433;Database=Pulse;User ID=your_user_id;Password=your_password;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True",
+    "MigrationConnection": "Server=localhost,1433;Database=Pulse;User ID=your_user_id;Password=your_password;MultipleActiveResultSets=True;Encrypt=True;TrustServerCertificate=True"
   }
 }
 ```
+  Note that in local development (`"ASPNETCORE_ENVIRONMENT": "Development"`) you can leave `"MigrationConnection"` blank and it will be populated with `"DefaultConnection"` value. But in Production you have to ensure that `"MigrationConnection"` is populated.
 
 **Pulse.API** runs DbUp migrations in `Program.cs` on startup (before HTTP requests are accepted). The database is created if it does not exist.
 
