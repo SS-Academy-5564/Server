@@ -46,7 +46,7 @@ if (builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(migrationCo
 }
 else if (string.IsNullOrWhiteSpace(migrationConnectionString))
 {
-    throw new InvalidOperationException("Connection string 'MigrationConnection' is required in Production environment, but is missing or empty.");
+    throw new InvalidOperationException("Connection string 'MigrationConnection' is required in non-Development environments, but is missing or empty.");
 }
 
 WebApplication app = builder.Build();
@@ -70,7 +70,7 @@ app.UseResponseLogging();
 app.UseExceptionHandling();
 app.UseRouting();
 
-// Liveness probe for Azure App Service health checks
+// Liveness probe endpoint for platform health checks
 app.MapHealthChecks("/health");
 
 app.UseCors("AngularPolicy");

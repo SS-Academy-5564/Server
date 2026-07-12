@@ -35,7 +35,7 @@ Define the database connection string in `appsettings.json` (inside both **Pulse
   }
 }
 ```
-  Note that in local development (`"ASPNETCORE_ENVIRONMENT": "Development"`) you can leave `"MigrationConnection"` blank and it will be populated with `"DefaultConnection"` value. But in Production you have to ensure that `"MigrationConnection"` is populated (needed only by API). 
+  Note: in local development (`"ASPNETCORE_ENVIRONMENT": "Development"`) you can leave `"MigrationConnection"` blank and it will be populated with the `"DefaultConnection"` value. In non-Development environments, ensure `"MigrationConnection"` is populated (needed only by the API).
 
 **Pulse.API** runs DbUp migrations in `Program.cs` on startup (before HTTP requests are accepted). The database is created if it does not exist.
 

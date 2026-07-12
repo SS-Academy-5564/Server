@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_OWNER: ss-academy-5564
+  IMAGE_OWNER: ${{ github.repository_owner }}
 
 jobs:
   build-and-push:
