@@ -3,11 +3,11 @@ using Pulse.DAL.Common.Repository;
 
 namespace Pulse.DAL.Commands.Organization;
 
-public class CreateOrganizationCommands : IOrganizationCommands
+public class OrganizationCommands : IOrganizationCommands
 {
     private readonly IDbSessionAccessor _sessionAccessor;
 
-    public CreateOrganizationCommands(IDbSessionAccessor sessionAccessor)
+    public OrganizationCommands(IDbSessionAccessor sessionAccessor)
     {
         _sessionAccessor = sessionAccessor;
     }

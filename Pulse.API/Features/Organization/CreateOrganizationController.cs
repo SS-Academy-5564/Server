@@ -9,12 +9,12 @@ namespace Pulse.API.Features.Organization;
 [ApiController]
 [Route("api/organizations")]
 [Authorize]
-public class CreateOrganizationsController : PulseControllerBase
+public class CreateOrganizationController : PulseControllerBase
 {
 
     private readonly CreateOrganizationHandler _handler;
 
-    public CreateOrganizationsController(CreateOrganizationHandler handler)
+    public CreateOrganizationController(CreateOrganizationHandler handler)
     {
         _handler = handler;
     }
