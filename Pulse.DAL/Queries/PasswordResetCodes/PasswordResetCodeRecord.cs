@@ -7,10 +7,12 @@ namespace Pulse.DAL.Queries.PasswordResetCodes;
 /// <param name="UserId">The ID of the user this code belongs to.</param>
 /// <param name="CodeHash">The hashed 6-digit OTP code.</param>
 /// <param name="ExpiresAt">The UTC time at which the code expires.</param>
+/// <param name="CreatedAt">The UTC time at which the code was created.</param>
 /// <param name="FailedAttempts">The number of consecutive failed verification attempts.</param>
 public sealed record PasswordResetCodeRecord(
     Guid Id,
     Guid UserId,
     string CodeHash,
     DateTimeOffset ExpiresAt,
+    DateTimeOffset CreatedAt,
     int FailedAttempts);

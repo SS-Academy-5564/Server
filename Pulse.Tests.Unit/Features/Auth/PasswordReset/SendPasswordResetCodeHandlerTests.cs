@@ -8,6 +8,7 @@ using Pulse.BL.Features.Auth.PasswordReset;
 using Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 using Pulse.BL.Features.Email;
 using Pulse.DAL.Commands.PasswordResetCodes;
+using Pulse.DAL.Queries.PasswordResetCodes;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.Tests.Unit.Features.Auth.PasswordReset;
@@ -15,6 +16,7 @@ namespace Pulse.Tests.Unit.Features.Auth.PasswordReset;
 public class SendPasswordResetCodeHandlerTests
 {
     private readonly Mock<IUserQueries> _userQueriesMock;
+    private readonly Mock<IPasswordResetCodeQueries> _codeQueriesMock;
     private readonly Mock<IPasswordResetCodeCommands> _codeCommandsMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<IEmailService> _emailServiceMock;
@@ -24,6 +26,7 @@ public class SendPasswordResetCodeHandlerTests
     public SendPasswordResetCodeHandlerTests()
     {
         _userQueriesMock = new Mock<IUserQueries>();
+        _codeQueriesMock = new Mock<IPasswordResetCodeQueries>();
         _codeCommandsMock = new Mock<IPasswordResetCodeCommands>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
         _emailServiceMock = new Mock<IEmailService>();
@@ -34,11 +37,13 @@ public class SendPasswordResetCodeHandlerTests
         {
             CodeTtlMinutes = 5,
             MaxFailedAttempts = 5,
-            ResetTokenLifetimeMinutes = 10
+            ResetTokenLifetimeMinutes = 10,
+            ResendCooldownSeconds = 60
         });
 
         _sut = new SendPasswordResetCodeHandler(
             _userQueriesMock.Object,
+            _codeQueriesMock.Object,
             _codeCommandsMock.Object,
             _passwordHasherMock.Object,
             _emailServiceMock.Object,
@@ -59,6 +64,10 @@ public class SendPasswordResetCodeHandlerTests
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userId);
 
+        _codeQueriesMock
+            .Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PasswordResetCodeRecord?)null);
+
         _passwordHasherMock
             .Setup(x => x.HashPassword(It.IsAny<string>()))
             .Returns("hashed_code");
@@ -71,10 +80,11 @@ public class SendPasswordResetCodeHandlerTests
             .ReturnsAsync(Result.Ok());
 
         // Act
-        Result result = await _sut.HandleAsync(command, CancellationToken.None);
+        Result<SendCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
+        result.Value.ResendCooldownSeconds.Should().Be(60);
 
         _codeCommandsMock.Verify(x => x.ReplaceAsync(
             It.Is<PasswordResetCodeInput>(i => i.UserId == userId && i.CodeHash == "hashed_code" && i.ExpiresAt == now.AddMinutes(5)),
@@ -97,10 +107,11 @@ public class SendPasswordResetCodeHandlerTests
             .ReturnsAsync((Guid?)null);
 
         // Act
-        Result result = await _sut.HandleAsync(command, CancellationToken.None);
+        Result<SendCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
+        result.Value.ResendCooldownSeconds.Should().Be(60);
 
         _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
         _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -118,6 +129,10 @@ public class SendPasswordResetCodeHandlerTests
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userId);
 
+        _codeQueriesMock
+            .Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PasswordResetCodeRecord?)null);
+
         _emailServiceMock
             .Setup(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("SMTP Error"));
@@ -125,12 +140,88 @@ public class SendPasswordResetCodeHandlerTests
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
 
         // Act
-        Result result = await _sut.HandleAsync(command, CancellationToken.None);
+        Result<SendCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue(); // Endpoint should still succeed to avoid enumeration
+        result.Value.ResendCooldownSeconds.Should().Be(60);
 
         _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
-}
 
+    [Fact]
+    public async Task RequestAsync_WhenCooldownNotExpired_ReturnsOk_DoesNotResend()
+    {
+        // Arrange
+        string email = "test@example.com";
+        Guid userId = Guid.NewGuid();
+        SendPasswordResetCodeCommand command = new(email);
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(now);
+
+        _userQueriesMock
+            .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userId);
+
+        // Code was created 30 seconds ago — cooldown (60s) is still active
+        PasswordResetCodeRecord existingCode = new(
+            Guid.NewGuid(), userId, "hash", now.AddMinutes(5), now.AddSeconds(-30), 0);
+
+        _codeQueriesMock
+            .Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingCode);
+
+        // Act
+        Result<SendCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ResendCooldownSeconds.Should().Be(60);
+
+        _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Never);
+        _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RequestAsync_WhenCooldownExpired_CreatesNewCode()
+    {
+        // Arrange
+        string email = "test@example.com";
+        Guid userId = Guid.NewGuid();
+        SendPasswordResetCodeCommand command = new(email);
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(now);
+
+        _userQueriesMock
+            .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userId);
+
+        // Code was created 90 seconds ago — cooldown (60s) has expired
+        PasswordResetCodeRecord existingCode = new(
+            Guid.NewGuid(), userId, "hash", now.AddMinutes(5), now.AddSeconds(-90), 0);
+
+        _codeQueriesMock
+            .Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingCode);
+
+        _passwordHasherMock
+            .Setup(x => x.HashPassword(It.IsAny<string>()))
+            .Returns("hashed_code");
+
+        _emailServiceMock
+            .Setup(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+
+        // Act
+        Result<SendCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ResendCooldownSeconds.Should().Be(60);
+
+        _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Once);
+        _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+}

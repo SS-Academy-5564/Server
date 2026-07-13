@@ -19,25 +19,37 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 builder.Services.AddControllers();
 builder.Services.AddAuthorization();
+builder.Services.AddHealthChecks();
 builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
 builder.Services.AddCurrentUserService();
 
+string[] allowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AngularPolicy", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 
-string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrWhiteSpace(connectionString))
+string defaultConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+
+string? migrationConnectionString = builder.Configuration.GetConnectionString("MigrationConnection");
+
+if (builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(migrationConnectionString))
 {
-    throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+    migrationConnectionString = defaultConnectionString;
+}
+else if (string.IsNullOrWhiteSpace(migrationConnectionString))
+{
+    throw new InvalidOperationException("Connection string 'MigrationConnection' is required in non-Development environments, but is missing or empty.");
 }
 
 WebApplication app = builder.Build();
@@ -48,7 +60,7 @@ ILogger migrationLogger = app.Services
 
 bool seedDevData = builder.Configuration.GetValue<bool>("Database:SeedDevData");
 
-await DatabaseMigration.RunWithRetryAsync(connectionString, migrationLogger, seedDevData);
+await DatabaseMigration.RunWithRetryAsync(migrationConnectionString, migrationLogger, seedDevData);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -60,6 +72,10 @@ if (app.Environment.IsDevelopment())
 app.UseResponseLogging();
 app.UseExceptionHandling();
 app.UseRouting();
+
+// Liveness probe endpoint for platform health checks
+app.MapHealthChecks("/health");
+
 app.UseCors("AngularPolicy");
 app.UseRateLimiter();
 

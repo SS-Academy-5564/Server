@@ -5,15 +5,25 @@ namespace Pulse.DAL.Commands.Members;
 
 public class MemberCommands : IMemberCommands
 {
-    /// <inheritdoc/>
-    public async Task CreateMemberAsync(CreateMemberInput input, IUnitOfWork uow, CancellationToken ct)
+    private readonly IDbSessionAccessor _sessionAccessor;
+
+    public MemberCommands(IDbSessionAccessor sessionAccessor)
     {
-        await uow.Connection.ExecuteAsync(
+        _sessionAccessor = sessionAccessor;
+    }
+
+    /// <inheritdoc/>
+    public async Task CreateMemberAsync(CreateMemberInput input, CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
+        await session.Connection.ExecuteAsync(
             new CommandDefinition(
                 "INSERT INTO Members (UserId, OrganizationId, RoleId, JoinedAt, UpdatedAt) " +
                 "VALUES (@UserId, @OrganizationId, @RoleId, @Now, @Now)",
                 new { input.UserId, input.OrganizationId, input.RoleId, Now = DateTimeOffset.UtcNow },
-                transaction: uow.Transaction,
+                transaction: session.Transaction,
                 cancellationToken: ct));
     }
 }

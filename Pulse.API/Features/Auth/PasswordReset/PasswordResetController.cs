@@ -13,15 +13,14 @@ namespace Pulse.API.Features.Auth.PasswordReset;
 
 [ApiController]
 [Route("api/auth/password-reset")]
-[AutoValidate]
 public class PasswordResetController : PulseControllerBase
 {
-    private readonly IAsyncHandler<SendPasswordResetCodeCommand, Result> _requestHandler;
+    private readonly IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>> _requestHandler;
     private readonly IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>> _verifyHandler;
     private readonly IAsyncHandler<ResetPasswordCommand, Result> _resetHandler;
 
     public PasswordResetController(
-        IAsyncHandler<SendPasswordResetCodeCommand, Result> requestHandler,
+        IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>> requestHandler,
         IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>> verifyHandler,
         IAsyncHandler<ResetPasswordCommand, Result> resetHandler)
     {
@@ -43,7 +42,7 @@ public class PasswordResetController : PulseControllerBase
         [Validate] RequestPasswordResetRequest request, CancellationToken ct)
     {
         SendPasswordResetCodeCommand command = new(request.Email);
-        Result result = await _requestHandler.HandleAsync(command, ct);
+        Result<SendCodeResult> result = await _requestHandler.HandleAsync(command, ct);
         return ToActionResult(result);
     }
 
