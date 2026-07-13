@@ -1,4 +1,4 @@
-name: Unit Tests
+name: Build & Unit Tests
 on:
   pull_request:
 jobs:
