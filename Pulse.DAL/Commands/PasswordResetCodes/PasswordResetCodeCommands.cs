@@ -23,16 +23,16 @@ public class PasswordResetCodeCommands : IPasswordResetCodeCommands
             SET XACT_ABORT ON;
             BEGIN TRAN;
             DELETE FROM PasswordResetCodes WHERE UserId = @UserId;
-            INSERT INTO PasswordResetCodes (UserId, CodeHash, ExpiresAt, FailedAttempts)
+            INSERT INTO PasswordResetCodes (UserId, CodeHash, ExpiresAt, CreatedAt, FailedAttempts)
             OUTPUT INSERTED.Id
-            VALUES (@UserId, @CodeHash, @ExpiresAt, 0);
+            VALUES (@UserId, @CodeHash, @ExpiresAt, @CreatedAt, 0);
             COMMIT TRAN;
         ";
 
         return await connection.ExecuteScalarAsync<Guid>(
             new CommandDefinition(
                 sql,
-                new { input.UserId, input.CodeHash, input.ExpiresAt },
+                new { input.UserId, input.CodeHash, input.ExpiresAt, input.CreatedAt },
                 cancellationToken: ct));
     }
 

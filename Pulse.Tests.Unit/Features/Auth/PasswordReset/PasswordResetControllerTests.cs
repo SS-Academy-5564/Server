@@ -14,14 +14,14 @@ namespace Pulse.Tests.Unit.Features.Auth.PasswordReset;
 
 public class PasswordResetControllerTests
 {
-    private readonly Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result>> _requestHandlerMock;
+    private readonly Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>>> _requestHandlerMock;
     private readonly Mock<IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>>> _verifyHandlerMock;
     private readonly Mock<IAsyncHandler<ResetPasswordCommand, Result>> _resetHandlerMock;
     private readonly PasswordResetController _sut;
 
     public PasswordResetControllerTests()
     {
-        _requestHandlerMock = new Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result>>();
+        _requestHandlerMock = new Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>>>();
         _verifyHandlerMock = new Mock<IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>>>();
         _resetHandlerMock = new Mock<IAsyncHandler<ResetPasswordCommand, Result>>();
 
@@ -36,18 +36,19 @@ public class PasswordResetControllerTests
     {
         // Arrange
         RequestPasswordResetRequest request = new("test@example.com");
+        SendCodeResult sendCodeResult = new(60);
 
         _requestHandlerMock
             .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok());
+            .ReturnsAsync(Result.Ok(sendCodeResult));
 
         // Act
         IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>()
-            .Which.Value.Should().BeOfType<ApiResponse>()
-            .Which.Success.Should().BeTrue();
+            .Which.Value.Should().BeOfType<ApiResponse<SendCodeResult>>()
+            .Which.Data.Should().Be(sendCodeResult);
     }
 
     [Fact]
