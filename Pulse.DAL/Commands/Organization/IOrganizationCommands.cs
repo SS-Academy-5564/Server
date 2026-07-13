@@ -4,5 +4,5 @@ namespace Pulse.DAL.Commands.Organization;
 
 public interface IOrganizationCommands : ICommands
 {
-    Task<Guid> CreateOrganizationAsync(CreateOrganizationInput input, IUnitOfWork uow, CancellationToken ct);
+    Task<Guid> CreateOrganizationAsync(CreateOrganizationInput input, CancellationToken ct);
 }

@@ -5,9 +5,18 @@ namespace Pulse.DAL.Commands.Organization;
 
 public class CreateOrganizationCommands : IOrganizationCommands
 {
-    public async Task<Guid> CreateOrganizationAsync(CreateOrganizationInput input, IUnitOfWork uow, CancellationToken ct)
+    private readonly IDbSessionAccessor _sessionAccessor;
+
+    public CreateOrganizationCommands(IDbSessionAccessor sessionAccessor)
     {
-        return await uow.Connection.ExecuteScalarAsync<Guid>(
+        _sessionAccessor = sessionAccessor;
+    }
+    public async Task<Guid> CreateOrganizationAsync(CreateOrganizationInput input, CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
+        return await session.Connection.ExecuteScalarAsync<Guid>(
             new CommandDefinition(
                 """
                 INSERT INTO Organizations (Name, CreatedAt, UpdatedAt)
@@ -19,7 +28,7 @@ public class CreateOrganizationCommands : IOrganizationCommands
                     input.Name,
                     Now = DateTimeOffset.UtcNow
                 },
-                transaction: uow.Transaction,
+                transaction: session.Transaction,
                 cancellationToken: ct));
     }
 }

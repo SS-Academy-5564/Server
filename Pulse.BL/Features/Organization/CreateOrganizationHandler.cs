@@ -36,7 +36,7 @@ public class CreateOrganizationHandler
         CancellationToken ct)
     {
         await using IUnitOfWork uow =
-            await _unitOfWorkFactory.CreateAsync(ct);
+            await _unitOfWorkFactory.CreateAsync(ct: ct);
 
         Guid? userId = _currentUserService.UserId;
 
@@ -51,7 +51,6 @@ public class CreateOrganizationHandler
         Guid organizationId =
             await _organizationCommands.CreateOrganizationAsync(
                 new CreateOrganizationInput(command.Name),
-                uow,
                 ct);
 
         await _memberCommands.CreateMemberAsync(
@@ -60,7 +59,6 @@ public class CreateOrganizationHandler
                 organizationId,
                 SeededIds.Roles.User
             ),
-            uow,
             ct);
 
         await uow.CommitAsync(ct);

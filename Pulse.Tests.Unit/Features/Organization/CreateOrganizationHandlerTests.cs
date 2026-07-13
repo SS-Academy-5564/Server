@@ -6,6 +6,7 @@ using Pulse.BL.Features.Organization;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Organization;
 using Pulse.DAL.Common.Repository;
+using System.Data;
 
 namespace Pulse.Tests.Unit.Features.Organization;
 
@@ -23,7 +24,9 @@ public class CreateOrganizationHandlerTests
     public CreateOrganizationHandlerTests()
     {
         _uowFactoryMock
-            .Setup(x => x.CreateAsync(It.IsAny<CancellationToken>()))
+            .Setup(x => x.CreateAsync(
+                It.IsAny<IsolationLevel>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(_uowMock.Object);
 
         _currentUserMock
@@ -33,7 +36,6 @@ public class CreateOrganizationHandlerTests
         _commandsMock
             .Setup(x => x.CreateOrganizationAsync(
                 It.IsAny<CreateOrganizationInput>(),
-                _uowMock.Object,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
 
@@ -72,7 +74,7 @@ public class CreateOrganizationHandlerTests
         var expectedId = Guid.NewGuid();
 
         _commandsMock
-           .Setup(x => x.CreateOrganizationAsync(It.IsAny<CreateOrganizationInput>(), _uowMock.Object, It.IsAny<CancellationToken>()))
+           .Setup(x => x.CreateOrganizationAsync(It.IsAny<CreateOrganizationInput>(), It.IsAny<CancellationToken>()))
            .ReturnsAsync(expectedId);
 
         CreateOrganizationCommand command = new("Test Org");
