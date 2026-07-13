@@ -49,7 +49,7 @@ public class MemberQueries : IMemberQueries
             JOIN Users u ON u.Id = m.UserId
             JOIN Roles r ON r.Id = m.RoleId
             WHERE m.OrganizationId = @OrganizationId
-            ORDER BY m.JoinedAt ASC
+            ORDER BY m.JoinedAt ASC, m.Id ASC
             """;
 
         IEnumerable<MemberRecord> records = await connection.QueryAsync<MemberRecord>(

@@ -5,7 +5,7 @@ using Pulse.API.Controllers;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Users.Members;
 
-namespace Pulse.API.Features.Users;
+namespace Pulse.API.Features.Users.Members;
 
 [ApiController]
 [Route("api/members")]

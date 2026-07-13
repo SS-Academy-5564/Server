@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Pulse.BL.Common.Security;
+using Pulse.BL.Common.Security.Tokens;
 
 namespace Pulse.API.Common.Security;
 
