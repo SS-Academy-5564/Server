@@ -1,3 +1,4 @@
+using System.Data;
 using FluentAssertions;
 using Moq;
 using Pulse.BL.Common.Security;
@@ -6,7 +7,6 @@ using Pulse.BL.Features.Organization;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Organization;
 using Pulse.DAL.Common.Repository;
-using System.Data;
 
 namespace Pulse.Tests.Unit.Features.Organization;
 
