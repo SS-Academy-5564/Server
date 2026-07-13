@@ -32,4 +32,32 @@ public class MemberQueries : IMemberQueries
 
         return records.ToList();
     }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyList<MemberRecord>> GetMembersByOrganizationIdAsync(Guid organizationId, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            SELECT u.Id AS UserId,
+                   u.Email,
+                   u.FirstName,
+                   u.LastName,
+                   r.Name AS RoleName,
+                   m.JoinedAt
+            FROM Members m
+            JOIN Users u ON u.Id = m.UserId
+            JOIN Roles r ON r.Id = m.RoleId
+            WHERE m.OrganizationId = @OrganizationId
+            ORDER BY m.JoinedAt ASC
+            """;
+
+        IEnumerable<MemberRecord> records = await connection.QueryAsync<MemberRecord>(
+            new CommandDefinition(
+                sql,
+                new { OrganizationId = organizationId },
+                cancellationToken: ct));
+
+        return records.AsList();
+    }
 }

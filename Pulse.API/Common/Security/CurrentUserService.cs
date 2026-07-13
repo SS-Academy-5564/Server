@@ -29,4 +29,18 @@ public sealed class CurrentUserService : ICurrentUserService
             }
         }
     }
+
+    public Guid? OrganizationId
+    {
+        get
+        {
+            Claim? organizationId =
+                _httpContextAccessor.HttpContext?.User.FindFirst(JwtClaimNames.OrganizationId);
+
+            return organizationId is not null &&
+                Guid.TryParse(organizationId.Value, out Guid id)
+                ? id
+                : null;
+        }
+    }
 }
