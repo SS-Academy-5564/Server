@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling;
@@ -6,27 +8,43 @@ using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.DependencyInjection;
 using Pulse.Worker.Polling;
 
-HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+IHostBuilder builder = Host.CreateDefaultBuilder(args);
 
-builder.Services.AddDataAccess();
+builder.ConfigureServices((context,services) =>
+{
+    services
+        .AddHttpClient(HttpMonitorClient.ClientName)
+        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            AllowAutoRedirect = false
+        });
+    services.AddOptions<PollingWorkerOptions>()
+        .Bind(context.Configuration.GetRequiredSection(PollingWorkerOptions.SectionName))
+        .ValidateOnStart();
 
-builder.Services
-    .AddHttpClient(HttpMonitorClient.ClientName)
-    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    services.AddSingleton<IValidateOptions<PollingWorkerOptions>, PollingWorkerOptionsValidator>();
+
+    services.AddScoped<IPollingService, PollingService>();
+    services.AddScoped<IHttpMonitorClient, HttpMonitorClient>();
+    services.AddScoped<IJsonPathReader, JsonPathReader>();
+
+    services.AddDataAccess();
+
+    services.AddHostedService<PollerWorker>();
+
+    services.AddHealthChecks();
+});
+
+builder.ConfigureWebHostDefaults(webBuilder =>
+{
+    webBuilder.Configure(app =>
     {
-        AllowAutoRedirect = false
+        app.UseRouting();
+        app.UseEndpoints(endpoints =>
+            endpoints.MapHealthChecks("/health")
+        );
     });
-
-builder.Services.AddScoped<IPollingService, PollingService>();
-builder.Services.AddScoped<IHttpMonitorClient, HttpMonitorClient>();
-builder.Services.AddScoped<IJsonPathReader, JsonPathReader>();
-
-builder.Services.AddSingleton<IValidateOptions<PollingWorkerOptions>, PollingWorkerOptionsValidator>();
-builder.Services.AddOptions<PollingWorkerOptions>()
-    .Bind(builder.Configuration.GetRequiredSection(PollingWorkerOptions.SectionName))
-    .ValidateOnStart();
-
-builder.Services.AddHostedService<PollerWorker>();
+});
 
 IHost host = builder.Build();
 host.Run();

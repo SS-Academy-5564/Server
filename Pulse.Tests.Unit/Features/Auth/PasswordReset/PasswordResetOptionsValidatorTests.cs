@@ -21,7 +21,8 @@ public class PasswordResetOptionsValidatorTests
         {
             CodeTtlMinutes = 5,
             MaxFailedAttempts = 5,
-            ResetTokenLifetimeMinutes = 10
+            ResetTokenLifetimeMinutes = 10,
+            ResendCooldownSeconds = 60
         };
 
         // Act
@@ -41,7 +42,8 @@ public class PasswordResetOptionsValidatorTests
         {
             CodeTtlMinutes = invalidValue,
             MaxFailedAttempts = 5,
-            ResetTokenLifetimeMinutes = 10
+            ResetTokenLifetimeMinutes = 10,
+            ResendCooldownSeconds = 60
         };
 
         // Act
@@ -62,7 +64,8 @@ public class PasswordResetOptionsValidatorTests
         {
             CodeTtlMinutes = 5,
             MaxFailedAttempts = invalidValue,
-            ResetTokenLifetimeMinutes = 10
+            ResetTokenLifetimeMinutes = 10,
+            ResendCooldownSeconds = 60
         };
 
         // Act
@@ -83,7 +86,8 @@ public class PasswordResetOptionsValidatorTests
         {
             CodeTtlMinutes = 5,
             MaxFailedAttempts = 5,
-            ResetTokenLifetimeMinutes = invalidValue
+            ResetTokenLifetimeMinutes = invalidValue,
+            ResendCooldownSeconds = 60
         };
 
         // Act
@@ -92,5 +96,27 @@ public class PasswordResetOptionsValidatorTests
         // Assert
         result.Failed.Should().BeTrue();
         result.FailureMessage.Should().Contain("ResetTokenLifetimeMinutes");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Validate_WhenResendCooldownSecondsIsInvalid_ReturnsFailure(int invalidValue)
+    {
+        // Arrange
+        PasswordResetOptions options = new()
+        {
+            CodeTtlMinutes = 5,
+            MaxFailedAttempts = 5,
+            ResetTokenLifetimeMinutes = 10,
+            ResendCooldownSeconds = invalidValue
+        };
+
+        // Act
+        ValidateOptionsResult result = _sut.Validate(PasswordResetOptions.SectionName, options);
+
+        // Assert
+        result.Failed.Should().BeTrue();
+        result.FailureMessage.Should().Contain("ResendCooldownSeconds");
     }
 }
