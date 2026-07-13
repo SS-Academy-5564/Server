@@ -3,8 +3,10 @@ using Pulse.DAL.Common.Repository;
 
 namespace Pulse.DAL.Commands.Monitors;
 
+/// <inheritdoc cref="IMonitorCommands"/>
 public class MonitorCommands : IMonitorCommands
 {
+    ///<inheritdoc/>
     public async Task UpdateAfterPollAsync(
         UpdateMonitorAfterPollInput input,
         IDbSession session,

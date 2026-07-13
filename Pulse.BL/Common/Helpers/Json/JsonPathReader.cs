@@ -5,6 +5,7 @@ namespace Pulse.BL.Common.Helpers.Json;
 
 public sealed class JsonPathReader : IJsonPathReader
 {
+    ///<inheritdoc/>
     public bool TryReadValue(string json, string path, out string? value)
     {
         try
@@ -12,23 +13,17 @@ public sealed class JsonPathReader : IJsonPathReader
             value = ReadValue(json, path);
             return true;
         }
-        catch (JsonException)
-        {
-            value = null;
-            return false;
-        }
-        catch (InvalidOperationException)
-        {
-            value = null;
-            return false;
-        }
-        catch (ArgumentException)
+        catch (Exception ex) when (
+            ex is JsonException
+                or InvalidOperationException
+                or ArgumentException)
         {
             value = null;
             return false;
         }
     }
 
+    ///<inheritdoc/>
     public string? ReadValue(string json, string path)
     {
         if (string.IsNullOrWhiteSpace(json) || string.IsNullOrWhiteSpace(path))
