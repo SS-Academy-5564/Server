@@ -10,7 +10,7 @@ using Pulse.Worker.Polling;
 
 IHostBuilder builder = Host.CreateDefaultBuilder(args);
 
-builder.ConfigureServices((context,services) =>
+builder.ConfigureServices((context, services) =>
 {
     services
         .AddHttpClient(HttpMonitorClient.ClientName)
