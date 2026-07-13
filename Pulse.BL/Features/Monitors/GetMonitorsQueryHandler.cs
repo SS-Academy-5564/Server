@@ -13,6 +13,12 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<IR
         _monitorQueries = monitorQueries;
     }
 
+    /// <summary>
+    /// Handles the query to retrieve monitor results.
+    /// </summary>
+    /// <param name="query">The query parameters, including the optional status filter.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A list of monitor results or failure details.</returns>
     public async Task<Result<IReadOnlyList<MonitorResult>>> HandleAsync(GetMonitorsQuery query, CancellationToken ct = default)
     {
         DAL.Queries.Monitors.MonitorStatus? dalStatus = query.Status is null
