@@ -95,7 +95,16 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
         }
         catch (HttpRequestException exception)
         {
-            _logger.LogWarning(exception, "Monitor HTTP request failed. MonitorId: {MonitorId}", monitor.Id);
+            _logger.LogWarning(
+                "Monitor request failed. MonitorId: {MonitorId}, Host: {Host}, Reason: {Reason}",
+                monitor.Id,
+                new Uri(monitor.Url).Host,
+                exception.Message);
+
+            _logger.LogDebug(
+                exception,
+                "Monitor request failure details. MonitorId: {MonitorId}",
+                monitor.Id);
 
             return new HttpMonitorResponse(
                 IsSuccess: false,
