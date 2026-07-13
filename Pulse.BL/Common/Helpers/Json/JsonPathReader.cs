@@ -28,6 +28,7 @@ public sealed class JsonPathReader : IJsonPathReader
             return false;
         }
     }
+
     public string? ReadValue(string json, string path)
     {
         if (string.IsNullOrWhiteSpace(json) || string.IsNullOrWhiteSpace(path))

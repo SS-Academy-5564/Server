@@ -28,6 +28,5 @@ public class MonitorQueries : IMonitorQueries
                 new { Max = max },
                 cancellationToken: ct)
         );
-
     }
 }
