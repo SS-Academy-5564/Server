@@ -63,7 +63,7 @@ public class CreateOrganizationHandler
 
         await uow.CommitAsync(ct);
 
-        GeneratedJwtToken jwt = _jwtTokenGenerator.GenerateToken(currentUserId, role, organizationId);
+        GeneratedJwtToken jwt = _jwtTokenGenerator.GenerateToken(currentUserId, role, organizationId, command.Name);
 
         string accessToken = jwt.Token;
 

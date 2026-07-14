@@ -22,6 +22,7 @@ public class JwtTokenGeneratorTests
     private static readonly Guid UserId = Guid.NewGuid();
     private static readonly string RoleName = "User";
     private static readonly Guid OrganizationId = Guid.NewGuid();
+    private static readonly string OrganizationName = "Test Organization";
 
     [Fact]
     public void Generate_ShouldContainUserIdClaim()
@@ -30,7 +31,7 @@ public class JwtTokenGeneratorTests
         JwtTokenGenerator sut = CreateSut();
 
         // Act
-        GeneratedJwtToken result = sut.GenerateToken(UserId, RoleName, OrganizationId);
+        GeneratedJwtToken result = sut.GenerateToken(UserId, RoleName, OrganizationId, OrganizationName);
         JsonWebToken jwtToken = ReadToken(result.Token);
 
         // Assert
@@ -45,7 +46,7 @@ public class JwtTokenGeneratorTests
         JwtTokenGenerator sut = CreateSut();
 
         // Act
-        GeneratedJwtToken result = sut.GenerateToken(UserId, RoleName, OrganizationId);
+        GeneratedJwtToken result = sut.GenerateToken(UserId, RoleName, OrganizationId, OrganizationName);
         JsonWebToken jwtToken = ReadToken(result.Token);
 
         // Assert
@@ -60,7 +61,7 @@ public class JwtTokenGeneratorTests
         JwtTokenGenerator sut = CreateSut();
 
         // Act
-        GeneratedJwtToken result = sut.GenerateToken(UserId, RoleName, OrganizationId);
+        GeneratedJwtToken result = sut.GenerateToken(UserId, RoleName, OrganizationId, OrganizationName);
         JsonWebToken jwtToken = ReadToken(result.Token);
 
         // Assert
@@ -78,7 +79,7 @@ public class JwtTokenGeneratorTests
         DateTimeOffset expectedExpiry = fixedTime.AddMinutes(_jwtOptions.ExpirationMinutes);
 
         // Act
-        GeneratedJwtToken generatedToken = sut.GenerateToken(UserId, RoleName, OrganizationId);
+        GeneratedJwtToken generatedToken = sut.GenerateToken(UserId, RoleName, OrganizationId, OrganizationName);
         JsonWebToken jwtToken = ReadToken(generatedToken.Token);
 
         // Assert
@@ -98,7 +99,7 @@ public class JwtTokenGeneratorTests
         DateTimeOffset expectedExpiry = timeProvider.GetUtcNow().AddMinutes(_jwtOptions.ExpirationMinutes);
 
         // Act
-        GeneratedJwtToken generatedToken = sut.GenerateToken(UserId, RoleName, OrganizationId);
+        GeneratedJwtToken generatedToken = sut.GenerateToken(UserId, RoleName, OrganizationId, OrganizationName);
         JsonWebToken jwtToken = ReadToken(generatedToken.Token);
 
         // Assert
@@ -113,7 +114,7 @@ public class JwtTokenGeneratorTests
         JwtTokenGenerator sut = CreateSut();
 
         // Act
-        GeneratedJwtToken result = sut.GenerateToken(UserId, RoleName, OrganizationId);
+        GeneratedJwtToken result = sut.GenerateToken(UserId, RoleName, OrganizationId, OrganizationName);
         JsonWebToken jwtToken = ReadToken(result.Token);
 
         // Assert

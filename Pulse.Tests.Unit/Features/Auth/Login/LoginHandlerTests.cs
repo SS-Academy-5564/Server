@@ -51,7 +51,8 @@ public class LoginHandlerTests
             email,
             passwordHash,
             organizationId,
-            roleName);
+            roleName,
+            "Test Organization");
 
         LoginCommand command = new(email, password);
 
@@ -64,7 +65,7 @@ public class LoginHandlerTests
             .Returns(true);
 
         _jwtTokenGeneratorMock
-            .Setup(x => x.GenerateToken(userId, roleName, organizationId))
+            .Setup(x => x.GenerateToken(userId, roleName, organizationId, "Test Organization"))
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
 
         _loginLockoutServiceMock
@@ -117,7 +118,8 @@ public class LoginHandlerTests
             email,
             passwordHash,
             organizationId,
-            "User");
+            "User",
+            "Test Organization");
 
         LoginCommand command = new(email, password);
 
@@ -155,7 +157,8 @@ public class LoginHandlerTests
             email,
             "hash",
             Guid.NewGuid(),
-            "User");
+            "User",
+            "Test Organization");
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
