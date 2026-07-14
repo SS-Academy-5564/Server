@@ -11,7 +11,6 @@ namespace Pulse.API.Features.Organization;
 [Authorize]
 public class CreateOrganizationController : PulseControllerBase
 {
-
     private readonly CreateOrganizationHandler _handler;
 
     public CreateOrganizationController(CreateOrganizationHandler handler)
