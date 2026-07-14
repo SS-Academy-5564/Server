@@ -12,7 +12,7 @@ public static class DatabaseMigration
     {
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new InvalidOperationException("Connection string 'DefaultConnection' is missing or empty.");
+            throw new InvalidOperationException("Connection string 'MigrationConnection' is missing or empty.");
         }
 
         logger.LogInformation("Running database migrations...");
