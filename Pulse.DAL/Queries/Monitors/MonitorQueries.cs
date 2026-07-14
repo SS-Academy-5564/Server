@@ -14,6 +14,7 @@ public class MonitorQueries : IMonitorQueries
         _connectionFactory = factory;
     }
 
+    /// <inheritdoc/>
     public async Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
