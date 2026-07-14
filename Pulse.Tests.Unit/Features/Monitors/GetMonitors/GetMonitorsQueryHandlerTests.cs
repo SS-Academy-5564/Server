@@ -4,7 +4,7 @@ using Moq;
 using Pulse.BL.Features.Monitors;
 using Pulse.DAL.Queries.Monitors;
 
-namespace Pulse.Tests.Unit.Features.Monitors;
+namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
 
 public class GetMonitorsQueryHandlerTests
 {
@@ -20,7 +20,7 @@ public class GetMonitorsQueryHandlerTests
     [Fact]
     public async Task HandleAsync_WhenRecordsExist_ReturnsMappedResults()
     {
-        IReadOnlyList<MonitorRecord> records = new List<MonitorRecord>
+        IReadOnlyList<MonitorListRecord> records = new List<MonitorListRecord>
         {
             new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, DAL.Queries.Monitors.MonitorStatus.Enabled, 60)
         }.AsReadOnly();
@@ -28,7 +28,7 @@ public class GetMonitorsQueryHandlerTests
         _queriesMock.Setup(q => q.GetAllAsync(null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(records);
 
-        Result<IReadOnlyList<MonitorResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(null));
+        Result<IReadOnlyList<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(null));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().HaveCount(1);
@@ -40,12 +40,12 @@ public class GetMonitorsQueryHandlerTests
     [Fact]
     public async Task HandleAsync_WhenFilteredByStatus_PassesStatusToQueries()
     {
-        IReadOnlyList<MonitorRecord> records = new List<MonitorRecord>().AsReadOnly();
+        IReadOnlyList<MonitorListRecord> records = new List<MonitorListRecord>().AsReadOnly();
 
         _queriesMock.Setup(q => q.GetAllAsync(DAL.Queries.Monitors.MonitorStatus.Disabled, It.IsAny<CancellationToken>()))
             .ReturnsAsync(records);
 
-        Result<IReadOnlyList<MonitorResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(BL.Features.Monitors.MonitorStatus.Disabled));
+        Result<IReadOnlyList<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(BL.Features.Monitors.MonitorStatus.Disabled));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();
@@ -57,9 +57,9 @@ public class GetMonitorsQueryHandlerTests
     public async Task HandleAsync_WhenNoMonitors_ReturnsEmptyList()
     {
         _queriesMock.Setup(q => q.GetAllAsync(null, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<MonitorRecord>().AsReadOnly());
+            .ReturnsAsync(new List<MonitorListRecord>().AsReadOnly());
 
-        Result<IReadOnlyList<MonitorResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(null));
+        Result<IReadOnlyList<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(null));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Should().BeEmpty();

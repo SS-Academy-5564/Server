@@ -11,7 +11,7 @@ namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
 
 public class GetMonitorsControllerTests
 {
-    private readonly Mock<IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorResult>>>> _handlerMock;
+    private readonly Mock<IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorListResult>>>> _handlerMock;
     private readonly GetMonitorsController _sut;
 
     public GetMonitorsControllerTests()
@@ -23,7 +23,7 @@ public class GetMonitorsControllerTests
     [Fact]
     public async Task GetMonitors_WhenSuccess_Returns200WithDtoShape()
     {
-        IReadOnlyList<MonitorResult> monitors = new List<MonitorResult>
+        IReadOnlyList<MonitorListResult> monitors = new List<MonitorListResult>
         {
             new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, MonitorStatus.Enabled, 60)
         }.AsReadOnly();
@@ -36,7 +36,7 @@ public class GetMonitorsControllerTests
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(200);
 
-        ApiResponse<IReadOnlyList<MonitorResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorResult>>>().Subject;
+        ApiResponse<IReadOnlyList<MonitorListResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
         response.Success.Should().BeTrue();
         response.Data.Should().BeEquivalentTo(monitors);
     }
@@ -44,7 +44,7 @@ public class GetMonitorsControllerTests
     [Fact]
     public async Task GetMonitors_WithStatusFilter_PassesStatusToHandler()
     {
-        IReadOnlyList<MonitorResult> monitors = new List<MonitorResult>().AsReadOnly();
+        IReadOnlyList<MonitorListResult> monitors = new List<MonitorListResult>().AsReadOnly();
 
         _handlerMock
             .Setup(h => h.HandleAsync(It.Is<GetMonitorsQuery>(q => q.Status == MonitorStatus.Disabled), It.IsAny<CancellationToken>()))
@@ -63,7 +63,7 @@ public class GetMonitorsControllerTests
     [Fact]
     public async Task GetMonitors_WhenNoFilter_ReturnsAllMonitorsIncludingError()
     {
-        IReadOnlyList<MonitorResult> monitors = new List<MonitorResult>
+        IReadOnlyList<MonitorListResult> monitors = new List<MonitorListResult>
         {
             new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, MonitorStatus.Enabled, 60),
             new(Guid.NewGuid(), "Broken Service", "https://broken.com", null, DateTimeOffset.UtcNow, MonitorStatus.Error, 120),
@@ -76,7 +76,7 @@ public class GetMonitorsControllerTests
         IActionResult result = await _sut.GetMonitorsAsync(new GetMonitorsRequest(null), CancellationToken.None);
 
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
-        ApiResponse<IReadOnlyList<MonitorResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorResult>>>().Subject;
+        ApiResponse<IReadOnlyList<MonitorListResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
         response.Data.Should().Contain(m => m.Status == MonitorStatus.Error);
     }
 }

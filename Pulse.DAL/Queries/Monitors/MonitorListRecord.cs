@@ -1,6 +1,6 @@
 namespace Pulse.DAL.Queries.Monitors;
 
-public sealed record MonitorRecord(
+public sealed record MonitorListRecord(
     Guid Id,
     string Name,
     string Url,

@@ -13,9 +13,9 @@ namespace Pulse.API.Features.Monitors.GetMonitors;
 [Authorize]
 public sealed class GetMonitorsController : PulseControllerBase
 {
-    private readonly IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorResult>>> _handler;
+    private readonly IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorListResult>>> _handler;
 
-    public GetMonitorsController(IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorResult>>> handler)
+    public GetMonitorsController(IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorListResult>>> handler)
     {
         _handler = handler;
     }
@@ -23,7 +23,7 @@ public sealed class GetMonitorsController : PulseControllerBase
     [HttpGet]
     public async Task<IActionResult> GetMonitorsAsync([FromQuery][Validate] GetMonitorsRequest request, CancellationToken ct)
     {
-        Result<IReadOnlyList<MonitorResult>> result = await _handler.HandleAsync(new GetMonitorsQuery(request.Status), ct);
+        Result<IReadOnlyList<MonitorListResult>> result = await _handler.HandleAsync(new GetMonitorsQuery(request.Status), ct);
         return ToActionResult(result);
     }
 }

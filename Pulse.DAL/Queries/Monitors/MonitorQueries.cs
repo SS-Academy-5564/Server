@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Data;
 using Dapper;
 using Pulse.DAL.Connection;
 
@@ -8,12 +9,12 @@ public class MonitorQueries : IMonitorQueries
 {
     private readonly IDbConnectionFactory _connectionFactory;
 
-    public MonitorQueries(IDbConnectionFactory connectionFactory)
+    public MonitorQueries(IDbConnectionFactory factory)
     {
-        _connectionFactory = connectionFactory;
+        _connectionFactory = factory;
     }
 
-    public async Task<IReadOnlyList<MonitorRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct)
+    public async Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
 
@@ -28,7 +29,7 @@ public class MonitorQueries : IMonitorQueries
 
             if (statusId is null)
             {
-                return new List<MonitorRecord>().AsReadOnly();
+                return new List<MonitorListRecord>().AsReadOnly();
             }
         }
 
@@ -42,10 +43,26 @@ public class MonitorQueries : IMonitorQueries
             sql += " WHERE m.StatusId = @StatusId";
         }
 
-        IEnumerable<MonitorRecord> records = await connection.QueryAsync<MonitorRecord>(
+        IEnumerable<MonitorListRecord> records = await connection.QueryAsync<MonitorListRecord>(
             new CommandDefinition(sql, new { StatusId = statusId }, cancellationToken: ct));
 
         return records.ToList().AsReadOnly();
     }
-}
 
+    public async Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        return await connection.QueryAsync<MonitorPollingRecord>(
+            new CommandDefinition(
+                "SELECT TOP (@Max) m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds " +
+                "FROM Monitors AS m " +
+                "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
+                "WHERE m.NextExecutionAt <= SYSUTCDATETIME() AND m.StatusId = " +
+                "   (SELECT Id FROM MonitorStatuses WHERE Name = 'Enabled') " +
+                "Order By m.NextExecutionAt ASC;",
+                new { Max = max },
+                cancellationToken: ct)
+        );
+    }
+}

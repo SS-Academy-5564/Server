@@ -4,5 +4,6 @@ namespace Pulse.DAL.Queries.Monitors;
 
 public interface IMonitorQueries : IQueries
 {
-    Task<IReadOnlyList<MonitorRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct);
+    Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
+    Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct);
 }
