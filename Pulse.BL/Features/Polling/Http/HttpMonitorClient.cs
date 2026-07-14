@@ -31,7 +31,7 @@ public sealed class HttpMonitorClient : IHttpMonitorClient
         _logger = logger;
     }
 
-    public async Task<HttpMonitorResponse> SendAsync(MonitorRecord monitor, CancellationToken ct)
+    public async Task<HttpMonitorResponse> SendAsync(MonitorPollingRecord monitor, CancellationToken ct)
     {
         if (!AllowedMethods.Contains(monitor.HttpMethod))
         {
