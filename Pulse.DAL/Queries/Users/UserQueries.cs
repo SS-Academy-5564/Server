@@ -49,9 +49,9 @@ public class UserQueries : IUserQueries
 
         return await connection.QuerySingleOrDefaultAsync<UserProfileRecord>(
             new CommandDefinition(
-                "SELECT Id, Email, FirstName, LastName, CreatedAt, UpdatedAt FROM Users WHERE Id = @Id",
-                new { Id = id },
-                cancellationToken: ct));
+                 "SELECT Id, Email, FirstName, LastName, CreatedAt, UpdatedAt  FROM Users WHERE Id = @Id;",
+                 new { Id = id },
+                 cancellationToken: ct));
     }
 
     /// <inheritdoc/>

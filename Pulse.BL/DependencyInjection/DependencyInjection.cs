@@ -7,6 +7,7 @@ using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login.LoginLockout;
 using Pulse.BL.Features.Auth.PasswordReset;
 using Pulse.BL.Features.Email;
+using Pulse.BL.Features.Organization;
 
 namespace Pulse.BL.DependencyInjection;
 
@@ -37,7 +38,7 @@ public static class DependencyInjection
             .Bind(configuration.GetRequiredSection(PasswordResetOptions.SectionName))
             .ValidateOnStart();
         services.AddEmailing(configuration);
-
+        services.AddScoped<CreateOrganizationHandler>();
         return services;
     }
 }
