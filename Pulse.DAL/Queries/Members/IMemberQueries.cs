@@ -17,4 +17,12 @@ public interface IMemberQueries : IQueries
     /// (oldest first), with a stable tiebreaker; an empty list when the user has none.
     /// </returns>
     Task<IReadOnlyList<UserOrganizationRecord>> GetOrganizationsByUserIdAsync(Guid userId, CancellationToken ct);
+
+    /// <summary>
+    /// Gets members for the specified organization.
+    /// </summary>
+    /// <param name="organizationId">The identifier of the organization.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>The list of member records.</returns>
+    Task<IReadOnlyList<MemberRecord>> GetMembersByOrganizationIdAsync(Guid organizationId, CancellationToken ct);
 }

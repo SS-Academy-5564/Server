@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Pulse.BL.Common.Security;
+using Pulse.BL.Common.Security.Tokens;
 
 namespace Pulse.API.Common.Security;
 
@@ -36,8 +37,11 @@ public sealed class CurrentUserService : ICurrentUserService
     {
         get
         {
-            string? value = GetClaim("orgId");
-            return string.IsNullOrEmpty(value) ? null : Guid.Parse(value);
+            string? value = GetClaim(JwtClaimNames.OrganizationId);
+
+            return value is not null && Guid.TryParse(value, out Guid id)
+                ? id
+                : null;
         }
     }
 
