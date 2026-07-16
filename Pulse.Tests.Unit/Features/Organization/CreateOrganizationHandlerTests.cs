@@ -43,7 +43,8 @@ public class CreateOrganizationHandlerTests
             .Setup(x => x.GenerateToken(
                 It.IsAny<Guid>(),
                 It.IsAny<string>(),
-                It.IsAny<Guid>()))
+                It.IsAny<Guid>(),
+                It.IsAny<string>()))
             .Returns(new GeneratedJwtToken(
                 "test-token",
                 DateTimeOffset.UtcNow.AddMinutes(30)));

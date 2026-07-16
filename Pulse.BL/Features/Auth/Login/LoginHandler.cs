@@ -72,7 +72,7 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
 
         await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
         GeneratedJwtToken generatedToken =
-            _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId);
+            _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
 
         return Result.Ok(new LoginResult(
             generatedToken.Token,
