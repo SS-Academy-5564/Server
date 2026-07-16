@@ -8,6 +8,15 @@ namespace Pulse.DAL.Commands.Monitors;
 public interface IMonitorCommands : ICommands
 {
     /// <summary>
+    /// Creates a new monitor within the active unit of work.
+    /// The monitor is created in the <c>Enabled</c> status and becomes eligible for polling immediately.
+    /// </summary>
+    /// <param name="input">The monitor configuration to persist.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>The identifier of the newly created monitor.</returns>
+    Task<Guid> CreateAsync(CreateMonitorInput input, CancellationToken ct);
+
+    /// <summary>
     /// Updates a monitor after a polling attempt within the specified database session.
     /// When the current value is <see langword="null"/>, the previously stored value is preserved.
     /// </summary>
