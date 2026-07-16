@@ -7,8 +7,8 @@ public class CreateMonitorRequestValidatorTests
 {
     private readonly CreateMonitorRequestValidator _validator = new();
 
-    private static CreateMonitorRequest ValidRequest() =>
-        new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
+    private static CreateMonitorRequest ValidRequest()
+        => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
 
     [Fact]
     public void Validate_ValidRequest_ShouldNotHaveValidationErrors()

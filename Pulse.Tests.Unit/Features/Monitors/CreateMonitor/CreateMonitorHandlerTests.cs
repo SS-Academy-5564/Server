@@ -29,8 +29,8 @@ public class CreateMonitorHandlerTests
         _sut = new CreateMonitorHandler(_uowFactoryMock.Object, _commandsMock.Object);
     }
 
-    private static CreateMonitorCommand ValidCommand() =>
-        new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
+    private static CreateMonitorCommand ValidCommand()
+        => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
 
     [Fact]
     public async Task HandleAsync_ValidCommand_ReturnsCreatedMonitorInEnabledStatus()

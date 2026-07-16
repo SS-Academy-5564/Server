@@ -20,8 +20,8 @@ public class CreateMonitorControllerTests
         _sut = new CreateMonitorController(_handlerMock.Object);
     }
 
-    private static CreateMonitorRequest ValidRequest() =>
-        new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
+    private static CreateMonitorRequest ValidRequest()
+        => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
 
     [Fact]
     public async Task CreateMonitor_WhenSuccess_Returns200WithCreatedMonitor()
