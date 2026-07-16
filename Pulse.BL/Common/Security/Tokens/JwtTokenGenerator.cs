@@ -33,7 +33,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(JwtClaimNames.Role, roleName),
             new(JwtClaimNames.OrganizationId, organizationId.ToString()),
-            new("organization", organizationName),
+            new(JwtClaimNames.Organization, organizationName),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
