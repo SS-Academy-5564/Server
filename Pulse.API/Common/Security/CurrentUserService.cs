@@ -45,6 +45,5 @@ public sealed class CurrentUserService : ICurrentUserService
         }
     }
 
-    private string? GetClaim(string type) =>
-        _httpContextAccessor.HttpContext?.User.FindFirst(type)?.Value;
+    private string? GetClaim(string type) => _httpContextAccessor.HttpContext?.User.FindFirst(type)?.Value;
 }
