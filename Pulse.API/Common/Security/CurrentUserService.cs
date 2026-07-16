@@ -31,17 +31,20 @@ public sealed class CurrentUserService : ICurrentUserService
         }
     }
 
+    public string Role => GetClaim("role") ?? throw new InvalidOperationException("Missing role claim.");
+
     public Guid? OrganizationId
     {
         get
         {
-            Claim? organizationId =
-                _httpContextAccessor.HttpContext?.User.FindFirst(JwtClaimNames.OrganizationId);
+            string? value = GetClaim(JwtClaimNames.OrganizationId);
 
-            return organizationId is not null &&
-                Guid.TryParse(organizationId.Value, out Guid id)
+            return value is not null && Guid.TryParse(value, out Guid id)
                 ? id
                 : null;
         }
     }
+
+    private string? GetClaim(string type) =>
+        _httpContextAccessor.HttpContext?.User.FindFirst(type)?.Value;
 }

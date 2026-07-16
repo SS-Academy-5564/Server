@@ -4,5 +4,5 @@ namespace Pulse.BL.Features.Polling.Http;
 
 public interface IHttpMonitorClient
 {
-    Task<HttpMonitorResponse> SendAsync(MonitorRecord monitor, CancellationToken ct);
+    Task<HttpMonitorResponse> SendAsync(MonitorPollingRecord monitor, CancellationToken ct);
 }

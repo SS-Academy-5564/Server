@@ -54,7 +54,7 @@ public class HttpMonitorClientTests
                 Content = new StringContent(expectedBody)
             });
 
-        MonitorRecord monitor = new(
+        MonitorPollingRecord monitorPolling = new(
             Guid.NewGuid(),
             "https://example.com/health",
             "GET",
@@ -63,7 +63,7 @@ public class HttpMonitorClientTests
             30);
 
         // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitor, CancellationToken.None);
+        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
 
         // Assert
         capturedRequest.Should().NotBeNull();
@@ -97,7 +97,7 @@ public class HttpMonitorClientTests
                 Content = new StringContent(expectedBody)
             });
 
-        MonitorRecord monitor = new(
+        MonitorPollingRecord monitorPolling = new(
             Guid.NewGuid(),
             "https://example.com/health",
             "GET",
@@ -106,7 +106,7 @@ public class HttpMonitorClientTests
             30);
 
         // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitor, CancellationToken.None);
+        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -127,7 +127,7 @@ public class HttpMonitorClientTests
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
 
-        MonitorRecord monitor = new(
+        MonitorPollingRecord monitorPolling = new(
             Guid.NewGuid(),
             "https://example.com/health",
             "fakeMethod",
@@ -136,7 +136,7 @@ public class HttpMonitorClientTests
             30);
 
         // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitor, CancellationToken.None);
+        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -164,7 +164,7 @@ public class HttpMonitorClientTests
                 ItExpr.IsAny<CancellationToken>())
             .ThrowsAsync(new OperationCanceledException());
 
-        MonitorRecord monitor = new(
+        MonitorPollingRecord monitorPolling = new(
             Guid.NewGuid(),
             "https://example.com/health",
             "GET",
@@ -173,7 +173,7 @@ public class HttpMonitorClientTests
             30);
 
         // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitor, CancellationToken.None);
+        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -193,7 +193,7 @@ public class HttpMonitorClientTests
                 ItExpr.IsAny<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("DNS failure"));
 
-        MonitorRecord monitor = new(
+        MonitorPollingRecord monitorPolling = new(
             Guid.NewGuid(),
             "https://example.com/health",
             "GET",
@@ -202,7 +202,7 @@ public class HttpMonitorClientTests
             30);
 
         // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitor, CancellationToken.None);
+        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -226,7 +226,7 @@ public class HttpMonitorClientTests
                 return new HttpResponseMessage(HttpStatusCode.OK);
             });
 
-        MonitorRecord monitor = new(
+        MonitorPollingRecord monitorPolling = new(
             Guid.NewGuid(),
             "https://example.com/health",
             "GET",
@@ -238,7 +238,7 @@ public class HttpMonitorClientTests
         await cts.CancelAsync();
 
         // Act
-        Func<Task> act = () => _client.SendAsync(monitor, cts.Token);
+        Func<Task> act = () => _client.SendAsync(monitorPolling, cts.Token);
 
         // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
@@ -256,7 +256,7 @@ public class HttpMonitorClientTests
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
 
-        MonitorRecord monitor = new(
+        MonitorPollingRecord monitorPolling = new(
             Guid.NewGuid(),
             "https://example.com/health",
             "GET",
@@ -265,7 +265,7 @@ public class HttpMonitorClientTests
             30);
 
         // Act
-        await _client.SendAsync(monitor, CancellationToken.None);
+        await _client.SendAsync(monitorPolling, CancellationToken.None);
 
         // Assert
         _capturedClientName.Should().Be(HttpMonitorClient.ClientName);

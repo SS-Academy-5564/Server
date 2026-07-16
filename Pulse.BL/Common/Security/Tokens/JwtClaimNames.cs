@@ -6,4 +6,5 @@ public static class JwtClaimNames
     public const string OrganizationId = "orgId";
     public const string Purpose = "purpose";
     public const string PasswordResetPurpose = "password-reset";
+    public const string Organization = "organization";
 }

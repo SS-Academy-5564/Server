@@ -24,7 +24,7 @@ public class PollingServiceTests
     private readonly Mock<IMonitorQueries> _monitorQueries = new();
     private readonly Mock<IUnitOfWork> _unitOfWork = new();
     private readonly Mock<IUnitOfWorkFactory> _unitOfWorkFactory = new();
-    private readonly MonitorRecord _monitor = new(
+    private readonly MonitorPollingRecord _monitor = new(
         Guid.NewGuid(),
         "https://example.com/health",
         "GET",
@@ -91,12 +91,12 @@ public class PollingServiceTests
             _unitOfWorkFactory.Object);
     }
 
-    private void SetupDueMonitors(params MonitorRecord[] monitors)
+    private void SetupDueMonitors(params MonitorPollingRecord[] monitors)
         => _monitorQueries
             .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(monitors);
 
-    private void SetupHttpResponse(MonitorRecord monitor, HttpMonitorResponse response)
+    private void SetupHttpResponse(MonitorPollingRecord monitor, HttpMonitorResponse response)
         => _httpMonitorClient
             .Setup(c => c.SendAsync(monitor, It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
@@ -285,7 +285,7 @@ public class PollingServiceTests
     public async Task ProcessDueMonitorsAsync_WhenMultipleMonitorsAreDue_ProcessesEachMonitorAsync()
     {
         // Arrange
-        MonitorRecord secondMonitor = _monitor with { Id = Guid.NewGuid() };
+        MonitorPollingRecord second = _monitor with { Id = Guid.NewGuid() };
         HttpMonitorResponse response = new(
             IsSuccess: false,
             ResponseTimeMs: 222,
@@ -296,9 +296,9 @@ public class PollingServiceTests
 
         _monitorQueries
             .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([_monitor, secondMonitor]);
+            .ReturnsAsync([_monitor, second]);
         _httpMonitorClient
-            .Setup(c => c.SendAsync(It.IsAny<MonitorRecord>(), It.IsAny<CancellationToken>()))
+            .Setup(c => c.SendAsync(It.IsAny<MonitorPollingRecord>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
 
         // Act
@@ -306,7 +306,7 @@ public class PollingServiceTests
 
         // Assert
         _httpMonitorClient.Verify(
-            c => c.SendAsync(It.IsAny<MonitorRecord>(), It.IsAny<CancellationToken>()),
+            c => c.SendAsync(It.IsAny<MonitorPollingRecord>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
         _unitOfWorkFactory.Verify(
             f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()),
@@ -327,7 +327,7 @@ public class PollingServiceTests
 
         // Assert
         _httpMonitorClient.Verify(
-            c => c.SendAsync(It.IsAny<MonitorRecord>(), It.IsAny<CancellationToken>()),
+            c => c.SendAsync(It.IsAny<MonitorPollingRecord>(), It.IsAny<CancellationToken>()),
             Times.Never);
         _monitorPollResultsCommands.Verify(
             c => c.CreateAsync(

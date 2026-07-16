@@ -19,7 +19,7 @@ public interface IJwtTokenGenerator
     /// <param name="roleName">The role assigned to the user.</param>
     /// <param name="organizationId">The identifier of the organization.</param>
     /// <returns>A generated JWT token along with its expiration time.</returns>
-    GeneratedJwtToken GenerateToken(Guid userId, string roleName, Guid organizationId);
+    GeneratedJwtToken GenerateToken(Guid userId, string roleName, Guid organizationId, string organizationName);
 
     /// <summary>
     /// Generates a short-lived password reset token for the given user, tied to a specific session JTI.

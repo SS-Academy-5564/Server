@@ -1,3 +1,4 @@
+using System.IdentityModel.Tokens.Jwt;
 using FluentValidation;
 using Pulse.API.Extensions;
 using Pulse.BL;
@@ -7,6 +8,8 @@ using Pulse.DAL.DependencyInjection;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
 builder.Services.AddDataAccess()
     .AddBusinessLogic(builder.Configuration);

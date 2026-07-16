@@ -23,7 +23,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
     }
 
     /// <inheritdoc/>
-    public GeneratedJwtToken GenerateToken(Guid userId, string roleName, Guid organizationId)
+    public GeneratedJwtToken GenerateToken(Guid userId, string roleName, Guid organizationId, string organizationName)
     {
         DateTimeOffset now = _timeProvider.GetUtcNow();
         DateTimeOffset expiresAt = now.AddMinutes(_options.ExpirationMinutes);
@@ -33,6 +33,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             new(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new(JwtClaimNames.Role, roleName),
             new(JwtClaimNames.OrganizationId, organizationId.ToString()),
+            new(JwtClaimNames.Organization, organizationName),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 

@@ -32,10 +32,11 @@ public class UserQueries : IUserQueries
 
         return await connection.QuerySingleOrDefaultAsync<UserAuthRecord>(
             new CommandDefinition(
-                "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, r.Name AS RoleName " +
+                "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, r.Name AS RoleName, o.Name AS OrganizationName " +
                 "FROM Users u " +
                 "JOIN Members m ON m.UserId = u.Id " +
                 "JOIN Roles r ON r.Id = m.RoleId " +
+                "JOIN Organizations o ON o.Id = m.OrganizationId " +
                 "WHERE u.Email = @Email " +
                 "ORDER BY m.JoinedAt DESC",
                 new { Email = email },
@@ -49,9 +50,9 @@ public class UserQueries : IUserQueries
 
         return await connection.QuerySingleOrDefaultAsync<UserProfileRecord>(
             new CommandDefinition(
-                "SELECT Id, Email, FirstName, LastName, CreatedAt, UpdatedAt FROM Users WHERE Id = @Id",
-                new { Id = id },
-                cancellationToken: ct));
+                 "SELECT Id, Email, FirstName, LastName, CreatedAt, UpdatedAt  FROM Users WHERE Id = @Id;",
+                 new { Id = id },
+                 cancellationToken: ct));
     }
 
     /// <inheritdoc/>

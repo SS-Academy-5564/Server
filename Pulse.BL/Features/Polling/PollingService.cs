@@ -45,9 +45,9 @@ public class PollingService : IPollingService
 
     public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
-        IEnumerable<MonitorRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+        IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
 
-        foreach (MonitorRecord monitor in monitors)
+        foreach (MonitorPollingRecord monitor in monitors)
         {
             try
             {
@@ -72,7 +72,7 @@ public class PollingService : IPollingService
         return Result.Ok();
     }
 
-    private async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorRecord monitor, CancellationToken ct)
+    private async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorPollingRecord monitor, CancellationToken ct)
     {
         HttpMonitorResponse response = await _httpMonitorClient.SendAsync(monitor, ct);
         bool isSuccess = response.IsSuccess;
@@ -108,7 +108,7 @@ public class PollingService : IPollingService
             RequestStatus: requestStatus);
     }
 
-    private async Task SavePollResultAsync(MonitorRecord monitor, CreateMonitorPollResultsInput resultInput, CancellationToken ct)
+    private async Task SavePollResultAsync(MonitorPollingRecord monitor, CreateMonitorPollResultsInput resultInput, CancellationToken ct)
     {
         DateTime completedAt = DateTime.UtcNow;
         DateTime nextExecutionAt = completedAt.AddSeconds(monitor.PollingIntervalSeconds);
