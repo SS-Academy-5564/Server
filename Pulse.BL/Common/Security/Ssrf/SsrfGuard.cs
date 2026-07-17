@@ -27,14 +27,16 @@ public sealed class SsrfGuard : ISsrfGuard
 
     private readonly bool _allowPrivateNetworks;
     private readonly IReadOnlyList<IpNetwork> _allowed;
-    private readonly IReadOnlyList<IpNetwork> _blocked;
+    private readonly IReadOnlyList<IpNetwork> _explicitlyBlocked;
+    private readonly IReadOnlyList<IpNetwork> _defaultBlocked;
 
     public SsrfGuard(IOptions<SsrfProtectionOptions> options)
     {
         SsrfProtectionOptions value = options.Value;
         _allowPrivateNetworks = value.AllowPrivateNetworks;
-        _allowed = ParseNetworks(value.AllowedCidrs);
-        _blocked = ParseNetworks(DefaultBlockedCidrs.Concat(value.BlockedCidrs));
+        _allowed = ParseNetworks(value.AllowedCidrs ?? []);
+        _explicitlyBlocked = ParseNetworks(value.BlockedCidrs ?? []);
+        _defaultBlocked = ParseNetworks(DefaultBlockedCidrs);
     }
 
     /// <inheritdoc />
@@ -48,17 +50,24 @@ public sealed class SsrfGuard : ISsrfGuard
             return false;
         }
 
-        if (_allowPrivateNetworks)
-        {
-            return true;
-        }
-
         if (_allowed.Any(network => network.Contains(normalized)))
         {
             return true;
         }
 
-        if (_blocked.Any(network => network.Contains(normalized)))
+        // Explicitly configured deny ranges are always enforced, even when
+        // private networks are otherwise permitted.
+        if (_explicitlyBlocked.Any(network => network.Contains(normalized)))
+        {
+            return false;
+        }
+
+        if (_allowPrivateNetworks)
+        {
+            return true;
+        }
+
+        if (_defaultBlocked.Any(network => network.Contains(normalized)))
         {
             return false;
         }
