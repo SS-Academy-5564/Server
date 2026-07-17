@@ -1,7 +1,5 @@
-using System.Net.Http;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Common.Security.Ssrf;
