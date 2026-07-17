@@ -20,8 +20,13 @@ public sealed class SsrfProtectionOptionsValidator : IValidateOptions<SsrfProtec
             : ValidateOptionsResult.Success;
     }
 
-    private static void ValidateCidrs(string[] cidrs, string propertyName, List<string> errors)
+    private static void ValidateCidrs(string[]? cidrs, string propertyName, List<string> errors)
     {
+        if (cidrs is null)
+        {
+            return;
+        }
+
         foreach (string cidr in cidrs)
         {
             if (!IpNetwork.TryParse(cidr, out _))
