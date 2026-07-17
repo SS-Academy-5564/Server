@@ -99,8 +99,9 @@ public sealed class SsrfGuard : ISsrfGuard
             return true;
         }
 
-        if (trimmed.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
-            trimmed.EndsWith(".localhost", StringComparison.OrdinalIgnoreCase))
+        if (!_allowPrivateNetworks &&
+            (trimmed.Equals("localhost", StringComparison.OrdinalIgnoreCase) ||
+             trimmed.EndsWith(".localhost", StringComparison.OrdinalIgnoreCase)))
         {
             error = "Endpoint URL must not target a private or internal address.";
             return false;
