@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http;
 using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Security.Ssrf;
