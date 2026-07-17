@@ -1,5 +1,4 @@
 using System.Net;
-using System.Net.Http;
 using System.Net.Sockets;
 using Pulse.BL.Common.Security.Ssrf;
 
