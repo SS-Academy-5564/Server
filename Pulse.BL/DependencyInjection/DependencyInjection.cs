@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Security.Passwords;
+using Pulse.BL.Common.Security.Ssrf;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login.LoginLockout;
 using Pulse.BL.Features.Auth.PasswordReset;
@@ -39,6 +40,9 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddEmailing(configuration);
         services.AddScoped<CreateOrganizationHandler>();
+
+        services.AddSsrfProtection(configuration);
+
         return services;
     }
 }
