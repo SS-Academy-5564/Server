@@ -33,18 +33,30 @@ public sealed class SsrfConnectionFactory
         DnsEndPoint endPoint = context.DnsEndPoint;
         IReadOnlyList<IPAddress> addresses = await ResolveAndValidateAsync(endPoint.Host, ct);
 
-        Socket socket = new(SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+        Exception? lastError = null;
 
-        try
+        foreach (IPAddress address in addresses)
         {
-            await socket.ConnectAsync(new IPEndPoint(addresses[0], endPoint.Port), ct);
-            return new NetworkStream(socket, ownsSocket: true);
+            Socket socket = new(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
+
+            try
+            {
+                await socket.ConnectAsync(new IPEndPoint(address, endPoint.Port), ct);
+                return new NetworkStream(socket, ownsSocket: true);
+            }
+            catch (OperationCanceledException)
+            {
+                socket.Dispose();
+                throw;
+            }
+            catch (Exception ex)
+            {
+                socket.Dispose();
+                lastError = ex;
+            }
         }
-        catch
-        {
-            socket.Dispose();
-            throw;
-        }
+
+        throw lastError ?? new HttpRequestException($"Host '{endPoint.Host}' could not be connected to.");
     }
 
     /// <summary>
