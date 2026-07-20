@@ -352,7 +352,7 @@ public class PollingServiceTests
         // Act
         Func<Task> act = () => _service.ProcessDueMonitorsAsync(cts.Token);
 
-        // Assertt
+        // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
 
