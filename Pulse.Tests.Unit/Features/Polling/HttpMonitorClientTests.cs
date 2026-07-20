@@ -60,7 +60,8 @@ public class HttpMonitorClientTests
             "GET",
             "status",
             60,
-            30);
+            30,
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -103,7 +104,8 @@ public class HttpMonitorClientTests
             "GET",
             "status",
             60,
-            30);
+            30,
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -133,7 +135,8 @@ public class HttpMonitorClientTests
             "fakeMethod",
             "status",
             60,
-            30);
+            30,
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -170,7 +173,8 @@ public class HttpMonitorClientTests
             "GET",
             "status",
             60,
-            30);
+            30,
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -199,7 +203,8 @@ public class HttpMonitorClientTests
             "GET",
             "status",
             60,
-            30);
+            30,
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -232,7 +237,8 @@ public class HttpMonitorClientTests
             "GET",
             "status",
             60,
-            30);
+            30,
+            "Enabled");
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -262,7 +268,8 @@ public class HttpMonitorClientTests
             "GET",
             "status",
             60,
-            30);
+            30,
+            "Enabled");
 
         // Act
         await _client.SendAsync(monitorPolling, CancellationToken.None);

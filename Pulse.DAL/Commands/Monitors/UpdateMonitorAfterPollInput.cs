@@ -4,4 +4,5 @@ public sealed record UpdateMonitorAfterPollInput(
     Guid MonitorId,
     string? CurrentValue,
     DateTime LastCheckedAt,
-    DateTime NextExecutionAt);
+    DateTime NextExecutionAt,
+    string Status);
