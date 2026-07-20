@@ -29,8 +29,10 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<IR
         DAL.Queries.Monitors.MonitorStatus? dalStatus = query.Status is null
             ? null
             : (DAL.Queries.Monitors.MonitorStatus)query.Status.Value;
+        int pageNumber = query.PageNumber is null ? 1 : query.PageNumber.Value;
+        int pageSize = query.PageSize is null ? 10 : query.PageSize.Value;
 
-        IReadOnlyList<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, ct);
+        IReadOnlyList<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, pageNumber, pageSize, ct);
 
         IReadOnlyList<MonitorListResult> results = records
             .Select(r => new MonitorListResult(r.Id, r.Name, r.Url, r.CurrentValue, r.LastCheckedAt, (MonitorStatus)r.Status, r.Interval))

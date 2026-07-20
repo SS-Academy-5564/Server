@@ -15,7 +15,7 @@ public class MonitorQueries : IMonitorQueries
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct)
+    public async Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, int pageNumber, int pageSize, CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
 
@@ -44,8 +44,10 @@ public class MonitorQueries : IMonitorQueries
             sql += " WHERE m.StatusId = @StatusId";
         }
 
+        sql += "  ORDER BY m.id OFFSET @RowsOffset ROWS FETCH NEXT @RowsCount ROWS ONLY";
+
         IEnumerable<MonitorListRecord> records = await connection.QueryAsync<MonitorListRecord>(
-            new CommandDefinition(sql, new { StatusId = statusId }, cancellationToken: ct));
+            new CommandDefinition(sql, new { StatusId = statusId, RowsCount = pageSize, RowsOffset = (pageNumber - 1) * pageSize }, cancellationToken: ct));
 
         return records.ToList().AsReadOnly();
     }

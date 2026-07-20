@@ -13,7 +13,7 @@ public interface IMonitorQueries : IQueries
     /// <param name="status">The monitor status to filter by, or <c>null</c> to retrieve all monitors.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>A list of monitor records matching the criteria.</returns>
-    Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct);
+    Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, int pageNumber, int pageSize, CancellationToken ct);
 
     Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
 }
