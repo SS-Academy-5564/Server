@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Errors;
@@ -45,53 +46,92 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
     /// </returns>
     public async Task<Result<LoginResult>> HandleAsync(LoginCommand command, CancellationToken ct)
     {
-        Stopwatch stopwatch = Stopwatch.StartNew();
-        UserAuthRecord? user = await _userQueries.GetByEmailForAuthAsync(command.Email, ct);
-        _logger.LogInformation($"GetByEmailForAuthAsync :  {stopwatch.ElapsedMilliseconds} ms");
+        List<(string Operation, long DurationMs)> timings = [];
+        Stopwatch totalStopwatch = Stopwatch.StartNew();
+        Stopwatch operationStopwatch = new();
 
-        if (user is null)
+        try
         {
-            LogFailure("user not found", command.Email);
-            return Result.Fail(new UnauthorizedError("Invalid email or password."));
+            operationStopwatch.Start();
+            UserAuthRecord? user = await _userQueries.GetByEmailForAuthAsync(command.Email, ct);
+            AddTiming("User lookup");
+
+            if (user is null)
+            {
+                LogFailure("user not found", command.Email);
+                return Result.Fail(new UnauthorizedError("Invalid email or password."));
+            }
+
+            operationStopwatch.Restart();
+            bool isAllowed = await _loginLockoutService.IsUserAllowedAsync(user.Id, ct);
+            AddTiming("Lockout check");
+
+            if (!isAllowed)
+            {
+                LogFailure("user not allowed", command.Email);
+                return Result.Fail(new UnauthorizedError("Invalid email or password."));
+            }
+
+            operationStopwatch.Restart();
+            bool passwordValid =
+                _passwordHasher.VerifyHashedPassword(user.PasswordHash, command.Password);
+            AddTiming("Password verification");
+
+            if (!passwordValid)
+            {
+                operationStopwatch.Restart();
+                await _loginLockoutService.AddFailedAttemptAsync(user.Id, ct);
+                AddTiming("Add failed attempt");
+
+                LogFailure("invalid password", command.Email);
+                return Result.Fail(new UnauthorizedError("Invalid email or password."));
+            }
+
+            operationStopwatch.Restart();
+            await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
+            AddTiming("Reset attempts");
+
+            operationStopwatch.Restart();
+            GeneratedJwtToken generatedToken =
+                _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
+            AddTiming("Generate JWT token");
+
+            return Result.Ok(new LoginResult(
+                generatedToken.Token,
+                generatedToken.ExpiresAt));
+        }
+        finally
+        {
+            totalStopwatch.Stop();
+            LogPerformanceTable(timings, totalStopwatch.ElapsedMilliseconds);
         }
 
-        stopwatch.Restart();
-        bool isAllowed = await _loginLockoutService.IsUserAllowedAsync(user.Id, ct);
-        _logger.LogInformation($"IsUserAllowedAsync :  {stopwatch.ElapsedMilliseconds} ms");
-
-        if (!isAllowed)
+        void AddTiming(string operation)
         {
-            LogFailure("user not allowed", command.Email);
-            return Result.Fail(new UnauthorizedError("Invalid email or password."));
+            operationStopwatch.Stop();
+            timings.Add((operation, operationStopwatch.ElapsedMilliseconds));
+        }
+    }
+
+    private void LogPerformanceTable(
+        IEnumerable<(string Operation, long DurationMs)> timings,
+        long totalDurationMs)
+    {
+        StringBuilder table = new();
+        table.AppendLine("| Operation             | Duration |");
+        table.AppendLine("|-----------------------|----------|");
+
+        foreach ((string operation, long durationMs) in timings)
+        {
+            table.AppendLine($"| {operation,-21} | {durationMs,6} ms |");
         }
 
-        stopwatch.Restart();
-        bool passwordValid =
-            _passwordHasher.VerifyHashedPassword(user.PasswordHash, command.Password);
-        _logger.LogInformation($"VerifyHashedPassword :  {stopwatch.ElapsedMilliseconds} ms");
+        table.Append($"| {"Total",-21} | {totalDurationMs,6} ms |");
 
-        if (!passwordValid)
-        {
-            stopwatch.Restart();
-            await _loginLockoutService.AddFailedAttemptAsync(user.Id, ct);
-            _logger.LogInformation($"AddFailedAttemptAsync :  {stopwatch.ElapsedMilliseconds} ms");
-
-            LogFailure("invalid password", command.Email);
-            return Result.Fail(new UnauthorizedError("Invalid email or password."));
-        }
-
-        stopwatch.Restart();
-        await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
-        _logger.LogInformation($"ResetAttemptsAsync :  {stopwatch.ElapsedMilliseconds} ms");
-
-        stopwatch.Restart();
-        GeneratedJwtToken generatedToken =
-            _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
-        _logger.LogInformation($"GenerateJwtToken :  {stopwatch.ElapsedMilliseconds} ms");
-
-        return Result.Ok(new LoginResult(
-            generatedToken.Token,
-            generatedToken.ExpiresAt));
+        _logger.LogInformation(
+            "Login performance:{NewLine}{PerformanceTable}",
+            Environment.NewLine,
+            table.ToString());
     }
 
     private void LogFailure(string reason, string email)
