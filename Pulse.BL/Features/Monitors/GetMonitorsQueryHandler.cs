@@ -1,10 +1,12 @@
 using FluentResults;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Pagination;
+using Pulse.DAL.Common.Pagination;
 using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.BL.Features.Monitors;
 
-public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorListResult>>>
+public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<PagedResult<MonitorListResult>>>
 {
     private readonly IMonitorQueries _monitorQueries;
 
@@ -24,22 +26,24 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<IR
     /// all monitors are returned. Otherwise, only monitors with the specified
     /// status are retrieved.
     /// </remarks>
-    public async Task<Result<IReadOnlyList<MonitorListResult>>> HandleAsync(GetMonitorsQuery query, CancellationToken ct = default)
+    public async Task<Result<PagedResult<MonitorListResult>>> HandleAsync(
+        GetMonitorsQuery query,
+        CancellationToken ct = default)
     {
         DAL.Queries.Monitors.MonitorStatus? dalStatus = query.Status is null
             ? null
             : (DAL.Queries.Monitors.MonitorStatus)query.Status.Value;
 
-        int pageNumber = query.PageNumber ?? 1;
-        int pageSize = query.PageSize ?? 10;
+        int pageNumber = query.PageNumber ?? PaginationDefaults.PageNumber;
+        int pageSize = query.PageSize ?? PaginationDefaults.PageSize;
 
-        IReadOnlyList<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, pageNumber, pageSize, ct);
+        PagedRecords<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, pageNumber, pageSize, ct);
 
-        IReadOnlyList<MonitorListResult> results = records
+        IReadOnlyList<MonitorListResult> results = records.Items
             .Select(r => new MonitorListResult(r.Id, r.Name, r.Url, r.CurrentValue, r.LastCheckedAt, (MonitorStatus)r.Status, r.Interval))
             .ToList()
             .AsReadOnly();
 
-        return Result.Ok(results);
+        return Result.Ok(new PagedResult<MonitorListResult>(results, pageNumber, pageSize, records.TotalCount));
     }
 }

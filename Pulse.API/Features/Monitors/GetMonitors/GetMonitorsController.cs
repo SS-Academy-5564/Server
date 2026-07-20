@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Attributes;
 using Pulse.API.Controllers;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Pagination;
 using Pulse.BL.Features.Monitors;
 
 namespace Pulse.API.Features.Monitors.GetMonitors;
@@ -13,9 +14,9 @@ namespace Pulse.API.Features.Monitors.GetMonitors;
 [Authorize]
 public sealed class GetMonitorsController : PulseControllerBase
 {
-    private readonly IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorListResult>>> _handler;
+    private readonly IAsyncHandler<GetMonitorsQuery, Result<PagedResult<MonitorListResult>>> _handler;
 
-    public GetMonitorsController(IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorListResult>>> handler)
+    public GetMonitorsController(IAsyncHandler<GetMonitorsQuery, Result<PagedResult<MonitorListResult>>> handler)
     {
         _handler = handler;
     }
@@ -23,7 +24,10 @@ public sealed class GetMonitorsController : PulseControllerBase
     [HttpGet]
     public async Task<IActionResult> GetMonitorsAsync([FromQuery][Validate] GetMonitorsRequest request, CancellationToken ct)
     {
-        Result<IReadOnlyList<MonitorListResult>> result = await _handler.HandleAsync(new GetMonitorsQuery(request.Status, request.PageNumber, request.PageSize), ct);
-        return ToActionResult(result);
+        Result<PagedResult<MonitorListResult>> result = await _handler.HandleAsync(
+            new GetMonitorsQuery(request.Status, request.PageNumber, request.PageSize),
+            ct);
+
+        return ToPagedActionResult(result);
     }
 }

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Pulse.BL.Common.Pagination;
 using Pulse.BL.Features.Monitors;
 
 namespace Pulse.API.Features.Monitors.GetMonitors;
@@ -12,12 +13,13 @@ public class GetMonitorsRequestValidator : AbstractValidator<GetMonitorsRequest>
             .WithMessage("Status must be one of: Enabled, Disabled, Error.");
 
         RuleFor(x => x.PageNumber)
-            .GreaterThan(0).WithMessage("Page number must be greater than zero")
-            .LessThanOrEqualTo(100).WithMessage("Page number must not exceed 100");
+            .GreaterThan(0)
+            .When(x => x.PageNumber.HasValue)
+            .WithMessage("Page number must be greater than zero.");
 
         RuleFor(x => x.PageSize)
-            .GreaterThan(0).WithMessage("Page size must be greater than zero")
-            .LessThanOrEqualTo(100).WithMessage("Page size must not exceed 100");
+            .InclusiveBetween(1, PaginationDefaults.MaxPageSize)
+            .When(x => x.PageSize.HasValue)
+            .WithMessage($"Page size must be between 1 and {PaginationDefaults.MaxPageSize}.");
     }
 }
-
