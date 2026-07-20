@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Errors;
@@ -44,7 +45,9 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
     /// </returns>
     public async Task<Result<LoginResult>> HandleAsync(LoginCommand command, CancellationToken ct)
     {
+        Stopwatch stopwatch = Stopwatch.StartNew();
         UserAuthRecord? user = await _userQueries.GetByEmailForAuthAsync(command.Email, ct);
+        _logger.LogInformation($"GetByEmailForAuthAsync :  {stopwatch.ElapsedMilliseconds} ms");
 
         if (user is null)
         {
@@ -52,27 +55,39 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
+        stopwatch.Restart();
         bool isAllowed = await _loginLockoutService.IsUserAllowedAsync(user.Id, ct);
+        _logger.LogInformation($"IsUserAllowedAsync :  {stopwatch.ElapsedMilliseconds} ms");
+
         if (!isAllowed)
         {
             LogFailure("user not allowed", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
+        stopwatch.Restart();
         bool passwordValid =
             _passwordHasher.VerifyHashedPassword(user.PasswordHash, command.Password);
+        _logger.LogInformation($"VerifyHashedPassword :  {stopwatch.ElapsedMilliseconds} ms");
 
         if (!passwordValid)
         {
+            stopwatch.Restart();
             await _loginLockoutService.AddFailedAttemptAsync(user.Id, ct);
+            _logger.LogInformation($"AddFailedAttemptAsync :  {stopwatch.ElapsedMilliseconds} ms");
 
             LogFailure("invalid password", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
+        stopwatch.Restart();
         await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
+        _logger.LogInformation($"ResetAttemptsAsync :  {stopwatch.ElapsedMilliseconds} ms");
+
+        stopwatch.Restart();
         GeneratedJwtToken generatedToken =
             _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
+        _logger.LogInformation($"GenerateJwtToken :  {stopwatch.ElapsedMilliseconds} ms");
 
         return Result.Ok(new LoginResult(
             generatedToken.Token,

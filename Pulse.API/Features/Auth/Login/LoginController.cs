@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -14,8 +15,10 @@ namespace Pulse.API.Features.Auth.Login;
 public class LoginController : Controllers.PulseControllerBase
 {
     private readonly IAsyncHandler<LoginCommand, Result<LoginResult>> _handler;
-    public LoginController(IAsyncHandler<LoginCommand, Result<LoginResult>> handler)
+    private readonly ILogger<LoginController> _logger;
+    public LoginController(IAsyncHandler<LoginCommand, Result<LoginResult>> handler,ILogger<LoginController> logger)
     {
+        _logger = logger;
         _handler = handler;
     }
 
@@ -30,7 +33,10 @@ public class LoginController : Controllers.PulseControllerBase
     public async Task<IActionResult> LoginAsync([Validate] LoginRequest request, CancellationToken ct)
     {
         LoginCommand command = new(request.Email, request.Password);
+        Stopwatch stopwatch = Stopwatch.StartNew();
         Result<LoginResult> result = await _handler.HandleAsync(command, ct);
+        stopwatch.Stop();
+        _logger.LogInformation($"LoginHandler {stopwatch.ElapsedMilliseconds}ms");
         return ToActionResult(result);
     }
 }
