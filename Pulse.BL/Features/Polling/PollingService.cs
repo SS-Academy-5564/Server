@@ -113,7 +113,9 @@ public class PollingService : IPollingService
         DateTime completedAt = DateTime.UtcNow;
         DateTime nextExecutionAt = completedAt.AddSeconds(monitor.PollingIntervalSeconds);
 
-        UpdateMonitorAfterPollInput monitorInput = new(monitor.Id, resultInput.Value, completedAt, nextExecutionAt);
+        string status = resultInput.IsSuccess ? monitor.Status : "Error";
+
+        UpdateMonitorAfterPollInput monitorInput = new(monitor.Id, resultInput.Value, completedAt, nextExecutionAt, status);
 
         await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
         IDbSession session = (IDbSession)uof;
