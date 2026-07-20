@@ -56,7 +56,12 @@ public class MonitorCommands : IMonitorCommands
             SET
                 CurrentValue = COALESCE(@CurrentValue, CurrentValue),
                 LastCheckedAt = @LastCheckedAt,
-                NextExecutionAt = @NextExecutionAt
+                NextExecutionAt = @NextExecutionAt,
+                StatusId = (
+                    SELECT Id
+                    FROM dbo.MonitorStatuses
+                    WHERE Name = @Status
+                )
             WHERE Id = @MonitorId;
             """;
 

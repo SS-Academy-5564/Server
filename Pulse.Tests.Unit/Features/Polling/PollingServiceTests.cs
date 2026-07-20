@@ -30,7 +30,8 @@ public class PollingServiceTests
         "GET",
         "data.status",
         60,
-        30);
+        30,
+        "Enabled");
     private readonly PollingService _service;
     private CreateMonitorPollResultsInput? _createdMonitorPollResults;
     private UpdateMonitorAfterPollInput? _updatedMonitor;
@@ -351,7 +352,31 @@ public class PollingServiceTests
         // Act
         Func<Task> act = () => _service.ProcessDueMonitorsAsync(cts.Token);
 
-        // Assert
+        // Assertt
         await act.Should().ThrowAsync<OperationCanceledException>();
+    }
+
+    [Fact]
+    public async Task ProcessDueMonitorsAsync_WhenPollingFails_SetsMonitorStatusToErrorAsync()
+    {
+        // Arrange
+        HttpMonitorResponse response = new(
+            IsSuccess: false,
+            ResponseTimeMs: 100,
+            RequestStatus: RequestStatusNames.Failed)
+        {
+            Body = null,
+            StatusCode = 500
+        };
+
+        SetupDueMonitors(_monitor);
+        SetupHttpResponse(_monitor, response);
+
+        // Act
+        await _service.ProcessDueMonitorsAsync();
+
+        // Assert
+        _updatedMonitor.Should().NotBeNull();
+        _updatedMonitor!.Status.Should().Be("Error");
     }
 }
