@@ -62,11 +62,7 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
                 return Result.Fail(new UnauthorizedError("Invalid email or password."));
             }
 
-            operationStopwatch.Restart();
-            bool isAllowed = await _loginLockoutService.IsUserAllowedAsync(user.Id, ct);
-            AddTiming("Lockout check");
-
-            if (!isAllowed)
+            if (user.IsLocked)
             {
                 LogFailure("user not allowed", command.Email);
                 return Result.Fail(new UnauthorizedError("Invalid email or password."));
@@ -87,9 +83,12 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
                 return Result.Fail(new UnauthorizedError("Invalid email or password."));
             }
 
-            operationStopwatch.Restart();
-            await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
-            AddTiming("Reset attempts");
+            if (user.FailedAttempts > 0)
+            {
+                operationStopwatch.Restart();
+                await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
+                AddTiming("Reset attempts");
+            }
 
             operationStopwatch.Restart();
             GeneratedJwtToken generatedToken =

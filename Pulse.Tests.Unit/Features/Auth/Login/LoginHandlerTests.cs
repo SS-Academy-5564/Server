@@ -52,7 +52,9 @@ public class LoginHandlerTests
             passwordHash,
             organizationId,
             roleName,
-            "Test Organization");
+            "Test Organization",
+            0,
+            false);
 
         LoginCommand command = new(email, password);
 
@@ -68,10 +70,6 @@ public class LoginHandlerTests
             .Setup(x => x.GenerateToken(userId, roleName, organizationId, "Test Organization"))
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
 
-        _loginLockoutServiceMock
-            .Setup(x => x.IsUserAllowedAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
         // Act
         Result<LoginResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
@@ -79,6 +77,50 @@ public class LoginHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().Be(accessToken);
         result.Value.ExpiresAt.Should().Be(expiresAt);
+        _loginLockoutServiceMock.Verify(
+            x => x.ResetAttemptsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+        _loginLockoutServiceMock.Verify(
+            x => x.IsUserAllowedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenCredentialsValidAndPreviousAttemptsExist_ResetsAttemptsAsync()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        Guid organizationId = Guid.NewGuid();
+        UserAuthRecord userRecord = new(
+            userId,
+            "user@example.com",
+            "password-hash",
+            organizationId,
+            "User",
+            "Test Organization",
+            2,
+            false);
+
+        _userQueriesMock
+            .Setup(x => x.GetByEmailForAuthAsync(userRecord.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userRecord);
+        _passwordHasherMock
+            .Setup(x => x.VerifyHashedPassword(userRecord.PasswordHash, "Password123"))
+            .Returns(true);
+        _jwtTokenGeneratorMock
+            .Setup(x => x.GenerateToken(userId, userRecord.RoleName, organizationId, userRecord.OrganizationName))
+            .Returns(new GeneratedJwtToken("token", DateTimeOffset.UtcNow.AddHours(1)));
+
+        // Act
+        Result<LoginResult> result = await _sut.HandleAsync(
+            new LoginCommand(userRecord.Email, "Password123"),
+            CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        _loginLockoutServiceMock.Verify(
+            x => x.ResetAttemptsAsync(userId, CancellationToken.None),
+            Times.Once);
     }
 
     [Fact]
@@ -119,17 +161,15 @@ public class LoginHandlerTests
             passwordHash,
             organizationId,
             "User",
-            "Test Organization");
+            "Test Organization",
+            0,
+            false);
 
         LoginCommand command = new(email, password);
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
-
-        _loginLockoutServiceMock
-            .Setup(x => x.IsUserAllowedAsync(userRecord.Id, ct: CancellationToken.None))
-            .ReturnsAsync(true);
 
         _passwordHasherMock
             .Setup(x => x.VerifyHashedPassword(passwordHash, password))
@@ -158,15 +198,13 @@ public class LoginHandlerTests
             "hash",
             Guid.NewGuid(),
             "User",
-            "Test Organization");
+            "Test Organization",
+            3,
+            true);
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
-
-        _loginLockoutServiceMock
-            .Setup(x => x.IsUserAllowedAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(false);
 
         // Act
         Result<LoginResult> result = await _sut.HandleAsync(
