@@ -6,6 +6,7 @@ using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login.LoginLockout;
 using Pulse.BL.Features.Auth.PasswordReset;
+using Pulse.BL.Features.DefaultOrganization;
 using Pulse.BL.Features.Email;
 using Pulse.BL.Features.Organization;
 
@@ -39,6 +40,7 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddEmailing(configuration);
         services.AddScoped<CreateOrganizationHandler>();
+        services.AddScoped<GetDefaultOrganizationHandler>();
         return services;
     }
 }
