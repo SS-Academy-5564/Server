@@ -14,10 +14,9 @@ namespace Pulse.API.Features.Auth.Login;
 public class LoginController : Controllers.PulseControllerBase
 {
     private readonly IAsyncHandler<LoginCommand, Result<LoginResult>> _handler;
-    private readonly ILogger<LoginController> _logger;
-    public LoginController(IAsyncHandler<LoginCommand, Result<LoginResult>> handler, ILogger<LoginController> logger)
+    public LoginController(IAsyncHandler<LoginCommand, Result<LoginResult>> handler)
     {
-        _logger = logger;
+
         _handler = handler;
     }
 

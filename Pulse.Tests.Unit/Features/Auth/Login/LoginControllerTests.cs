@@ -20,8 +20,7 @@ public class LoginControllerTests
     {
         _handlerMock = new();
         _sut = new LoginController(
-            _handlerMock.Object,
-            new Mock<ILogger<LoginController>>().Object);
+            _handlerMock.Object);
     }
 
     [Fact]
