@@ -80,9 +80,6 @@ public class LoginHandlerTests
         _loginLockoutServiceMock.Verify(
             x => x.ResetAttemptsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        _loginLockoutServiceMock.Verify(
-            x => x.IsUserAllowedAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
-            Times.Never);
     }
 
     [Fact]

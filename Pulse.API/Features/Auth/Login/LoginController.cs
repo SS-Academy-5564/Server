@@ -16,7 +16,6 @@ public class LoginController : Controllers.PulseControllerBase
     private readonly IAsyncHandler<LoginCommand, Result<LoginResult>> _handler;
     public LoginController(IAsyncHandler<LoginCommand, Result<LoginResult>> handler)
     {
-
         _handler = handler;
     }
 

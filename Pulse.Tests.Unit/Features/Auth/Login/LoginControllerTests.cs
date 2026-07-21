@@ -1,7 +1,6 @@
 using FluentAssertions;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Pulse.API.Features.Auth.Login;
 using Pulse.API.Responses;
@@ -19,8 +18,7 @@ public class LoginControllerTests
     public LoginControllerTests()
     {
         _handlerMock = new();
-        _sut = new LoginController(
-            _handlerMock.Object);
+        _sut = new LoginController(_handlerMock.Object);
     }
 
     [Fact]
