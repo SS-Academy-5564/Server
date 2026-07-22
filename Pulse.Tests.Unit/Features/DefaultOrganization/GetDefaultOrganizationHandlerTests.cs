@@ -11,12 +11,9 @@ public class GetDefaultOrganizationHandlerTests
     {
         // Arrange
         GetDefaultOrganizationHandler handler = new();
-        GetDefaultOrganizationQuery query = new();
 
         // Act
-        Result<GetDefaultOrganizationResult> result = await handler.HandleAsync(
-            query,
-            CancellationToken.None);
+        Result<GetDefaultOrganizationResult> result = await handler.HandleAsync(CancellationToken.None);
 
         // Assert
         Assert.True(result.IsSuccess);

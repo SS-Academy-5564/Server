@@ -1,15 +1,14 @@
 using FluentResults;
+using Pulse.BL.Common.Handlers;
 using Pulse.DAL.Common.Constants;
 
 namespace Pulse.BL.Features.DefaultOrganization;
 
-public class GetDefaultOrganizationHandler
+public sealed class GetDefaultOrganizationHandler
+    : IAsyncQueryHandler<Result<GetDefaultOrganizationResult>>
 {
-    public Task<Result<GetDefaultOrganizationResult>> HandleAsync(GetDefaultOrganizationQuery query, CancellationToken ct)
+    public Task<Result<GetDefaultOrganizationResult>> HandleAsync(CancellationToken ct = default)
     {
-        _ = query;
-        _ = ct;
-
         GetDefaultOrganizationResult result =
             new(SeededIds.Organizations.Default);
 

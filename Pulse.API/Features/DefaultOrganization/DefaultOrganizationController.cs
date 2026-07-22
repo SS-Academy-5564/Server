@@ -2,6 +2,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Controllers;
+using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.DefaultOrganization;
 
 namespace Pulse.API.Features.DefaultOrganization;
@@ -11,10 +12,10 @@ namespace Pulse.API.Features.DefaultOrganization;
 [Authorize]
 public class DefaultOrganizationController : PulseControllerBase
 {
-    private readonly GetDefaultOrganizationHandler _handler;
+    private readonly IAsyncQueryHandler<Result<GetDefaultOrganizationResult>> _handler;
 
     public DefaultOrganizationController(
-        GetDefaultOrganizationHandler handler)
+        IAsyncQueryHandler<Result<GetDefaultOrganizationResult>> handler)
     {
         _handler = handler;
     }
@@ -24,7 +25,7 @@ public class DefaultOrganizationController : PulseControllerBase
         CancellationToken ct)
     {
         Result<GetDefaultOrganizationResult> result =
-            await _handler.HandleAsync(new GetDefaultOrganizationQuery(), ct);
+            await _handler.HandleAsync(ct);
 
         return ToActionResult(result);
     }
