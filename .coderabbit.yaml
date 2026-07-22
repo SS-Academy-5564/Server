@@ -59,6 +59,7 @@ reviews:
         - Error handling: Do not use try/catch for business flow control.
         - Forbidden: No direct SqlConnection creation outside SqlConnectionFactory. No SQL outside DAL. No returning database entities from API. No cross-layer dependencies.
         - Comments: Do not comment self-evident code — good code is self-documenting through clear names and structure. Only add a comment when it explains a non-obvious architectural or design decision (the *why*) that a reader cannot infer from the code itself. Do not restate *what* the code does, do not add section-banner comments, and do not leave TODO/task-tracking comments. Flag comments that add no information beyond what the identifier already says.
+        - XML doc comments (///) are the exception to the rule above — they are API-surface documentation for tooling, not "what" comments, so they are allowed. But if present they must be complete: a <summary> plus a <param> for every parameter, a <returns> when the member returns a value, and a <exception> for each exception it can throw. Flag partial doc comments (summary only, or documenting some parameters but not others) — either the full block or none at all.
 knowledge_base:
   code_guidelines:
     enabled: true
