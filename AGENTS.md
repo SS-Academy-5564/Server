@@ -270,6 +270,12 @@ CreateMonitor_EmptyName_ShouldThrowValidationException()
 * Reuse existing abstractions.
 * Do not introduce new frameworks or architecture styles unless requested.
 * Generate production-ready code by default.
+* **Do not write comments for self-evident code** — good code is
+  self-documenting through clear names and structure. Only add a comment when
+  it explains a non-obvious architectural or design decision (the *why*) that
+  a reader cannot infer from the code itself. Do not restate *what* the code
+  does, do not add section banners, and do not leave TODO/task-tracking
+  comments.
 * After making changes, **offer to verify** them end-to-end (build, tests, or
   the affected flow) before the user commits.
 * Once verification passes with no issues, **give the user a ready-to-use pull
