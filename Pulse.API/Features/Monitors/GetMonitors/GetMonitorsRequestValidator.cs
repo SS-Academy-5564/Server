@@ -13,9 +13,9 @@ public class GetMonitorsRequestValidator : AbstractValidator<GetMonitorsRequest>
             .WithMessage("Status must be one of: Enabled, Disabled, Error.");
 
         RuleFor(x => x.PageNumber)
-            .GreaterThan(0)
+            .InclusiveBetween(1, PaginationDefaults.MaxPageNumber)
             .When(x => x.PageNumber.HasValue)
-            .WithMessage("Page number must be greater than zero.");
+            .WithMessage($"Page number must be between 1 and {PaginationDefaults.MaxPageNumber}");
 
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, PaginationDefaults.MaxPageSize)

@@ -18,11 +18,12 @@ public class MonitorQueries : IMonitorQueries
     /// <inheritdoc/>
     public async Task<PagedRecords<MonitorListRecord>> GetAllAsync(
         MonitorStatus? status,
-        long pageNumber,
+        int pageNumber,
         int pageSize,
         CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
+        long offset = checked((pageNumber - 1L) * pageSize);
 
         string statusFilter = status is null ? string.Empty : "WHERE s.Name = @Status";
         string sql =
@@ -52,7 +53,7 @@ public class MonitorQueries : IMonitorQueries
             new
             {
                 Status = status?.ToString(),
-                Offset = (pageNumber - 1) * pageSize,
+                Offset = offset,
                 PageSize = pageSize
             },
             cancellationToken: ct);

@@ -2,7 +2,7 @@ namespace Pulse.BL.Common.Pagination;
 
 public sealed record PagedResult<T>(
     IReadOnlyList<T> Items,
-    long PageNumber,
+    int PageNumber,
     int PageSize,
     int TotalCount)
 {

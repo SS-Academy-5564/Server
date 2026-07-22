@@ -1,5 +1,6 @@
 using FluentValidation.TestHelper;
 using Pulse.API.Features.Monitors.GetMonitors;
+using Pulse.BL.Common.Pagination;
 using Pulse.BL.Features.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
@@ -35,12 +36,25 @@ public class GetMonitorsRequestValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.PageNumber);
     }
 
-    [Fact]
-    public void Validate_WithLargePositivePageNumber_ShouldNotHaveValidationError()
+    [Theory]
+    [InlineData(1)]
+    [InlineData(PaginationDefaults.MaxPageNumber)]
+    public void Validate_WithAllowedPositivePageNumber_ShouldNotHaveValidationError(int pageNumber)
     {
-        TestValidationResult<GetMonitorsRequest> result = _validator.TestValidate(new GetMonitorsRequest(null, 101, 10));
+        TestValidationResult<GetMonitorsRequest> result = _validator.TestValidate(new GetMonitorsRequest(null, pageNumber, 10));
 
         result.ShouldNotHaveValidationErrorFor(x => x.PageNumber);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(PaginationDefaults.MaxPageNumber + 1)]
+    public void Validate_WithPageNumberAboveMaximum_ShouldHaveValidationError(int pageNumber)
+    {
+        TestValidationResult<GetMonitorsRequest> result = _validator.TestValidate(new GetMonitorsRequest(null, pageNumber, 10));
+
+        result.ShouldHaveValidationErrorFor(x => x.PageNumber)
+            .WithErrorMessage($"Page number must be between 1 and {PaginationDefaults.MaxPageNumber}");
     }
 
     [Theory]

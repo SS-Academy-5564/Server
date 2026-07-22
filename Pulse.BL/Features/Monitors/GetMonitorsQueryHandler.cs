@@ -34,7 +34,7 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
             ? null
             : (DAL.Queries.Monitors.MonitorStatus)query.Status.Value;
 
-        long pageNumber = query.PageNumber ?? PaginationDefaults.PageNumber;
+        int pageNumber = query.PageNumber ?? PaginationDefaults.PageNumber;
         int pageSize = query.PageSize ?? PaginationDefaults.PageSize;
 
         PagedRecords<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, pageNumber, pageSize, ct);
