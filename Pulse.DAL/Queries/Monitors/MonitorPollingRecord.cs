@@ -6,5 +6,6 @@ public sealed record MonitorPollingRecord(
     string HttpMethod,
     string ResultPath,
     int PollingIntervalSeconds,
-    int PollingTimeoutSeconds
+    int PollingTimeoutSeconds,
+    string Status
 );
