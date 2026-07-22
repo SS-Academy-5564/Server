@@ -23,7 +23,7 @@ public class MonitorQueries : IMonitorQueries
         CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
-        long offset = checked((pageNumber - 1L) * pageSize);
+        int offset = checked((pageNumber - 1) * pageSize);
 
         string statusFilter = status is null ? string.Empty : "WHERE s.Name = @Status";
         string sql =
