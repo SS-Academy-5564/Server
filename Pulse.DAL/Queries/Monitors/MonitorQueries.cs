@@ -18,7 +18,7 @@ public class MonitorQueries : IMonitorQueries
     /// <inheritdoc/>
     public async Task<PagedRecords<MonitorListRecord>> GetAllAsync(
         MonitorStatus? status,
-        int pageNumber,
+        long pageNumber,
         int pageSize,
         CancellationToken ct)
     {

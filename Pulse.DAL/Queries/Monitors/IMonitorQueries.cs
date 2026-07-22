@@ -16,7 +16,7 @@ public interface IMonitorQueries : IQueries
     /// <returns>A list of monitor records matching the criteria.</returns>
     Task<PagedRecords<MonitorListRecord>> GetAllAsync(
         MonitorStatus? status,
-        int pageNumber,
+        long pageNumber,
         int pageSize,
         CancellationToken ct);
 
