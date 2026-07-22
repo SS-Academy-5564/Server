@@ -5,13 +5,6 @@ namespace Pulse.BL.Features.Auth.Login.LoginLockout;
 /// </summary>
 public interface ILoginLockoutService
 {
-    /// <summary>
-    /// Determines whether the account cooldown permits another login attempt.
-    /// </summary>
-    /// <param name="userId">The user attempting to log in.</param>
-    /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns><c>true</c> when login may proceed; otherwise <c>false</c>.</returns>
-    Task<bool> IsUserAllowedAsync(Guid userId, CancellationToken ct);
 
     /// <summary>
     /// Records a confirmed failed login attempt.
