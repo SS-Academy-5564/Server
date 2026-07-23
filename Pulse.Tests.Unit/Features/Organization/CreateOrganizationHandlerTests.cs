@@ -1,5 +1,6 @@
 using System.Data;
 using FluentAssertions;
+using FluentResults;
 using Moq;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
@@ -7,6 +8,7 @@ using Pulse.BL.Features.Organization;
 using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Organization;
 using Pulse.DAL.Common.Repository;
+using Pulse.DAL.Queries.Users;
 
 namespace Pulse.Tests.Unit.Features.Organization;
 
@@ -18,6 +20,7 @@ public class CreateOrganizationHandlerTests
     private readonly Mock<IJwtTokenGenerator> _jwtMock = new();
     private readonly Mock<ICurrentUserService> _currentUserMock = new();
     private readonly Mock<IMemberCommands> _memberCommandsMock = new();
+    private readonly Mock<IUserQueries> _userQueriesMock = new();
 
     private readonly CreateOrganizationHandler _handler;
 
@@ -49,12 +52,17 @@ public class CreateOrganizationHandlerTests
                 "test-token",
                 DateTimeOffset.UtcNow.AddMinutes(30)));
 
+        _userQueriesMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserProfileRecord(Guid.NewGuid(), "test@example.com", "Test", "Test", DateTimeOffset.UtcNow, DateTimeOffset.UtcNow));
+
         _handler = new CreateOrganizationHandler(
             _uowFactoryMock.Object,
             _commandsMock.Object,
             _jwtMock.Object,
             _currentUserMock.Object,
-            _memberCommandsMock.Object);
+            _memberCommandsMock.Object,
+            _userQueriesMock.Object);
     }
 
     [Fact]
@@ -94,5 +102,21 @@ public class CreateOrganizationHandlerTests
         await _handler.HandleAsync(command, CancellationToken.None);
 
         _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UserDoesNotExist_ShouldReturnUnauthorizedError()
+    {
+        _userQueriesMock
+            .Setup(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserProfileRecord?)null);
+
+        var command = new CreateOrganizationCommand("Test Org");
+
+        Result<CreateOrganizationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
+
+        result.IsFailed.Should().BeTrue();
+        result.Errors.Should().ContainSingle(e => e is Pulse.BL.Common.Errors.UnauthorizedError);
+        _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }
