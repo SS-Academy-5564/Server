@@ -67,4 +67,19 @@ public class MonitorQueries : IMonitorQueries
                 cancellationToken: ct)
         );
     }
+    public async Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        return await connection.QuerySingleOrDefaultAsync<MonitorPollingRecord>(
+            new CommandDefinition(
+                "SELECT m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status " +
+                "FROM Monitors AS m " +
+                "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
+                "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
+                "WHERE m.Id = @Id " +
+                "   AND s.Name = 'Enabled';",
+                new { Id = id },
+                cancellationToken: ct));
+    }
 }

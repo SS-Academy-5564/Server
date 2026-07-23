@@ -52,9 +52,7 @@ public class PollingService : IPollingService
             try
             {
                 ct.ThrowIfCancellationRequested();
-
-                CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
-                await SavePollResultAsync(monitor, monitorPollResults, ct);
+                await ProcessMonitorAsync(monitor, ct);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested)
             {
@@ -62,14 +60,30 @@ public class PollingService : IPollingService
             }
             catch (Exception exception)
             {
-                _logger.LogError(
-                    exception,
-                    "Failed to process monitor. MonitorId: {MonitorId}",
-                    monitor.Id);
+                _logger.LogError(exception, "Failed to process monitor. MonitorId: {MonitorId}", monitor.Id);
             }
         }
 
         return Result.Ok();
+    }
+
+    public async Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
+    {
+        try
+        {
+            CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
+            await SavePollResultAsync(monitor, monitorPollResults, ct);
+            return Result.Ok();
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to process monitor. MonitorId: {MonitorId}", monitor.Id);
+            return Result.Fail("Failed to process monitor.");
+        }
     }
 
     private async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorPollingRecord monitor, CancellationToken ct)

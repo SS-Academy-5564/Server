@@ -8,15 +8,14 @@ using Pulse.BL.Features.Auth.Login.LoginLockout;
 using Pulse.BL.Features.Auth.PasswordReset;
 using Pulse.BL.Features.Email;
 using Pulse.BL.Features.Organization;
+using Pulse.BL.Features.Polling;
 
 namespace Pulse.BL.DependencyInjection;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddBusinessLogic(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddHandlersFromAssembly(Assembly.GetExecutingAssembly());
-        services.AddSingleton(TimeProvider.System);
         services.AddTransient<IPasswordHasher, PasswordHasher>();
         services.AddTransient<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<ILoginLockoutService, LoginLockoutService>();
@@ -37,8 +36,20 @@ public static class DependencyInjection
             .AddOptions<PasswordResetOptions>()
             .Bind(configuration.GetRequiredSection(PasswordResetOptions.SectionName))
             .ValidateOnStart();
+
+        return services;
+    }
+    public static IServiceCollection AddBusinessLogic(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddHandlersFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddSingleton(TimeProvider.System);
+
+        services.AddAuth(configuration);
         services.AddEmailing(configuration);
+        services.AddPolling(configuration);
+
         services.AddScoped<CreateOrganizationHandler>();
+
         return services;
     }
 }
