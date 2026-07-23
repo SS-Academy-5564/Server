@@ -46,7 +46,7 @@ public class CreateOrganizationHandler
 
         if (userId is null)
         {
-            return Result.Fail(new UnauthorizedError("User identity not found."));
+            return Result.Fail(new UnauthorizedError("Creation of organization failed: User identity not found."));
         }
 
         Guid currentUserId = userId.Value;
@@ -54,7 +54,7 @@ public class CreateOrganizationHandler
         UserProfileRecord? user = await _userQueries.GetByIdAsync(currentUserId, ct);
         if (user is null)
         {
-            return Result.Fail(new UnauthorizedError("User identity not found."));
+            return Result.Fail(new UnauthorizedError("Creation of organization failed: User identity not found."));
         }
 
         string role = _currentUserService.Role;
