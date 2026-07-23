@@ -2,6 +2,7 @@ using System.Data;
 using FluentAssertions;
 using FluentResults;
 using Moq;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Organization;
@@ -116,7 +117,10 @@ public class CreateOrganizationHandlerTests
         Result<CreateOrganizationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
-        result.Errors.Should().ContainSingle(e => e is Pulse.BL.Common.Errors.UnauthorizedError);
+        result.Errors.Should().ContainSingle(e => e is UnauthorizedError);
         _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _userQueriesMock.Verify(x => x.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+        _commandsMock.Verify(x => x.CreateOrganizationAsync(It.IsAny<CreateOrganizationInput>(), It.IsAny<CancellationToken>()), Times.Never);
+        _memberCommandsMock.Verify(x => x.CreateMemberAsync(It.IsAny<CreateMemberInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
