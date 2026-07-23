@@ -9,11 +9,13 @@ namespace Pulse.DAL.Queries.Monitors;
 public interface IMonitorQueries : IQueries
 {
     /// <summary>
-    /// Retrieves all monitor records, optionally filtered by status.
+    /// Retrieves one page of monitor records, optionally filtered by status.
     /// </summary>
     /// <param name="status">The monitor status to filter by, or <c>null</c> to retrieve all monitors.</param>
+    /// <param name="pageNumber">The one-based page number.</param>
+    /// <param name="pageSize">The maximum number of records to return.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>A list of monitor records matching the criteria.</returns>
+    /// <returns>The requested monitor records and the total number of matching records.</returns>
     Task<PagedRecords<MonitorListRecord>> GetAllAsync(
         MonitorStatus? status,
         int pageNumber,

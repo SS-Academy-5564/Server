@@ -16,15 +16,14 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
     }
 
     /// <summary>
-    /// Handles the query to retrieve monitor results.
+    /// Retrieves a filtered and paginated list of monitor results.
     /// </summary>
-    /// <param name="query">The query parameters, including the optional status filter.</param>
+    /// <param name="query">The optional status filter, page number, and page size.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>A list of monitor results or failure details.</returns>
+    /// <returns>The monitor results and pagination metadata.</returns>
     /// <remarks>
-    /// If <see cref="GetMonitorsQuery.Status"/> is <see langword="null"/>,
-    /// all monitors are returned. Otherwise, only monitors with the specified
-    /// status are retrieved.
+    /// A missing page number defaults to <see cref="PaginationDefaults.PageNumber"/>, and a missing page size
+    /// defaults to <see cref="PaginationDefaults.PageSize"/>. A missing status returns monitors of every status.
     /// </remarks>
     public async Task<Result<PagedResult<MonitorListResult>>> HandleAsync(
         GetMonitorsQuery query,
