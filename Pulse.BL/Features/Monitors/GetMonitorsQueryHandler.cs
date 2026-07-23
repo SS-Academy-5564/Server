@@ -1,10 +1,12 @@
 using FluentResults;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Pagination;
+using Pulse.DAL.Common.Pagination;
 using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.BL.Features.Monitors;
 
-public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorListResult>>>
+public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<PagedResult<MonitorListResult>>>
 {
     private readonly IMonitorQueries _monitorQueries;
 
@@ -14,29 +16,33 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<IR
     }
 
     /// <summary>
-    /// Handles the query to retrieve monitor results.
+    /// Retrieves a filtered and paginated list of monitor results.
     /// </summary>
-    /// <param name="query">The query parameters, including the optional status filter.</param>
+    /// <param name="query">The optional status filter, page number, and page size.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>A list of monitor results or failure details.</returns>
+    /// <returns>The monitor results and pagination metadata.</returns>
     /// <remarks>
-    /// If <see cref="GetMonitorsQuery.Status"/> is <see langword="null"/>,
-    /// all monitors are returned. Otherwise, only monitors with the specified
-    /// status are retrieved.
+    /// A missing page number defaults to <see cref="PaginationDefaults.PageNumber"/>, and a missing page size
+    /// defaults to <see cref="PaginationDefaults.PageSize"/>. A missing status returns monitors of every status.
     /// </remarks>
-    public async Task<Result<IReadOnlyList<MonitorListResult>>> HandleAsync(GetMonitorsQuery query, CancellationToken ct = default)
+    public async Task<Result<PagedResult<MonitorListResult>>> HandleAsync(
+        GetMonitorsQuery query,
+        CancellationToken ct = default)
     {
         DAL.Queries.Monitors.MonitorStatus? dalStatus = query.Status is null
             ? null
             : (DAL.Queries.Monitors.MonitorStatus)query.Status.Value;
 
-        IReadOnlyList<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, ct);
+        int pageNumber = query.PageNumber ?? PaginationDefaults.PageNumber;
+        int pageSize = query.PageSize ?? PaginationDefaults.PageSize;
 
-        IReadOnlyList<MonitorListResult> results = records
+        PagedRecords<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, pageNumber, pageSize, ct);
+
+        IReadOnlyList<MonitorListResult> results = records.Items
             .Select(r => new MonitorListResult(r.Id, r.Name, r.Url, r.CurrentValue, r.LastCheckedAt, (MonitorStatus)r.Status, r.Interval))
             .ToList()
             .AsReadOnly();
 
-        return Result.Ok(results);
+        return Result.Ok(new PagedResult<MonitorListResult>(results, pageNumber, pageSize, records.TotalCount));
     }
 }
