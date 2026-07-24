@@ -1,4 +1,5 @@
 using FluentResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Pulse.API.Constants;
@@ -9,6 +10,7 @@ namespace Pulse.API.Features.Monitors.TriggerMonitorCheck;
 
 [ApiController]
 [Route("api/monitors")]
+[Authorize]
 public sealed class TriggerMonitorCheckController : PulseControllerBase
 {
     private readonly IManualMonitorTriggerService _manualTriggerService;
