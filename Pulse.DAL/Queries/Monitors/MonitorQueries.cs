@@ -78,7 +78,7 @@ public class MonitorQueries : IMonitorQueries
                 "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
                 "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
                 "WHERE m.Id = @Id " +
-                "   AND s.Name = 'Enabled';",
+                "   AND s.Name IN ('Enabled', 'Error');",
                 new { Id = id },
                 cancellationToken: ct));
     }

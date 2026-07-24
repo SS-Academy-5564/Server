@@ -127,7 +127,9 @@ public class PollingService : IPollingService
         DateTime completedAt = DateTime.UtcNow;
         DateTime nextExecutionAt = completedAt.AddSeconds(monitor.PollingIntervalSeconds);
 
-        string status = resultInput.IsSuccess ? monitor.Status : "Error";
+        string status = resultInput.IsSuccess
+            ? nameof(MonitorStatus.Enabled)
+            : nameof(MonitorStatus.Error);
 
         UpdateMonitorAfterPollInput monitorInput = new(monitor.Id, resultInput.Value, completedAt, nextExecutionAt, status);
 
