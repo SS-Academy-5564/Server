@@ -22,6 +22,7 @@ public sealed class ManualMonitorTriggerService : IManualMonitorTriggerService
         _logger = logger;
     }
 
+    /// <inheritdoc />
     public async Task<Result> TriggerAsync(Guid monitorId, CancellationToken ct)
     {
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(monitorId, ct);

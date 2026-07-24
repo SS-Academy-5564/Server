@@ -4,6 +4,9 @@ using Pulse.BL.Features.Polling.ManualTrigger.Queue;
 
 namespace Pulse.BL.Features.Polling.ManualTrigger.Execution;
 
+/// <summary>
+/// A background service that continuously dequeues monitor IDs from the manual check queue and executes the corresponding checks.
+/// </summary>
 public sealed class ManualCheckHostedService : BackgroundService
 {
     private readonly IManualCheckQueue _queue;
