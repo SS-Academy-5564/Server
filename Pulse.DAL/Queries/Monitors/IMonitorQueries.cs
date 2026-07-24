@@ -16,4 +16,5 @@ public interface IMonitorQueries : IQueries
     Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct);
 
     Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
+    Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct);
 }

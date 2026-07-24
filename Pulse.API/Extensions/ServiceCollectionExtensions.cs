@@ -114,6 +114,39 @@ public static class ServiceCollectionExtensions
                             });
                     });
 
+                    rateLimiterOptions.AddPolicy(RateLimitPolicies.ManualMonitorTrigger, httpContext =>
+                    {
+                        string monitorId = httpContext.Request.RouteValues["id"]?.ToString() ?? "unknown";
+
+                        return RateLimitPartition.GetFixedWindowLimiter(monitorId, _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 1,
+                            Window = TimeSpan.FromSeconds(30),
+                            QueueLimit = 0
+                        });
+                    });
+
+                    rateLimiterOptions.OnRejected = async (context, ct) =>
+                    {
+                        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                        context.HttpContext.Response.ContentType = "application/json";
+
+                        var response = new ApiResponse
+                        {
+                            Success = false,
+                            Errors =
+                            [
+                                new ApiError
+                                {
+                                    Code = "RateLimited",
+                                    Message = "Manual check was already triggered recently. Please wait before trying again."
+                                }
+                            ]
+                        };
+
+                        await context.HttpContext.Response.WriteAsJsonAsync(response, ct);
+                    };
+
                     rateLimiterOptions.OnRejected = async (onRejectedContext, cancellationToken) =>
                     {
                         HttpContext httpContext = onRejectedContext.HttpContext;
