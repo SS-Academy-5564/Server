@@ -1,4 +1,4 @@
-namespace Pulse.BL.Features.Polling.ManualTrigger;
+namespace Pulse.BL.Features.Polling.ManualTrigger.Queue;
 
 /// <summary>
 /// A bounded queue of monitor IDs awaiting a manually-triggered check.

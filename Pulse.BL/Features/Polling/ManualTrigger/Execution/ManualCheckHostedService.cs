@@ -1,22 +1,22 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Pulse.BL.Features.Polling.ManualTrigger.Queue;
 
-namespace Pulse.BL.Features.Polling.ManualTrigger;
+namespace Pulse.BL.Features.Polling.ManualTrigger.Execution;
 
 public sealed class ManualCheckHostedService : BackgroundService
 {
     private readonly IManualCheckQueue _queue;
-    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly IScopedManualCheckRunner _runner;
     private readonly ILogger<ManualCheckHostedService> _logger;
 
     public ManualCheckHostedService(
         IManualCheckQueue queue,
-        IServiceScopeFactory scopeFactory,
+        IScopedManualCheckRunner runner,
         ILogger<ManualCheckHostedService> logger)
     {
         _queue = queue;
-        _scopeFactory = scopeFactory;
+        _runner = runner;
         _logger = logger;
     }
 
@@ -37,9 +37,7 @@ public sealed class ManualCheckHostedService : BackgroundService
 
             try
             {
-                using IServiceScope scope = _scopeFactory.CreateScope();
-                IManualCheckExecutor executor = scope.ServiceProvider.GetRequiredService<IManualCheckExecutor>();
-                await executor.ExecuteAsync(monitorId, stoppingToken);
+                await _runner.RunAsync(monitorId, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

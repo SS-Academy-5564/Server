@@ -4,12 +4,20 @@ using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.ManualTrigger;
+using Pulse.BL.Features.Polling.ManualTrigger.Execution;
+using Pulse.BL.Features.Polling.ManualTrigger.Queue;
 using Pulse.BL.Features.Polling.Options;
 
 namespace Pulse.BL.Features.Polling;
 
 public static class PollingServiceCollectionExtensions
 {
+    /// <summary>
+    /// Registers the core polling functionality: the monitor HTTP client,
+    /// JSON path reader, and polling service. Required by any host that runs
+    /// monitor checks — both Pulse.API (manual triggers) and Pulse.Worker
+    /// (scheduled polling).
+    /// </summary>
     public static IServiceCollection AddPolling(this IServiceCollection services, IConfiguration configuration)
     {
         services
@@ -29,8 +37,27 @@ public static class PollingServiceCollectionExtensions
         services.AddScoped<IHttpMonitorClient, HttpMonitorClient>();
         services.AddScoped<IJsonPathReader, JsonPathReader>();
 
-        services.AddSingleton<IManualCheckQueue>(_ => new ManualCheckQueue(capacity: 100));
+        return services;
+    }
+
+    /// <summary>
+    /// Registers manual monitor trigger functionality: the bounded check
+    /// queue, its background executor, and the trigger service used by the
+    /// "Run Check Now" endpoint. Only needed by hosts that expose the
+    /// manual-trigger HTTP endpoint (Pulse.API). Requires <see cref="AddPolling"/>
+    /// to have been called first, since it depends on <see cref="IPollingService"/>.
+    /// </summary>
+    public static IServiceCollection AddManualTrigger(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddOptions<ManualCheckQueueOptions>()
+            .Bind(configuration.GetRequiredSection(ManualCheckQueueOptions.SectionName))
+            .ValidateOnStart();
+
+        services.AddSingleton<IValidateOptions<ManualCheckQueueOptions>, ManualCheckQueueOptionsValidator>();
+
+        services.AddSingleton<IManualCheckQueue, ManualCheckQueue>();
         services.AddScoped<IManualCheckExecutor, ManualCheckExecutor>();
+        services.AddSingleton<IScopedManualCheckRunner, ScopedManualCheckRunner>();
         services.AddScoped<IManualMonitorTriggerService, ManualMonitorTriggerService>();
         services.AddHostedService<ManualCheckHostedService>();
 

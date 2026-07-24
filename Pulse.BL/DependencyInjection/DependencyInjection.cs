@@ -39,6 +39,7 @@ public static class DependencyInjection
 
         return services;
     }
+
     public static IServiceCollection AddBusinessLogic(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddHandlersFromAssembly(Assembly.GetExecutingAssembly());
@@ -47,6 +48,7 @@ public static class DependencyInjection
         services.AddAuth(configuration);
         services.AddEmailing(configuration);
         services.AddPolling(configuration);
+        services.AddManualTrigger(configuration);
 
         services.AddScoped<CreateOrganizationHandler>();
 

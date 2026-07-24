@@ -1,4 +1,4 @@
-namespace Pulse.BL.Features.Polling.ManualTrigger;
+namespace Pulse.BL.Features.Polling.ManualTrigger.Execution;
 
 /// <summary>
 /// Executes a single queued manual monitor check. Resolved per work item

@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Features.Polling.ManualTrigger.Queue;
 using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.BL.Features.Polling.ManualTrigger;

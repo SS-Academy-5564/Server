@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Pulse.DAL.Queries.Monitors;
 
-namespace Pulse.BL.Features.Polling.ManualTrigger;
+namespace Pulse.BL.Features.Polling.ManualTrigger.Execution;
 
 public sealed class ManualCheckExecutor : IManualCheckExecutor
 {

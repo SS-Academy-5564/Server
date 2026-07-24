@@ -25,6 +25,12 @@ internal static class ResultMapper
             return BuildErrorResponse(409, error.Code, error.Message);
         }
 
+        if (result.HasError<TooManyRequestsError>())
+        {
+            TooManyRequestsError error = result.Errors.OfType<TooManyRequestsError>().First();
+            return BuildErrorResponse(429, error.Code, error.Message);
+        }
+
         if (result.HasError<NotFoundError>())
         {
             NotFoundError error = result.Errors.OfType<NotFoundError>().First();
