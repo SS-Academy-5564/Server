@@ -3,7 +3,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Pulse.BL.Features.Polling;
-using Pulse.BL.Features.Polling.ManualTrigger;
+using Pulse.BL.Features.Polling.ManualTrigger.Execution;
 using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Polling.ManualTrigger;

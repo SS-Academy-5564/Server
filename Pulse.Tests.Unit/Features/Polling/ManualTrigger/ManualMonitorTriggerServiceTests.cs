@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Features.Polling.ManualTrigger;
+using Pulse.BL.Features.Polling.ManualTrigger.Queue;
 using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Polling.ManualTrigger;

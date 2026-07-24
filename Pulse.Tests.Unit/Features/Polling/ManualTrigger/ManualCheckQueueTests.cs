@@ -1,15 +1,19 @@
 using FluentAssertions;
-using Pulse.BL.Features.Polling.ManualTrigger;
+using Microsoft.Extensions.Options;
+using Pulse.BL.Features.Polling.ManualTrigger.Queue;
 
 namespace Pulse.Tests.Unit.Features.Polling.ManualTrigger;
 
 public class ManualCheckQueueTests
 {
+    private static ManualCheckQueue CreateQueue(int capacity)
+        => new(Options.Create(new ManualCheckQueueOptions { Capacity = capacity }));
+
     [Fact]
     public void TryEnqueue_WhenQueueHasCapacity_ReturnsTrue()
     {
         // Arrange
-        ManualCheckQueue queue = new(capacity: 1);
+        ManualCheckQueue queue = CreateQueue(capacity: 1);
 
         // Act
         bool result = queue.TryEnqueue(Guid.NewGuid());
@@ -22,7 +26,7 @@ public class ManualCheckQueueTests
     public void TryEnqueue_WhenQueueIsFull_ReturnsFalseWithoutBlocking()
     {
         // Arrange
-        ManualCheckQueue queue = new(capacity: 1);
+        ManualCheckQueue queue = CreateQueue(capacity: 1);
         queue.TryEnqueue(Guid.NewGuid());
 
         // Act
@@ -36,7 +40,7 @@ public class ManualCheckQueueTests
     public async Task DequeueAsync_ReturnsPreviouslyEnqueuedMonitorId()
     {
         // Arrange
-        ManualCheckQueue queue = new(capacity: 10);
+        ManualCheckQueue queue = CreateQueue(capacity: 10);
         Guid monitorId = Guid.NewGuid();
         queue.TryEnqueue(monitorId);
 
