@@ -11,10 +11,11 @@ public sealed class BackgroundTaskQueue : IBackgroundTaskQueue
         var options = new BoundedChannelOptions(capacity) { FullMode = BoundedChannelFullMode.Wait };
         _queue = Channel.CreateBounded<Func<IServiceProvider, CancellationToken, Task>>(options);
     }
-
+    /// <inheritdoc />
     public ValueTask EnqueueAsync(Func<IServiceProvider, CancellationToken, Task> workItem)
         => _queue.Writer.WriteAsync(workItem);
 
+    /// <inheritdoc />
     public ValueTask<Func<IServiceProvider, CancellationToken, Task>> DequeueAsync(CancellationToken ct)
         => _queue.Reader.ReadAsync(ct);
 }

@@ -67,6 +67,8 @@ public class MonitorQueries : IMonitorQueries
                 cancellationToken: ct)
         );
     }
+
+    /// <inheritdoc/>
     public async Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
