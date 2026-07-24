@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Pulse.BL.Common.BackgroundTasks;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.ManualTrigger;
@@ -11,12 +10,6 @@ namespace Pulse.BL.Features.Polling;
 
 public static class PollingServiceCollectionExtensions
 {
-    /// <summary>
-    /// Registers everything needed to run and trigger monitor checks:
-    /// the HTTP client, JSON path reader, polling service, manual trigger
-    /// service, and the background task queue used to run manual checks
-    /// without blocking the HTTP request.
-    /// </summary>
     public static IServiceCollection AddPolling(this IServiceCollection services, IConfiguration configuration)
     {
         services
@@ -36,9 +29,10 @@ public static class PollingServiceCollectionExtensions
         services.AddScoped<IHttpMonitorClient, HttpMonitorClient>();
         services.AddScoped<IJsonPathReader, JsonPathReader>();
 
-        services.AddSingleton<IBackgroundTaskQueue>(_ => new BackgroundTaskQueue(capacity: 100));
-        services.AddHostedService<QueuedHostedService>();
+        services.AddSingleton<IManualCheckQueue>(_ => new ManualCheckQueue(capacity: 100));
+        services.AddScoped<IManualCheckExecutor, ManualCheckExecutor>();
         services.AddScoped<IManualMonitorTriggerService, ManualMonitorTriggerService>();
+        services.AddHostedService<ManualCheckHostedService>();
 
         return services;
     }
