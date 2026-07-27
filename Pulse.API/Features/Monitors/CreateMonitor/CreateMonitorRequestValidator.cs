@@ -57,7 +57,6 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
 
     private bool NotTargetInternalHost(string? url)
     {
-        // Only enforce for well-formed HTTP(S) URLs; malformed URLs are caught by BeAValidHttpUrl.
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
             || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
         {

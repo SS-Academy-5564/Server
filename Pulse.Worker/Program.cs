@@ -24,8 +24,6 @@ builder.ConfigureServices((context, services) =>
             return new SocketsHttpHandler
             {
                 AllowAutoRedirect = false,
-                // Disable connection reuse so the SSRF connect callback re-resolves
-                // and re-validates the destination on every poll (defeats DNS rebinding).
                 PooledConnectionLifetime = TimeSpan.Zero,
                 ConnectCallback = connectionFactory.ConnectAsync
             };

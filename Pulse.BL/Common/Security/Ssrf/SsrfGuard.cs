@@ -10,19 +10,18 @@ namespace Pulse.BL.Common.Security.Ssrf;
 /// </summary>
 public sealed class SsrfGuard : ISsrfGuard
 {
-    // Built-in deny ranges covering the acceptance-criteria set.
     private static readonly string[] DefaultBlockedCidrs =
     [
-        "0.0.0.0/8",        // "this host" / unspecified
-        "127.0.0.0/8",      // loopback
-        "10.0.0.0/8",       // private
-        "172.16.0.0/12",    // private
-        "192.168.0.0/16",   // private
-        "169.254.0.0/16",   // link-local (incl. 169.254.169.254 metadata)
-        "::/128",           // IPv6 unspecified (analog of 0.0.0.0)
-        "::1/128",          // IPv6 loopback
-        "fc00::/7",         // IPv6 unique-local
-        "fe80::/10",        // IPv6 link-local
+        "0.0.0.0/8",
+        "127.0.0.0/8",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "169.254.0.0/16",
+        "::/128",
+        "::1/128",
+        "fc00::/7",
+        "fe80::/10",
     ];
 
     private readonly bool _allowPrivateNetworks;
