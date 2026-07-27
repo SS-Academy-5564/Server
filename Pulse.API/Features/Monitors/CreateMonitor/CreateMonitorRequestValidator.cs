@@ -36,7 +36,7 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
         RuleFor(x => x.Url)
             .NotEmpty().WithMessage("Endpoint URL is required.")
             .MaximumLength(2083).WithMessage("Endpoint URL must be at most 2083 characters.")
-            .Must(BeAValidHttpUrl).WithMessage("Endpoint URL must be a valid HTTP or HTTPS URL.")
+            .Must(BeAValidHttpsUrl).WithMessage("Endpoint URL must be a valid HTTPS URL.")
             .Must(NotTargetInternalHost).WithMessage("Endpoint URL must not target a private or internal address.");
 
         RuleFor(x => x.HttpMethod)
@@ -58,14 +58,14 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
     }
 
     /// <summary>
-    /// Determines whether the given string is a valid absolute HTTP or HTTPS URL.
+    /// Determines whether the given string is a valid absolute HTTPS URL.
     /// </summary>
     /// <param name="url">The URL string to validate.</param>
-    /// <returns><c>true</c> if the URL is a valid absolute HTTP or HTTPS URI; otherwise, <c>false</c>.</returns>
-    private static bool BeAValidHttpUrl(string? url)
+    /// <returns><c>true</c> if the URL is a valid absolute HTTPS URI; otherwise, <c>false</c>.</returns>
+    private static bool BeAValidHttpsUrl(string? url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
-            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+            && uri.Scheme == Uri.UriSchemeHttps;
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
     private bool NotTargetInternalHost(string? url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
-            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+            || uri.Scheme != Uri.UriSchemeHttps)
         {
             return true;
         }

@@ -45,6 +45,7 @@ public class CreateMonitorRequestValidatorTests
     [InlineData("")]
     [InlineData("not-a-url")]
     [InlineData("ftp://example.com/data")]
+    [InlineData("http://example.com/data")]
     public void Validate_InvalidUrl_ShouldHaveValidationError(string url)
     {
         CreateMonitorRequest request = ValidRequest() with { Url = url };
@@ -73,7 +74,6 @@ public class CreateMonitorRequestValidatorTests
 
     [Theory]
     [InlineData("https://api.example.com/data")]
-    [InlineData("http://8.8.8.8/data")]
     public void Validate_PublicHostUrl_ShouldNotHaveUrlError(string url)
     {
         CreateMonitorRequest request = ValidRequest() with { Url = url };
