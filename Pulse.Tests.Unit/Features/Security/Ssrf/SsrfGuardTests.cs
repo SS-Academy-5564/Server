@@ -63,7 +63,6 @@ public class SsrfGuardTests
         });
 
         guard.IsAddressAllowed(IPAddress.Parse("10.10.5.5")).Should().BeTrue();
-        // Outside the allow range remains blocked.
         guard.IsAddressAllowed(IPAddress.Parse("10.20.5.5")).Should().BeFalse();
     }
 
