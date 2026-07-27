@@ -65,7 +65,7 @@ public class SsrfProtectionOptionsValidatorTests
     public void Validate_WhenCidrsAreEmpty_ReturnsSuccess()
     {
         // Arrange
-        SsrfProtectionOptions options = new SsrfProtectionOptions();
+        SsrfProtectionOptions options = new();
 
         // Act
         ValidateOptionsResult result = _validator.Validate(null, options);

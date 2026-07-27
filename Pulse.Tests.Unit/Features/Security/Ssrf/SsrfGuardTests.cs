@@ -55,7 +55,7 @@ public class SsrfGuardTests
         result.Should().BeTrue();
     }
 
-[Fact]
+    [Fact]
     public void IsAddressAllowed_WhenPrivateNetworksAllowed_ReturnsTrueForInternal()
     {
         // Arrange
