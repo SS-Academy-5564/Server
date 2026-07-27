@@ -2,6 +2,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Attributes;
 using Pulse.API.Responses;
+using Pulse.BL.Common.Pagination;
 
 namespace Pulse.API.Controllers;
 
@@ -26,6 +27,28 @@ public abstract class PulseControllerBase : ControllerBase
         if (result.IsSuccess)
         {
             return Ok(new ApiResponse { Success = true });
+        }
+
+        return MapErrorToResponse(result);
+    }
+
+    protected IActionResult ToPagedActionResult<T>(Result<PagedResult<T>> result)
+    {
+        if (result.IsSuccess)
+        {
+            PagedResult<T> page = result.Value;
+
+            return Ok(new ApiResponse<IReadOnlyList<T>>
+            {
+                Success = true,
+                Data = page.Items,
+                Pagination = new ApiPagination
+                {
+                    Page = page.PageNumber,
+                    PageSize = page.PageSize,
+                    TotalCount = page.TotalCount
+                }
+            });
         }
 
         return MapErrorToResponse(result);

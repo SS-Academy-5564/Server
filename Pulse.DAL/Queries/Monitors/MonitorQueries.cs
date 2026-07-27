@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using Dapper;
+using Pulse.DAL.Common.Pagination;
 using Pulse.DAL.Connection;
 
 namespace Pulse.DAL.Queries.Monitors;
@@ -15,39 +16,53 @@ public class MonitorQueries : IMonitorQueries
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct)
+    public async Task<PagedRecords<MonitorListRecord>> GetAllAsync(
+        MonitorStatus? status,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
+        int offset = checked((pageNumber - 1) * pageSize);
 
-        Guid? statusId = null;
-        if (status is not null)
-        {
-            statusId = await connection.ExecuteScalarAsync<Guid?>(
-                new CommandDefinition(
-                    "SELECT Id FROM dbo.MonitorStatuses WHERE Name = @Name",
-                    new { Name = status.Value.ToString() },
-                    cancellationToken: ct));
-
-            if (statusId is null)
-            {
-                return new List<MonitorListRecord>().AsReadOnly();
-            }
-        }
-
+        string statusFilter = status is null ? string.Empty : "WHERE s.Name = @Status";
         string sql =
-            "SELECT m.Id, m.Name, m.Url, m.CurrentValue, m.LastCheckedAt, s.Name AS Status, m.PollingIntervalSeconds AS Interval " +
-            "FROM dbo.Monitors m " +
-            "JOIN dbo.MonitorStatuses s ON m.StatusId = s.Id";
+            $$"""
+            SELECT
+                m.Id,
+                m.Name,
+                m.Url,
+                m.CurrentValue,
+                m.LastCheckedAt,
+                s.Name AS Status,
+                m.PollingIntervalSeconds AS Interval
+            FROM dbo.Monitors AS m
+            JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
+            {{statusFilter}}
+            ORDER BY m.Id
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
-        if (statusId is not null)
-        {
-            sql += " WHERE m.StatusId = @StatusId";
-        }
+            SELECT COUNT(*)
+            FROM dbo.Monitors AS m
+            JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
+            {{statusFilter}};
+            """;
 
-        IEnumerable<MonitorListRecord> records = await connection.QueryAsync<MonitorListRecord>(
-            new CommandDefinition(sql, new { StatusId = statusId }, cancellationToken: ct));
+        CommandDefinition command = new(
+            sql,
+            new
+            {
+                Status = status?.ToString(),
+                Offset = offset,
+                PageSize = pageSize
+            },
+            cancellationToken: ct);
 
-        return records.ToList().AsReadOnly();
+        using SqlMapper.GridReader result = await connection.QueryMultipleAsync(command);
+        IReadOnlyList<MonitorListRecord> records = (await result.ReadAsync<MonitorListRecord>()).ToList().AsReadOnly();
+        int totalCount = await result.ReadSingleAsync<int>();
+
+        return new PagedRecords<MonitorListRecord>(records, totalCount);
     }
 
     public async Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct)
