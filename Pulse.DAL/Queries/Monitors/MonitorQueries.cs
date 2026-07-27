@@ -85,7 +85,9 @@ public class MonitorQueries : IMonitorQueries
                 m.PollingIntervalSeconds,
                 m.PollingTimeoutSeconds,
                 m.LastCheckedAt,
-                m.NextExecutionAt
+                m.NextExecutionAt,
+                m.CreatedAt,
+                m.LastModifiedAt
             FROM dbo.Monitors m
             JOIN HttpMethods AS h ON m.HttpMethod = h.Id
             JOIN MonitorStatuses AS s ON m.StatusId = s.Id

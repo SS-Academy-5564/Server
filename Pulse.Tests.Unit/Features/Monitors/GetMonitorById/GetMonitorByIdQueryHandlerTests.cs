@@ -31,7 +31,9 @@ public class GetMonitorByIdQueryHandlerTests
             60,
             10,
             DateTimeOffset.UtcNow,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(-7),
+            DateTimeOffset.UtcNow.AddHours(-1));
 
     [Fact]
     public async Task HandleAsync_WhenMonitorExists_ReturnsMappedResult()
@@ -55,6 +57,8 @@ public class GetMonitorByIdQueryHandlerTests
         result.Value.PollingTimeoutSeconds.Should().Be(record.PollingTimeoutSeconds);
         result.Value.LastCheckedAt.Should().Be(record.LastCheckedAt);
         result.Value.NextExecutionAt.Should().Be(record.NextExecutionAt);
+        result.Value.CreatedAt.Should().Be(record.CreatedAt);
+        result.Value.LastModifiedAt.Should().Be(record.LastModifiedAt);
     }
 
     [Fact]

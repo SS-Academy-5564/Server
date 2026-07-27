@@ -35,7 +35,9 @@ public class GetMonitorByIdControllerTests
             60,
             10,
             DateTimeOffset.UtcNow,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(-7),
+            DateTimeOffset.UtcNow.AddHours(-1));
 
     [Fact]
     public async Task GetMonitorById_WhenSuccess_Returns200WithMonitorResult()

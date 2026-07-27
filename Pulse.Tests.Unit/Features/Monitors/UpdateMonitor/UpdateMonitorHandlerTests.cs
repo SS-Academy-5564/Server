@@ -50,7 +50,9 @@ public class UpdateMonitorHandlerTests
             120,
             10,
             DateTimeOffset.UtcNow,
-            DateTime.UtcNow);
+            DateTime.UtcNow,
+            DateTimeOffset.UtcNow.AddDays(-7),
+            DateTimeOffset.UtcNow.AddHours(-1));
 
     [Fact]
     public async Task HandleAsync_WhenMonitorNotFound_ReturnsNotFoundError()

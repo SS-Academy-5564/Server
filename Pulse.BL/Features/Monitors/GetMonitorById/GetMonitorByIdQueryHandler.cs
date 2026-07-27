@@ -40,7 +40,9 @@ public class GetMonitorByIdQueryHandler : IAsyncHandler<GetMonitorByIdQuery, Res
             existingMonitor.PollingIntervalSeconds,
             existingMonitor.PollingTimeoutSeconds,
             existingMonitor.LastCheckedAt,
-            existingMonitor.NextExecutionAt);
+            existingMonitor.NextExecutionAt,
+            existingMonitor.CreatedAt,
+            existingMonitor.LastModifiedAt);
 
         return Result.Ok(result);
     }

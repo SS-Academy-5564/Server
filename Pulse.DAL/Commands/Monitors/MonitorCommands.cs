@@ -62,7 +62,8 @@ public class MonitorCommands : IMonitorCommands
                 PollingIntervalSeconds = @PollingIntervalSeconds,
                 PollingTimeoutSeconds = @PollingTimeoutSeconds,
                 CurrentValue = NULL,
-                NextExecutionAt = SYSUTCDATETIME()
+                NextExecutionAt = SYSUTCDATETIME(),
+                LastModifiedAt = SYSUTCDATETIME()
             OUTPUT INSERTED.Id
             WHERE Id = @Id;
             """;

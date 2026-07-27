@@ -11,4 +11,6 @@ public sealed record MonitorResult(
     int PollingIntervalSeconds,
     int PollingTimeoutSeconds,
     DateTimeOffset LastCheckedAt,
-    DateTime NextExecutionAt);
+    DateTime NextExecutionAt,
+    DateTimeOffset CreatedAt,
+    DateTimeOffset LastModifiedAt);
