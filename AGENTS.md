@@ -270,6 +270,23 @@ CreateMonitor_EmptyName_ShouldThrowValidationException()
 * Reuse existing abstractions.
 * Do not introduce new frameworks or architecture styles unless requested.
 * Generate production-ready code by default.
+* **Do not write comments for self-evident code** — good code is
+  self-documenting through clear names and structure. Only add a comment when
+  it explains a non-obvious architectural or design decision (the *why*) that
+  a reader cannot infer from the code itself. Do not restate *what* the code
+  does, do not add section banners, and do not leave TODO/task-tracking
+  comments.
+* **XML doc comments (`///`) are required on every public member** —
+  public types, methods, properties, events, and constructors — because they
+  document API surface for tooling and IDE tooltips. They are not "what"
+  comments and are not covered by the rule above. Each block must be
+  **complete**: a `<summary>` describing the member's purpose, a `<param>`
+  for every parameter, a `<returns>` when the member returns a value, and a
+  `<exception>` for each exception it can throw. Partial doc comments
+  (summary only, or documenting some parameters but not others) are not
+  acceptable. Non-public members (`private`, `internal`, `protected`) do not
+  require doc comments, but if you add one it must be complete under the same
+  rules.
 * After making changes, **offer to verify** them end-to-end (build, tests, or
   the affected flow) before the user commits.
 * Once verification passes with no issues, **give the user a ready-to-use pull
