@@ -53,20 +53,20 @@ public class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result>
 
         try
         {
-            await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct);
+            await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct: ct);
             Guid userId = await _userCommands.CreateUserAsync(new CreateUserInput
             (
                 command.Email,
                 command.FirstName,
                 command.LastName,
                 passwordHash
-            ), uow, ct);
+            ), ct);
             await _memberCommands.CreateMemberAsync(new CreateMemberInput
             (
                 userId,
                 SeededIds.Organizations.Default,
                 SeededIds.Roles.User
-            ), uow, ct);
+            ), ct);
             await uow.CommitAsync(ct);
         }
         catch (DuplicateKeyException ex)

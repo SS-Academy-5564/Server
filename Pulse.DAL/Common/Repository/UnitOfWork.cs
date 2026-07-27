@@ -1,43 +1,94 @@
 using System.Data;
+using System.Data.Common;
 
 namespace Pulse.DAL.Common.Repository;
 
-public class UnitOfWork : IUnitOfWork
+public class UnitOfWork : IUnitOfWork, IDbSession, IDisposable
 {
     private bool _committed;
+    private readonly DbConnection _connection;
+    private readonly DbTransaction _transaction;
+    private readonly IDbSessionAccessor _sessionAccessor;
 
     /// <inheritdoc/>
-    public IDbConnection Connection { get; }
+    IDbConnection IDbSession.Connection => _connection;
 
     /// <inheritdoc/>
-    public IDbTransaction Transaction { get; }
+    IDbTransaction IDbSession.Transaction => _transaction;
 
-    public UnitOfWork(IDbConnection connection, IDbTransaction transaction)
+    /// <summary>
+    /// Initializes a new instance with an already-open connection and an active transaction.
+    /// Sets itself as the ambient session on <paramref name="sessionAccessor"/>.
+    /// </summary>
+    /// <param name="connection">An open database connection.</param>
+    /// <param name="transaction">An active transaction on <paramref name="connection"/>.</param>
+    /// <param name="sessionAccessor">The scoped accessor used to expose this session to repositories.</param>
+    public UnitOfWork(DbConnection connection, DbTransaction transaction, IDbSessionAccessor sessionAccessor)
     {
-        Connection = connection;
-        Transaction = transaction;
+        _connection = connection;
+        _transaction = transaction;
+        _sessionAccessor = sessionAccessor;
+
+        if (_sessionAccessor.Session is not null)
+        {
+            throw new InvalidOperationException("A unit of work is already active in this scope.");
+        }
+
+        _sessionAccessor.Session = this;
     }
 
     /// <inheritdoc/>
-    public Task CommitAsync(CancellationToken ct = default)
+    public async Task CommitAsync(CancellationToken ct = default)
     {
-        Transaction.Commit();
+        await _transaction.CommitAsync(ct);
         _committed = true;
-        return Task.CompletedTask;
     }
 
     /// <summary>
-    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection.
+    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection,
+    /// and clears the ambient session.
     /// </summary>
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (!_committed)
         {
-            Transaction.Rollback();
+            try
+            {
+                await _transaction.RollbackAsync();
+            }
+            catch (Exception ex) when (ex is DbException or InvalidOperationException or ObjectDisposedException) { }
         }
 
-        Transaction.Dispose();
-        Connection.Dispose();
-        return ValueTask.CompletedTask;
+        await _transaction.DisposeAsync();
+        await _connection.DisposeAsync();
+        if (ReferenceEquals(_sessionAccessor.Session, this))
+        {
+            _sessionAccessor.Session = null;
+        }
+    }
+
+    /// <summary>
+    /// Rolls back the transaction if it was not committed, then disposes the transaction and connection,
+    /// and clears the ambient session.
+    /// </summary>
+    public void Dispose()
+    {
+        if (!_committed)
+        {
+            try
+            {
+                _transaction.Rollback();
+            }
+            catch (Exception ex) when (ex is DbException or InvalidOperationException or ObjectDisposedException) { }
+        }
+
+        _transaction.Dispose();
+        _connection.Dispose();
+        if (ReferenceEquals(_sessionAccessor.Session, this))
+        {
+            _sessionAccessor.Session = null;
+        }
+
+        GC.SuppressFinalize(this);
     }
 }

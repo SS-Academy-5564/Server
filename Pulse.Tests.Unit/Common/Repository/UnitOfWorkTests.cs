@@ -1,4 +1,5 @@
-using System.Data;
+using System.Data.Common;
+using FluentAssertions;
 using Moq;
 using Pulse.DAL.Common.Repository;
 
@@ -6,13 +7,18 @@ namespace Pulse.Tests.Unit.Common.Repository;
 
 public class UnitOfWorkTests
 {
-    private readonly Mock<IDbConnection> _connection = new();
-    private readonly Mock<IDbTransaction> _transaction = new();
+    private readonly Mock<DbConnection> _connection = new();
+    private readonly Mock<DbTransaction> _transaction = new();
+    private readonly DbSessionAccessor _sessionAccessor = new();
     private readonly UnitOfWork _uow;
 
     public UnitOfWorkTests()
     {
-        _uow = new UnitOfWork(_connection.Object, _transaction.Object);
+        _transaction.Setup(t => t.CommitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _transaction.Setup(t => t.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _transaction.Setup(t => t.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        _connection.Setup(c => c.DisposeAsync()).Returns(ValueTask.CompletedTask);
+        _uow = new UnitOfWork(_connection.Object, _transaction.Object, _sessionAccessor);
     }
 
     [Fact]
@@ -20,7 +26,7 @@ public class UnitOfWorkTests
     {
         await _uow.CommitAsync();
 
-        _transaction.Verify(t => t.Commit(), Times.Once);
+        _transaction.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -28,7 +34,7 @@ public class UnitOfWorkTests
     {
         await _uow.DisposeAsync();
 
-        _transaction.Verify(t => t.Rollback(), Times.Once);
+        _transaction.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -37,7 +43,7 @@ public class UnitOfWorkTests
         await _uow.CommitAsync();
         await _uow.DisposeAsync();
 
-        _transaction.Verify(t => t.Rollback(), Times.Never);
+        _transaction.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -45,8 +51,8 @@ public class UnitOfWorkTests
     {
         await _uow.DisposeAsync();
 
-        _transaction.Verify(t => t.Dispose(), Times.Once);
-        _connection.Verify(c => c.Dispose(), Times.Once);
+        _transaction.Verify(t => t.DisposeAsync(), Times.Once);
+        _connection.Verify(c => c.DisposeAsync(), Times.Once);
     }
 
     [Fact]
@@ -55,7 +61,43 @@ public class UnitOfWorkTests
         await _uow.CommitAsync();
         await _uow.DisposeAsync();
 
-        _transaction.Verify(t => t.Dispose(), Times.Once);
-        _connection.Verify(c => c.Dispose(), Times.Once);
+        _transaction.Verify(t => t.DisposeAsync(), Times.Once);
+        _connection.Verify(c => c.DisposeAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DisposeAsync_ClearsAmbientSession()
+    {
+        await _uow.DisposeAsync();
+
+        _sessionAccessor.Session.Should().BeNull();
+    }
+
+    [Fact]
+    public void Constructor_WhenSessionAlreadyActive_Throws()
+    {
+        Action act = () => _ = new UnitOfWork(_connection.Object, _transaction.Object, _sessionAccessor);
+
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("A unit of work is already active in this scope.");
+    }
+
+    [Fact]
+    public void Dispose_WhenNotCommitted_RollsBack()
+    {
+        _uow.Dispose();
+
+        _transaction.Verify(t => t.Rollback(), Times.Once);
+    }
+
+    [Fact]
+    public async Task Dispose_WhenCommitted_DoesNotRollBack()
+    {
+        await _uow.CommitAsync();
+#pragma warning disable CA1849 // intentionally testing the sync Dispose() path
+        _uow.Dispose();
+#pragma warning restore CA1849
+
+        _transaction.Verify(t => t.Rollback(), Times.Never);
     }
 }

@@ -1,0 +1,34 @@
+IF NOT EXISTS (SELECT 1 FROM HttpMethods WHERE Name = 'GET')
+BEGIN
+    INSERT INTO HttpMethods (Name) VALUES ('GET');
+END;
+
+IF NOT EXISTS (SELECT 1 FROM HttpMethods WHERE Name = 'POST')
+BEGIN
+    INSERT INTO HttpMethods (Name) VALUES ('POST');
+END;
+
+IF NOT EXISTS (SELECT 1 FROM HttpMethods WHERE Name = 'PUT')
+BEGIN
+    INSERT INTO HttpMethods (Name) VALUES ('PUT');
+END;
+
+IF NOT EXISTS (SELECT 1 FROM HttpMethods WHERE Name = 'DELETE')
+BEGIN
+    INSERT INTO HttpMethods (Name) VALUES ('DELETE');
+END;
+
+IF NOT EXISTS (SELECT 1 FROM HttpMethods WHERE Name = 'PATCH')
+BEGIN
+    INSERT INTO HttpMethods (Name) VALUES ('PATCH');
+END;
+
+IF NOT EXISTS (SELECT 1 FROM HttpMethods WHERE Name = 'HEAD')
+BEGIN
+    INSERT INTO HttpMethods (Name) VALUES ('HEAD');
+END;
+
+IF NOT EXISTS (SELECT 1 FROM HttpMethods WHERE Name = 'OPTIONS')
+BEGIN
+    INSERT INTO HttpMethods (Name) VALUES ('OPTIONS');
+END;

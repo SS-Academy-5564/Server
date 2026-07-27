@@ -1,4 +1,5 @@
 using System.Data;
+using System.Data.Common;
 using Pulse.DAL.Connection;
 
 namespace Pulse.DAL.Common.Repository;
@@ -6,18 +7,28 @@ namespace Pulse.DAL.Common.Repository;
 public class UnitOfWorkFactory : IUnitOfWorkFactory
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IDbSessionAccessor _sessionAccessor;
 
-    public UnitOfWorkFactory(IDbConnectionFactory connectionFactory)
+    public UnitOfWorkFactory(IDbConnectionFactory connectionFactory, IDbSessionAccessor sessionAccessor)
     {
         _connectionFactory = connectionFactory;
+        _sessionAccessor = sessionAccessor;
     }
 
     /// <inheritdoc/>
-    public Task<IUnitOfWork> CreateAsync(CancellationToken ct = default)
+    public async Task<IUnitOfWork> CreateAsync(IsolationLevel isolationLevel = IsolationLevel.ReadCommitted, CancellationToken ct = default)
     {
-        IDbConnection connection = _connectionFactory.CreateConnection();
-        connection.Open();
-        IDbTransaction transaction = connection.BeginTransaction();
-        return Task.FromResult<IUnitOfWork>(new UnitOfWork(connection, transaction));
+        DbConnection connection = _connectionFactory.CreateConnection();
+        try
+        {
+            await connection.OpenAsync(ct);
+            DbTransaction transaction = await connection.BeginTransactionAsync(isolationLevel, ct);
+            return new UnitOfWork(connection, transaction, _sessionAccessor);
+        }
+        catch
+        {
+            await connection.DisposeAsync();
+            throw;
+        }
     }
 }

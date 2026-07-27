@@ -11,7 +11,8 @@ public static class DependencyInjection
     {
         services.AddSingleton<IDbConnectionFactory, SqlConnectionFactory>();
         services.AddCommandsAndQueriesFromAssembly(Assembly.GetExecutingAssembly());
-        services.AddSingleton<IUnitOfWorkFactory, UnitOfWorkFactory>();
+        services.AddScoped<IDbSessionAccessor, DbSessionAccessor>();
+        services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
         return services;
     }

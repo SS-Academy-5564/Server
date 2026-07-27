@@ -9,19 +9,24 @@ namespace Pulse.DAL.Commands.Users;
 public class UserCommands : IUserCommands
 {
     private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IDbSessionAccessor _sessionAccessor;
 
-    public UserCommands(IDbConnectionFactory connectionFactory)
+    public UserCommands(IDbConnectionFactory connectionFactory, IDbSessionAccessor sessionAccessor)
     {
         _connectionFactory = connectionFactory;
+        _sessionAccessor = sessionAccessor;
     }
 
     // change to Task later when we will remove adding user to default organization
     /// <inheritdoc/>
-    public async Task<Guid> CreateUserAsync(CreateUserInput input, IUnitOfWork uow, CancellationToken ct)
+    public async Task<Guid> CreateUserAsync(CreateUserInput input, CancellationToken ct)
     {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
         try
         {
-            return await uow.Connection.ExecuteScalarAsync<Guid>(
+            return await session.Connection.ExecuteScalarAsync<Guid>(
                 new CommandDefinition(
                     "INSERT INTO Users (Email, FirstName, LastName, PasswordHash, CreatedAt, UpdatedAt) OUTPUT INSERTED.Id VALUES (@Email, @FirstName, @LastName, @PasswordHash, @Now, @Now)",
                     new
@@ -32,7 +37,7 @@ public class UserCommands : IUserCommands
                         input.PasswordHash,
                         Now = DateTimeOffset.UtcNow
                     },
-                    transaction: uow.Transaction,
+                    transaction: session.Transaction,
                     cancellationToken: ct));
         }
         catch (SqlException ex) when (ex.Number is 2627 or 2601)

@@ -21,7 +21,7 @@ public class PasswordResetCodeQueries : IPasswordResetCodeQueries
 
         return await connection.QuerySingleOrDefaultAsync<PasswordResetCodeRecord>(
             new CommandDefinition(
-                "SELECT TOP(1) Id, UserId, CodeHash, ExpiresAt, FailedAttempts " +
+                "SELECT TOP(1) Id, UserId, CodeHash, ExpiresAt, CreatedAt, FailedAttempts " +
                 "FROM PasswordResetCodes " +
                 "WHERE UserId = @UserId " +
                 "ORDER BY ExpiresAt DESC",

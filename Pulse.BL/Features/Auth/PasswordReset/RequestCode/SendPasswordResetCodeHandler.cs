@@ -7,6 +7,7 @@ using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Features.Auth.PasswordReset;
 using Pulse.BL.Features.Email;
 using Pulse.DAL.Commands.PasswordResetCodes;
+using Pulse.DAL.Queries.PasswordResetCodes;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
@@ -16,9 +17,10 @@ namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 /// Always returns success to prevent email enumeration attacks.
 /// Emails are sent in the requested language (with English as fallback).
 /// </summary>
-public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeCommand, Result>
+public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>>
 {
     private readonly IUserQueries _userQueries;
+    private readonly IPasswordResetCodeQueries _codeQueries;
     private readonly IPasswordResetCodeCommands _codeCommands;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
@@ -28,6 +30,7 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
 
     public SendPasswordResetCodeHandler(
         IUserQueries userQueries,
+        IPasswordResetCodeQueries codeQueries,
         IPasswordResetCodeCommands codeCommands,
         IPasswordHasher passwordHasher,
         IEmailService emailService,
@@ -36,6 +39,7 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
         ILogger<SendPasswordResetCodeHandler> logger)
     {
         _userQueries = userQueries;
+        _codeQueries = codeQueries;
         _codeCommands = codeCommands;
         _passwordHasher = passwordHasher;
         _emailService = emailService;
@@ -50,8 +54,8 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
     /// </summary>
     /// <param name="command">The password reset request with email and desired language.</param>
     /// <param name="ct">Cancellation token for the operation.</param>
-    /// <returns>Always returns a successful result.</returns>
-    public async Task<Result> HandleAsync(SendPasswordResetCodeCommand command, CancellationToken ct)
+    /// <returns>Always returns a successful result with resend cooldown info.</returns>
+    public async Task<Result<SendCodeResult>> HandleAsync(SendPasswordResetCodeCommand command, CancellationToken ct)
     {
         // Fallback to English if language is unsupported (should not happen due to EmailLanguageResolver, but defensive)
         string language = command.IsLanguageSupported() ? command.Language : PasswordResetConstants.SupportedLanguages.English;
@@ -64,13 +68,25 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
             _logger.LogInformation(
                 "Password reset requested for non-existent email. Identifier: {Identifier}",
                 PiiHasher.HashForLogging(command.Email));
-            return Result.Ok();
+            return Result.Ok(new SendCodeResult(_options.ResendCooldownSeconds));
+        }
+
+        // Check cooldown: if a code was recently created, silently skip to prevent abuse
+        PasswordResetCodeRecord? existingCode = await _codeQueries.GetActiveByUserIdAsync(userId.Value, ct);
+
+        if (existingCode is not null && IsCooldownActive(existingCode.CreatedAt))
+        {
+            _logger.LogInformation(
+                "Password reset code resend blocked by cooldown. Identifier: {Identifier}",
+                PiiHasher.HashForLogging(command.Email));
+            return Result.Ok(new SendCodeResult(_options.ResendCooldownSeconds));
         }
 
         // Generate 6-digit OTP
         string plainCode = GenerateSixDigitCode();
         string codeHash = _passwordHasher.HashPassword(plainCode);
-        DateTimeOffset expiresAt = _timeProvider.GetUtcNow().AddMinutes(_options.CodeTtlMinutes);
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+        DateTimeOffset expiresAt = now.AddMinutes(_options.CodeTtlMinutes);
 
         // Send the email first
         Result emailResult = await _emailService.SendEmailAsync(new SendEmailDto(
@@ -85,17 +101,23 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
             _logger.LogError("Failed to send reset email for identifier: {Identifier}",
                 PiiHasher.HashForLogging(command.Email));
 
-            return Result.Ok();
+            return Result.Ok(new SendCodeResult(_options.ResendCooldownSeconds));
         }
 
         // Transactionally replace any existing codes for this user with a fresh one ONLY after successful email
-        await _codeCommands.ReplaceAsync(new PasswordResetCodeInput(userId.Value, codeHash, expiresAt), ct);
+        await _codeCommands.ReplaceAsync(new PasswordResetCodeInput(userId.Value, codeHash, expiresAt, now), ct);
 
         _logger.LogInformation(
             "Password reset code issued. Identifier: {Identifier}",
             PiiHasher.HashForLogging(command.Email));
 
-        return Result.Ok();
+        return Result.Ok(new SendCodeResult(_options.ResendCooldownSeconds));
+    }
+
+    private bool IsCooldownActive(DateTimeOffset createdAt)
+    {
+        TimeSpan elapsed = _timeProvider.GetUtcNow() - createdAt;
+        return elapsed.TotalSeconds < _options.ResendCooldownSeconds;
     }
 
     private static string GenerateSixDigitCode()

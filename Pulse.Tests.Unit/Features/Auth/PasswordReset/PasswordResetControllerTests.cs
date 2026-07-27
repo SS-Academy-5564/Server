@@ -15,14 +15,14 @@ namespace Pulse.Tests.Unit.Features.Auth.PasswordReset;
 
 public class PasswordResetControllerTests
 {
-    private readonly Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result>> _requestHandlerMock;
+    private readonly Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>>> _requestHandlerMock;
     private readonly Mock<IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>>> _verifyHandlerMock;
     private readonly Mock<IAsyncHandler<ResetPasswordCommand, Result>> _resetHandlerMock;
     private readonly PasswordResetController _sut;
 
     public PasswordResetControllerTests()
     {
-        _requestHandlerMock = new Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result>>();
+        _requestHandlerMock = new Mock<IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>>>();
         _verifyHandlerMock = new Mock<IAsyncHandler<VerifyPasswordResetCodeCommand, Result<VerifyCodeResult>>>();
         _resetHandlerMock = new Mock<IAsyncHandler<ResetPasswordCommand, Result>>();
 
@@ -38,18 +38,19 @@ public class PasswordResetControllerTests
         // Arrange
         RequestPasswordResetRequest request = new("test@example.com");
         SetAcceptLanguageHeader(null);
+        SendCodeResult sendCodeResult = new(60);
 
         _requestHandlerMock
             .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok());
+            .ReturnsAsync(Result.Ok(sendCodeResult));
 
         // Act
         IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>()
-            .Which.Value.Should().BeOfType<ApiResponse>()
-            .Which.Success.Should().BeTrue();
+            .Which.Value.Should().BeOfType<ApiResponse<SendCodeResult>>()
+            .Which.Data.Should().Be(sendCodeResult);
     }
 
     [Fact]
@@ -58,10 +59,11 @@ public class PasswordResetControllerTests
         // Arrange
         RequestPasswordResetRequest request = new("test@example.com");
         SetAcceptLanguageHeader("uk-UA,uk;q=0.9,en;q=0.8");
+        SendCodeResult sendCodeResult = new(60);
 
         _requestHandlerMock
             .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "uk"), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok());
+            .ReturnsAsync(Result.Ok(sendCodeResult));
 
         // Act
         IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
@@ -79,10 +81,11 @@ public class PasswordResetControllerTests
         // Arrange
         RequestPasswordResetRequest request = new("test@example.com");
         SetAcceptLanguageHeader("de-DE,de;q=0.9");
+        SendCodeResult sendCodeResult = new(60);
 
         _requestHandlerMock
             .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok());
+            .ReturnsAsync(Result.Ok(sendCodeResult));
 
         // Act
         IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);

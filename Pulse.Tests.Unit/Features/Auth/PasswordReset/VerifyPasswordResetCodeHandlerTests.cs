@@ -38,7 +38,8 @@ public class VerifyPasswordResetCodeHandlerTests
         {
             CodeTtlMinutes = 5,
             MaxFailedAttempts = 5,
-            ResetTokenLifetimeMinutes = 10
+            ResetTokenLifetimeMinutes = 10,
+            ResendCooldownSeconds = 60
         });
 
         _sut = new VerifyPasswordResetCodeHandler(
@@ -62,7 +63,7 @@ public class VerifyPasswordResetCodeHandlerTests
         Guid codeId = Guid.NewGuid();
         string resetToken = "generated_jwt_token";
 
-        PasswordResetCodeRecord record = new(codeId, userId, "hashed_code", DateTimeOffset.UtcNow.AddMinutes(5), 0);
+        PasswordResetCodeRecord record = new(codeId, userId, "hashed_code", DateTimeOffset.UtcNow.AddMinutes(5), DateTimeOffset.UtcNow, 0);
 
         _userQueriesMock.Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>())).ReturnsAsync(userId);
         _codeQueriesMock.Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(record);
@@ -92,7 +93,7 @@ public class VerifyPasswordResetCodeHandlerTests
         Guid userId = Guid.NewGuid();
         Guid codeId = Guid.NewGuid();
 
-        PasswordResetCodeRecord record = new(codeId, userId, "hashed_code", DateTimeOffset.UtcNow.AddMinutes(5), 0);
+        PasswordResetCodeRecord record = new(codeId, userId, "hashed_code", DateTimeOffset.UtcNow.AddMinutes(5), DateTimeOffset.UtcNow, 0);
 
         _userQueriesMock.Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>())).ReturnsAsync(userId);
         _codeQueriesMock.Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>())).ReturnsAsync(record);
@@ -155,7 +156,7 @@ public class VerifyPasswordResetCodeHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        PasswordResetCodeRecord record = new(Guid.NewGuid(), userId, "hash", DateTimeOffset.UtcNow.AddMinutes(-1), 0);
+        PasswordResetCodeRecord record = new(Guid.NewGuid(), userId, "hash", DateTimeOffset.UtcNow.AddMinutes(-1), DateTimeOffset.UtcNow.AddMinutes(-6), 0);
         VerifyPasswordResetCodeCommand command = new("test@example.com", "123456");
 
         _userQueriesMock.Setup(x => x.GetIdByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(userId);
@@ -177,7 +178,7 @@ public class VerifyPasswordResetCodeHandlerTests
         // Arrange
         Guid userId = Guid.NewGuid();
         Guid codeId = Guid.NewGuid();
-        PasswordResetCodeRecord record = new(codeId, userId, "hash", DateTimeOffset.UtcNow.AddMinutes(5), 0);
+        PasswordResetCodeRecord record = new(codeId, userId, "hash", DateTimeOffset.UtcNow.AddMinutes(5), DateTimeOffset.UtcNow, 0);
         VerifyPasswordResetCodeCommand command = new("test@example.com", "wrong!");
 
         _userQueriesMock.Setup(x => x.GetIdByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(userId);
@@ -204,7 +205,7 @@ public class VerifyPasswordResetCodeHandlerTests
         // Arrange
         Guid userId = Guid.NewGuid();
         Guid codeId = Guid.NewGuid();
-        PasswordResetCodeRecord record = new(codeId, userId, "hash", DateTimeOffset.UtcNow.AddMinutes(5), 4);
+        PasswordResetCodeRecord record = new(codeId, userId, "hash", DateTimeOffset.UtcNow.AddMinutes(5), DateTimeOffset.UtcNow, 4);
         VerifyPasswordResetCodeCommand command = new("test@example.com", "wrong!");
 
         _userQueriesMock.Setup(x => x.GetIdByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(userId);

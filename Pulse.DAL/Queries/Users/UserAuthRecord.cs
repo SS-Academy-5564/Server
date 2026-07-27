@@ -5,4 +5,7 @@ public sealed record UserAuthRecord(
     string Email,
     string PasswordHash,
     Guid OrganizationId,
-    string RoleName);
+    string RoleName,
+    string OrganizationName,
+    int FailedAttempts,
+    bool IsLocked);

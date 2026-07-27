@@ -62,4 +62,4 @@ knowledge_base:
   code_guidelines:
     enabled: true
     filePatterns:
-      - ".github/copilot-instructions.md"
+      - "AGENTS.md"

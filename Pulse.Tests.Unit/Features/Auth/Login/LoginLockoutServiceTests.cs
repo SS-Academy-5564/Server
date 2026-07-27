@@ -20,9 +20,7 @@ public class LoginLockoutServiceTests
             LockoutDurationMinutes = 15
         };
 
-        _sut = new LoginLockoutService(
-            _queries.Object,
-            _commands.Object,
+        _sut = new LoginLockoutService(_commands.Object,
             Options.Create(options));
     }
 

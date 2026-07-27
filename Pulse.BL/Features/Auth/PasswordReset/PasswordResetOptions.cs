@@ -21,4 +21,9 @@ public sealed class PasswordResetOptions
     /// Gets or sets the lifetime of the JWT reset token in minutes.
     /// </summary>
     public required int ResetTokenLifetimeMinutes { get; init; } = 10;
+
+    /// <summary>
+    /// Gets or sets the minimum interval in seconds between successive code resend requests for the same user.
+    /// </summary>
+    public required int ResendCooldownSeconds { get; init; } = 60;
 }

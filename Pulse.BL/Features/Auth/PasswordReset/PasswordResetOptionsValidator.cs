@@ -23,6 +23,11 @@ public class PasswordResetOptionsValidator : IValidateOptions<PasswordResetOptio
             failures.Add("ResetTokenLifetimeMinutes must be greater than zero.");
         }
 
+        if (options.ResendCooldownSeconds <= 0)
+        {
+            failures.Add("ResendCooldownSeconds must be greater than zero.");
+        }
+
         if (failures.Count > 0)
         {
             return ValidateOptionsResult.Fail(failures);
