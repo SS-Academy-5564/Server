@@ -21,7 +21,7 @@ public interface IMonitorCommands : ICommands
     /// </summary>
     /// <param name="input">The monitor configuration to be updated.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
+    /// <returns>The identifier of the updated monitor.</returns>
     Task<Guid> UpdateAsync(UpdateMonitorInput input, CancellationToken ct);
 
     /// <summary>

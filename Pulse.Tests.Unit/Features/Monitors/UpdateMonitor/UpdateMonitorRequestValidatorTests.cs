@@ -52,6 +52,28 @@ public class UpdateMonitorRequestValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.Url);
     }
 
+    [Fact]
+    public void Validate_UrlAtMaxLength_ShouldNotHaveUrlError()
+    {
+        // "https://x.com/" (14) + 2069 chars = 2083 total
+        UpdateMonitorRequest request = ValidRequest() with { Url = "https://x.com/" + new string('a', 2069) };
+
+        TestValidationResult<UpdateMonitorRequest> result = _validator.TestValidate(request);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.Url);
+    }
+
+    [Fact]
+    public void Validate_UrlExceedsMaxLength_ShouldHaveValidationError()
+    {
+        // "https://x.com/" (14) + 2070 chars = 2084 total
+        UpdateMonitorRequest request = ValidRequest() with { Url = "https://x.com/" + new string('a', 2070) };
+
+        TestValidationResult<UpdateMonitorRequest> result = _validator.TestValidate(request);
+
+        result.ShouldHaveValidationErrorFor(x => x.Url);
+    }
+
     [Theory]
     [InlineData("get")]
     [InlineData("POST")]
@@ -81,6 +103,26 @@ public class UpdateMonitorRequestValidatorTests
     public void Validate_EmptyResultPath_ShouldHaveValidationError()
     {
         UpdateMonitorRequest request = ValidRequest() with { ResultPath = "" };
+
+        TestValidationResult<UpdateMonitorRequest> result = _validator.TestValidate(request);
+
+        result.ShouldHaveValidationErrorFor(x => x.ResultPath);
+    }
+
+    [Fact]
+    public void Validate_ResultPathAtMaxLength_ShouldNotHaveResultPathError()
+    {
+        UpdateMonitorRequest request = ValidRequest() with { ResultPath = new string('a', 255) };
+
+        TestValidationResult<UpdateMonitorRequest> result = _validator.TestValidate(request);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.ResultPath);
+    }
+
+    [Fact]
+    public void Validate_ResultPathExceedsMaxLength_ShouldHaveValidationError()
+    {
+        UpdateMonitorRequest request = ValidRequest() with { ResultPath = new string('a', 256) };
 
         TestValidationResult<UpdateMonitorRequest> result = _validator.TestValidate(request);
 

@@ -21,6 +21,17 @@ public sealed class UpdateMonitorController : PulseControllerBase
         _handler = handler;
     }
 
+    /// <summary>
+    /// Updates an existing monitor identified by <paramref name="id"/> with the supplied configuration.
+    /// </summary>
+    /// <param name="id">The unique identifier of the monitor to update.</param>
+    /// <param name="request">The new monitor configuration.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>
+    /// <c>200 OK</c> with the updated monitor projection on success;
+    /// <c>404 Not Found</c> if no monitor with the given <paramref name="id"/> exists;
+    /// <c>400 Bad Request</c> if the request fails validation.
+    /// </returns>
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> UpdateMonitorAsync([FromRoute] Guid id, [Validate] UpdateMonitorRequest request, CancellationToken ct = default)
     {

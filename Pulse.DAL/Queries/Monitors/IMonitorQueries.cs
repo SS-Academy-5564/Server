@@ -22,6 +22,9 @@ public interface IMonitorQueries : IQueries
     /// </summary>
     /// <param name="id">The monitor id to search by.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>A monitor record matching database table.</returns>
+    /// <returns>
+    /// A <see cref="MonitorRecord"/> matching the given <paramref name="id"/>,
+    /// or <see langword="null"/> if no monitor with that identifier exists.
+    /// </returns>
     Task<MonitorRecord?> GetByIdAsync(Guid id, CancellationToken ct);
 }

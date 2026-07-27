@@ -19,6 +19,15 @@ public class GetMonitorByIdController : PulseControllerBase
         _handler = handler;
     }
 
+    /// <summary>
+    /// Returns the full detail of a single monitor identified by <paramref name="id"/>.
+    /// </summary>
+    /// <param name="id">The unique identifier of the monitor to retrieve.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>
+    /// <c>200 OK</c> with the <see cref="MonitorResult"/> on success;
+    /// <c>404 Not Found</c> if no monitor with the given <paramref name="id"/> exists.
+    /// </returns>
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetMonitorByIdAsync([FromRoute] Guid id, CancellationToken ct = default)
     {

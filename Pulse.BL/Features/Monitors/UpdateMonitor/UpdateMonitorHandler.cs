@@ -28,7 +28,7 @@ public class UpdateMonitorHandler : IAsyncHandler<UpdateMonitorCommand, Result<M
     /// </summary>
     /// <param name="command">The monitor configuration to update.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>The newly created monitor in list-projection shape.</returns>
+    /// <returns>The updated monitor in list-projection shape.</returns>
     public async Task<Result<MonitorListResult>> HandleAsync(UpdateMonitorCommand command, CancellationToken ct)
     {
         MonitorRecord? existingMonitor = await _monitorQueries.GetByIdAsync(command.Id, ct);
