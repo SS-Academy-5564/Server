@@ -1,4 +1,5 @@
 using System.Reflection;
+using Pulse.BL.Common.Localization;
 using Scriban;
 
 namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
@@ -9,17 +10,20 @@ namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 /// </summary>
 internal static class PasswordResetEmailBuilder
 {
-    private static readonly Template EnglishHtmlTemplate;
-    private static readonly Template EnglishPlainTextTemplate;
-    private static readonly Template UkrainianHtmlTemplate;
-    private static readonly Template UkrainianPlainTextTemplate;
+    private const string ResourcePrefix = "Pulse.BL.Features.Auth.PasswordReset.RequestCode.PasswordResetEmail";
+    private static readonly IReadOnlyDictionary<string, TemplateSet> TemplatesByLanguage;
 
     static PasswordResetEmailBuilder()
     {
-        EnglishHtmlTemplate = LoadTemplate("Pulse.BL.Features.Auth.PasswordReset.RequestCode.PasswordResetEmail.html");
-        EnglishPlainTextTemplate = LoadTemplate("Pulse.BL.Features.Auth.PasswordReset.RequestCode.PasswordResetEmail.txt");
-        UkrainianHtmlTemplate = LoadTemplate("Pulse.BL.Features.Auth.PasswordReset.RequestCode.PasswordResetEmail.ukrainian.html");
-        UkrainianPlainTextTemplate = LoadTemplate("Pulse.BL.Features.Auth.PasswordReset.RequestCode.PasswordResetEmail.ukrainian.txt");
+        TemplatesByLanguage = new Dictionary<string, TemplateSet>(StringComparer.Ordinal)
+        {
+            [PasswordResetConstants.SupportedLanguages.English] = new(
+                LoadTemplate(BuildResourceName("", "html")),
+                LoadTemplate(BuildResourceName("", "txt"))),
+            [PasswordResetConstants.SupportedLanguages.Ukrainian] = new(
+                LoadTemplate(BuildResourceName(".ukrainian", "html")),
+                LoadTemplate(BuildResourceName(".ukrainian", "txt")))
+        };
     }
 
     /// <summary>
@@ -38,7 +42,7 @@ internal static class PasswordResetEmailBuilder
     /// <param name="language">The language code (e.g., "en", "uk", "uk-UA"). Defaults to English if unsupported.</param>
     /// <returns>The rendered HTML email body.</returns>
     public static string BuildHtmlBody(string code, int codeTtlMinutes, string language)
-        => GetHtmlTemplate(language).Render(new { code, code_ttl_minutes = codeTtlMinutes });
+        => ResolveTemplateSet(language).Html.Render(new { code, code_ttl_minutes = codeTtlMinutes });
 
     /// <summary>
     /// Builds the plain text email body for the specified language.
@@ -48,7 +52,10 @@ internal static class PasswordResetEmailBuilder
     /// <param name="language">The language code (e.g., "en", "uk", "uk-UA"). Defaults to English if unsupported.</param>
     /// <returns>The rendered plain text email body.</returns>
     public static string BuildPlainTextBody(string code, int codeTtlMinutes, string language)
-        => GetPlainTextTemplate(language).Render(new { code, code_ttl_minutes = codeTtlMinutes });
+        => ResolveTemplateSet(language).PlainText.Render(new { code, code_ttl_minutes = codeTtlMinutes });
+
+    private static string BuildResourceName(string languageSuffix, string extension)
+        => $"{ResourcePrefix}{languageSuffix}.{extension}";
 
     private static Template LoadTemplate(string resourceName)
     {
@@ -64,29 +71,21 @@ internal static class PasswordResetEmailBuilder
         return Template.Parse(reader.ReadToEnd());
     }
 
-    private static Template GetHtmlTemplate(string language)
-        => IsUkrainian(language) ? UkrainianHtmlTemplate : EnglishHtmlTemplate;
-
-    private static Template GetPlainTextTemplate(string language)
-        => IsUkrainian(language) ? UkrainianPlainTextTemplate : EnglishPlainTextTemplate;
-
-    private static bool IsUkrainian(string language)
-        => string.Equals(NormalizeLanguageTag(language), PasswordResetConstants.SupportedLanguages.Ukrainian, StringComparison.Ordinal);
-
-    /// <summary>
-    /// Normalizes a language tag to its primary language subtag (first segment before '-' or '_').
-    /// Examples: "en-US" → "en", "uk_UA" → "uk", "invalid" → "invalid"
-    /// </summary>
-    private static string NormalizeLanguageTag(string language)
+    private static TemplateSet ResolveTemplateSet(string language)
     {
-        string normalized = language.Trim().ToLowerInvariant();
-        string[] parts = normalized.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        if (parts.Length == 0)
+        string normalizedLanguage = LanguageTagNormalizer.NormalizePrimarySubtag(language);
+        if (string.IsNullOrWhiteSpace(normalizedLanguage))
         {
-            return PasswordResetConstants.SupportedLanguages.English;
+            normalizedLanguage = PasswordResetConstants.SupportedLanguages.English;
         }
 
-        return parts[0];
+        if (TemplatesByLanguage.TryGetValue(normalizedLanguage, out TemplateSet? templateSet))
+        {
+            return templateSet;
+        }
+
+        return TemplatesByLanguage[PasswordResetConstants.SupportedLanguages.English];
     }
+
+    private sealed record TemplateSet(Template Html, Template PlainText);
 }

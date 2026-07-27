@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Reflection;
 using System.Resources;
+using Pulse.BL.Common.Localization;
 
 namespace Pulse.BL.Features.Auth.PasswordReset;
 
@@ -33,14 +34,11 @@ internal static class PasswordResetEmailSubjectLocalizer
 
     private static CultureInfo ResolveCulture(string language)
     {
-        if (string.IsNullOrWhiteSpace(language))
+        string primaryLanguage = LanguageTagNormalizer.NormalizePrimarySubtag(language);
+        if (string.IsNullOrWhiteSpace(primaryLanguage))
         {
-            return CultureInfo.GetCultureInfo(PasswordResetConstants.SupportedLanguages.English);
+            primaryLanguage = PasswordResetConstants.SupportedLanguages.English;
         }
-
-        string normalized = language.Trim().ToLowerInvariant();
-        string[] parts = normalized.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        string primaryLanguage = parts.Length == 0 ? PasswordResetConstants.SupportedLanguages.English : parts[0];
 
         return PasswordResetConstants.SupportedLanguages.All.Contains(primaryLanguage)
             ? CultureInfo.GetCultureInfo(primaryLanguage)

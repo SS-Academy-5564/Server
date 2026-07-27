@@ -1,4 +1,5 @@
 using System.Globalization;
+using Pulse.BL.Common.Localization;
 
 namespace Pulse.API.Features.Auth.PasswordReset;
 
@@ -64,7 +65,7 @@ internal static class EmailLanguageResolver
                 continue;
             }
 
-            string normalizedLanguage = NormalizeLanguage(parts[0]);
+            string normalizedLanguage = LanguageTagNormalizer.NormalizePrimarySubtag(parts[0]);
             if (string.IsNullOrWhiteSpace(normalizedLanguage))
             {
                 continue;
@@ -96,18 +97,6 @@ internal static class EmailLanguageResolver
 
             yield return (normalizedLanguage, quality, i);
         }
-    }
-
-    private static string NormalizeLanguage(string languageTag)
-    {
-        string tag = languageTag.Trim().ToLowerInvariant();
-        if (tag.Length == 0 || tag == "*")
-        {
-            return string.Empty;
-        }
-
-        string[] parts = tag.Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        return parts.Length == 0 ? string.Empty : parts[0];
     }
 
     private sealed record LanguagePreference(string Language, double Quality, int Index)

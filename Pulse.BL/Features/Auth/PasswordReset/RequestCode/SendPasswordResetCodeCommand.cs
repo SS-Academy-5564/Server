@@ -1,3 +1,5 @@
+using Pulse.BL.Common.Localization;
+
 namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 
 /// <summary>
@@ -19,20 +21,7 @@ public sealed record SendPasswordResetCodeCommand(string Email, string Language)
     /// <returns>True if the language is supported; otherwise, false.</returns>
     public bool IsLanguageSupported()
     {
-        string normalizedLanguage = NormalizeLanguage(Language);
+        string normalizedLanguage = LanguageTagNormalizer.NormalizePrimarySubtag(Language);
         return PasswordResetConstants.SupportedLanguages.All.Contains(normalizedLanguage);
-    }
-
-    private static string NormalizeLanguage(string language)
-    {
-        if (string.IsNullOrWhiteSpace(language))
-        {
-            return string.Empty;
-        }
-
-        string[] parts = language.Trim().ToLowerInvariant()
-            .Split(['-', '_'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-
-        return parts.Length == 0 ? string.Empty : parts[0];
     }
 }
