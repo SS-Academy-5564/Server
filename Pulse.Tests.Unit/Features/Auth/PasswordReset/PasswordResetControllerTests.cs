@@ -98,6 +98,50 @@ public class PasswordResetControllerTests
     }
 
     [Fact]
+    public async Task RequestCodeAsync_WhenAcceptLanguageHasOutOfRangeQ_IgnoresInvalidPreference()
+    {
+        // Arrange
+        RequestPasswordResetRequest request = new("test@example.com");
+        SetAcceptLanguageHeader("uk;q=2,en;q=0.8");
+        SendCodeResult sendCodeResult = new(60);
+
+        _requestHandlerMock
+            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(sendCodeResult));
+
+        // Act
+        IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        _requestHandlerMock.Verify(
+            x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RequestCodeAsync_WhenAcceptLanguageHasMalformedQ_IgnoresInvalidPreference()
+    {
+        // Arrange
+        RequestPasswordResetRequest request = new("test@example.com");
+        SetAcceptLanguageHeader("uk;q=abc,en;q=0.8");
+        SendCodeResult sendCodeResult = new(60);
+
+        _requestHandlerMock
+            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(sendCodeResult));
+
+        // Act
+        IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        _requestHandlerMock.Verify(
+            x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task VerifyCodeAsync_OnSuccess_ReturnsOkWithToken()
     {
         // Arrange

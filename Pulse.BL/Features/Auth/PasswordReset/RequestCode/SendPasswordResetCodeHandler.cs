@@ -4,7 +4,6 @@ using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
-using Pulse.BL.Features.Auth.PasswordReset;
 using Pulse.BL.Features.Email;
 using Pulse.DAL.Commands.PasswordResetCodes;
 using Pulse.DAL.Queries.PasswordResetCodes;

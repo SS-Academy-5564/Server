@@ -1,5 +1,3 @@
-using Pulse.BL.Features.Auth.PasswordReset;
-
 namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 
 /// <summary>
@@ -9,9 +7,9 @@ namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 /// </summary>
 /// <param name="Email">The email address of the account requesting a password reset.</param>
 /// <param name="Language">
-/// The email language code derived from the Accept-Language header (normalized to primary subtag).
-/// Must be one of the supported languages: "en" (English) or "uk" (Ukrainian).
-/// Defaults to "en" if the header contains no supported languages.
+/// The email language code derived from the Accept-Language header (e.g. "uk-UA").
+/// Only the primary subtag is used for matching (e.g. "uk").
+/// Supported languages are "en" (English) and "uk" (Ukrainian); English is used as fallback.
 /// </param>
 public sealed record SendPasswordResetCodeCommand(string Email, string Language)
 {

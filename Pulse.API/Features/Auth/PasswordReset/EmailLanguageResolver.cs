@@ -79,10 +79,14 @@ internal static class EmailLanguageResolver
                 }
 
                 string qValue = parts[p][2..].Trim();
-                if (double.TryParse(qValue, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double parsedQ))
+                if (!double.TryParse(qValue, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out double parsedQ)
+                    || parsedQ is < 0 or > 1)
                 {
-                    quality = parsedQ;
+                    quality = -1;
+                    break;
                 }
+
+                quality = parsedQ;
             }
 
             if (quality <= 0)
