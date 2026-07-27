@@ -3,26 +3,26 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Pulse.BL.Common.Errors;
-using Pulse.BL.Features.Polling.ManualTrigger;
-using Pulse.BL.Features.Polling.ManualTrigger.Queue;
+using Pulse.BL.Features.Polling.ManualCheck;
+using Pulse.BL.Features.Polling.ManualCheck.Queue;
 using Pulse.DAL.Queries.Monitors;
 
-namespace Pulse.Tests.Unit.Features.Polling.ManualTrigger;
+namespace Pulse.Tests.Unit.Features.Polling.ManualCheck;
 
-public class ManualMonitorTriggerServiceTests
+public class ManualCheckHandlerTests
 {
     private readonly Mock<IMonitorQueries> _monitorQueries = new();
     private readonly Mock<IManualCheckQueue> _queue = new();
-    private readonly ILogger<ManualMonitorTriggerService> _logger = Mock.Of<ILogger<ManualMonitorTriggerService>>();
+    private readonly ILogger<ManualCheckHandler> _logger = Mock.Of<ILogger<ManualCheckHandler>>();
 
-    private ManualMonitorTriggerService CreateService()
+    private ManualCheckHandler CreateHandler()
         => new(_monitorQueries.Object, _queue.Object, _logger);
 
     [Fact]
-    public async Task TriggerAsync_WhenMonitorDoesNotExist_ReturnsNotFoundAndDoesNotEnqueue()
+    public async Task HandleAsync_WhenMonitorDoesNotExist_ReturnsNotFoundAndDoesNotEnqueue()
     {
         // Arrange
-        ManualMonitorTriggerService service = CreateService();
+        ManualCheckHandler handler = CreateHandler();
         Guid monitorId = Guid.NewGuid();
 
         _monitorQueries
@@ -30,7 +30,7 @@ public class ManualMonitorTriggerServiceTests
             .ReturnsAsync((MonitorPollingRecord?)null);
 
         // Act
-        Result result = await service.TriggerAsync(monitorId, CancellationToken.None);
+        Result result = await handler.HandleAsync(new ManualCheckCommand(monitorId), CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -41,10 +41,10 @@ public class ManualMonitorTriggerServiceTests
     }
 
     [Fact]
-    public async Task TriggerAsync_WhenMonitorExistsAndQueueHasCapacity_EnqueuesMonitorIdAndReturnsSuccess()
+    public async Task HandleAsync_WhenMonitorExistsAndQueueHasCapacity_EnqueuesMonitorIdAndReturnsSuccess()
     {
         // Arrange
-        ManualMonitorTriggerService service = CreateService();
+        ManualCheckHandler handler = CreateHandler();
 
         MonitorPollingRecord monitor = new(
             Guid.NewGuid(),
@@ -64,7 +64,7 @@ public class ManualMonitorTriggerServiceTests
             .Returns(true);
 
         // Act
-        Result result = await service.TriggerAsync(monitor.Id, CancellationToken.None);
+        Result result = await handler.HandleAsync(new ManualCheckCommand(monitor.Id), CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -72,10 +72,10 @@ public class ManualMonitorTriggerServiceTests
     }
 
     [Fact]
-    public async Task TriggerAsync_WhenQueueIsFull_ReturnsTooManyRequestsError()
+    public async Task HandleAsync_WhenQueueIsFull_ReturnsTooManyRequestsError()
     {
         // Arrange
-        ManualMonitorTriggerService service = CreateService();
+        ManualCheckHandler handler = CreateHandler();
 
         MonitorPollingRecord monitor = new(
             Guid.NewGuid(),
@@ -95,7 +95,7 @@ public class ManualMonitorTriggerServiceTests
             .Returns(false);
 
         // Act
-        Result result = await service.TriggerAsync(monitor.Id, CancellationToken.None);
+        Result result = await handler.HandleAsync(new ManualCheckCommand(monitor.Id), CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

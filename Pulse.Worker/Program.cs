@@ -9,7 +9,8 @@ IHostBuilder builder = Host.CreateDefaultBuilder(args);
 builder.ConfigureServices((context, services) =>
 {
     services.AddDataAccess();
-    services.AddPolling(context.Configuration);
+    services.AddPolling();
+    services.AddPollingWorkerOptions(context.Configuration);
 
     services.AddHostedService<PollerWorker>();
 

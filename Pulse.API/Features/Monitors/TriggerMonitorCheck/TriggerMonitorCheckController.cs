@@ -4,7 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Pulse.API.Constants;
 using Pulse.API.Controllers;
-using Pulse.BL.Features.Polling.ManualTrigger;
+using Pulse.BL.Common.Handlers;
+using Pulse.BL.Features.Polling.ManualCheck;
 
 namespace Pulse.API.Features.Monitors.TriggerMonitorCheck;
 
@@ -13,18 +14,18 @@ namespace Pulse.API.Features.Monitors.TriggerMonitorCheck;
 [Authorize]
 public sealed class TriggerMonitorCheckController : PulseControllerBase
 {
-    private readonly IManualMonitorTriggerService _manualTriggerService;
+    private readonly IAsyncHandler<ManualCheckCommand, Result> _handler;
 
-    public TriggerMonitorCheckController(IManualMonitorTriggerService manualTriggerService)
+    public TriggerMonitorCheckController(IAsyncHandler<ManualCheckCommand, Result> handler)
     {
-        _manualTriggerService = manualTriggerService;
+        _handler = handler;
     }
 
     [HttpPost("{id:guid}/run-now")]
     [EnableRateLimiting(RateLimitPolicies.ManualMonitorTrigger)]
     public async Task<IActionResult> RunNowAsync(Guid id, CancellationToken ct)
     {
-        Result result = await _manualTriggerService.TriggerAsync(id, ct);
+        Result result = await _handler.HandleAsync(new ManualCheckCommand(id), ct);
         return ToActionResult(result);
     }
 }

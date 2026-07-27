@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.Options;
@@ -65,6 +66,18 @@ public class PollingService : IPollingService
         }
 
         return Result.Ok();
+    }
+
+    public async Task<Result> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
+    {
+        MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(monitorId, ct);
+
+        if (monitor is null)
+        {
+            return Result.Fail(new NotFoundError($"Monitor '{monitorId}' was not found."));
+        }
+
+        return await ProcessMonitorAsync(monitor, ct);
     }
 
     public async Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)

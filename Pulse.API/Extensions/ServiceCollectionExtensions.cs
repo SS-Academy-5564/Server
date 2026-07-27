@@ -126,38 +126,15 @@ public static class ServiceCollectionExtensions
                         });
                     });
 
-                    rateLimiterOptions.OnRejected = async (context, ct) =>
-                    {
-                        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-                        context.HttpContext.Response.ContentType = "application/json";
-
-                        var response = new ApiResponse
-                        {
-                            Success = false,
-                            Errors =
-                            [
-                                new ApiError
-                                {
-                                    Code = "RateLimited",
-                                    Message = "Manual check was already triggered recently. Please wait before trying again."
-                                }
-                            ]
-                        };
-
-                        await context.HttpContext.Response.WriteAsJsonAsync(response, ct);
-                    };
-
                     rateLimiterOptions.OnRejected = async (onRejectedContext, cancellationToken) =>
                     {
                         HttpContext httpContext = onRejectedContext.HttpContext;
                         httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                        httpContext.Response.ContentType = "application/json";
 
-                        double retryAfterSeconds = 0;
-                        if (onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
-                        {
-                            retryAfterSeconds = Math.Ceiling(retryAfter.TotalSeconds);
-                            httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
-                        }
+                        string retryMessage = onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter)
+                            ? $"Please try again in {retryAfter.TotalSeconds:F0} seconds."
+                            : "Please wait before trying again.";
 
                         await httpContext.Response.WriteAsJsonAsync(new ApiResponse
                         {
@@ -166,10 +143,8 @@ public static class ServiceCollectionExtensions
                             [
                                 new ApiError
                                 {
-                                    Code = AppError.Codes.TooManyRequests,
-                                    Message = retryAfterSeconds > 0
-                                        ? $"Too many requests. Retry after {retryAfterSeconds:0} second(s)"
-                                        : "Too many requests."
+                                    Code = RateLimitErrorCodes.RateLimited,
+                                    Message = $"Manual check was already triggered recently. {retryMessage}"
                                 }
                             ]
                         }, cancellationToken);

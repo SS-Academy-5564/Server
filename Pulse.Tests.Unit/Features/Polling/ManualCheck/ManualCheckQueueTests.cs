@@ -2,7 +2,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Features.Polling.ManualCheck.Queue;
 
-namespace Pulse.Tests.Unit.Features.Polling.ManualTrigger;
+namespace Pulse.Tests.Unit.Features.Polling.ManualCheck;
 
 public class ManualCheckQueueTests
 {

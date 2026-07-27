@@ -16,7 +16,6 @@ public sealed class ManualCheckQueue : IManualCheckQueue
         });
     }
 
-    /// <inheritdoc/>
     public bool TryEnqueue(Guid monitorId) => _channel.Writer.TryWrite(monitorId);
 
     public ValueTask<Guid> DequeueAsync(CancellationToken ct) => _channel.Reader.ReadAsync(ct);

@@ -1,25 +1,23 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Pulse.BL.Features.Polling.ManualTrigger.Queue;
+using Pulse.BL.Features.Polling.ManualCheck.Queue;
 
-namespace Pulse.BL.Features.Polling.ManualTrigger.Execution;
+namespace Pulse.BL.Features.Polling.ManualCheck;
 
-/// <summary>
-/// A background service that continuously dequeues monitor IDs from the manual check queue and executes the corresponding checks.
-/// </summary>
-public sealed class ManualCheckHostedService : BackgroundService
+public sealed class ManualCheckQueueWorker : BackgroundService
 {
     private readonly IManualCheckQueue _queue;
-    private readonly IScopedManualCheckRunner _runner;
-    private readonly ILogger<ManualCheckHostedService> _logger;
+    private readonly IServiceScopeFactory _scopeFactory;
+    private readonly ILogger<ManualCheckQueueWorker> _logger;
 
-    public ManualCheckHostedService(
+    public ManualCheckQueueWorker(
         IManualCheckQueue queue,
-        IScopedManualCheckRunner runner,
-        ILogger<ManualCheckHostedService> logger)
+        IServiceScopeFactory scopeFactory,
+        ILogger<ManualCheckQueueWorker> logger)
     {
         _queue = queue;
-        _runner = runner;
+        _scopeFactory = scopeFactory;
         _logger = logger;
     }
 
@@ -40,7 +38,9 @@ public sealed class ManualCheckHostedService : BackgroundService
 
             try
             {
-                await _runner.RunAsync(monitorId, stoppingToken);
+                using IServiceScope scope = _scopeFactory.CreateScope();
+                IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
+                await pollingService.ProcessMonitorAsync(monitorId, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {

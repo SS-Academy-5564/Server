@@ -3,7 +3,6 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Pulse.BL.Features.Polling;
-using Pulse.BL.Features.Polling.ManualTrigger.Execution;
 using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Polling.ManualTrigger;
@@ -12,10 +11,17 @@ public class ManualCheckExecutorTests
 {
     private readonly Mock<IMonitorQueries> _monitorQueries = new();
     private readonly Mock<IPollingService> _pollingService = new();
-    private readonly ILogger<ManualCheckExecutor> _logger = Mock.Of<ILogger<ManualCheckExecutor>>();
 
-    private ManualCheckExecutor CreateExecutor()
-        => new(_monitorQueries.Object, _pollingService.Object, _logger);
+    private PollingService CreateExecutor()
+        => new(
+            Mock.Of<ILogger<PollingService>>(),
+            Options.Create(new Pulse.BL.Features.Polling.Options.PollingWorkerOptions { BatchSize = 50, LoopIntervalSeconds = 10 }),
+            Mock.Of<Pulse.BL.Features.Polling.Http.IHttpMonitorClient>(),
+            Mock.Of<Pulse.BL.Common.Helpers.Json.IJsonPathReader>(),
+            _monitorQueries.Object,
+            Mock.Of<Pulse.DAL.Commands.Monitors.IMonitorCommands>(),
+            Mock.Of<Pulse.DAL.Commands.MonitorPollResults.IMonitorPollResultsCommands>(),
+            Mock.Of<Pulse.DAL.Common.Repository.IUnitOfWorkFactory>());
 
     [Fact]
     public async Task ExecuteAsync_WhenMonitorIsStillEligible_ReRequeriesAndProcessesIt()
