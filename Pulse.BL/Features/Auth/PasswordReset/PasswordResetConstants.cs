@@ -18,20 +18,4 @@ internal static class PasswordResetConstants
         /// </summary>
         public static IReadOnlySet<string> All { get; } = new HashSet<string> { English, Ukrainian };
     }
-
-    /// <summary>
-    /// English localization strings.
-    /// </summary>
-    public static class EmailTexts
-    {
-        public static class English
-        {
-            public const string Subject = "Your Pulse password reset code";
-        }
-
-        public static class Ukrainian
-        {
-            public const string Subject = "Код для скидання пароля Pulse";
-        }
-    }
 }

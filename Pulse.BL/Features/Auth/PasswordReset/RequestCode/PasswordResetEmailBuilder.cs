@@ -28,9 +28,7 @@ internal static class PasswordResetEmailBuilder
     /// <param name="language">The language code (e.g., "en", "uk", "uk-UA"). Defaults to English if unsupported.</param>
     /// <returns>The localized email subject.</returns>
     public static string BuildSubject(string language)
-        => IsUkrainian(language)
-            ? PasswordResetConstants.EmailTexts.Ukrainian.Subject
-            : PasswordResetConstants.EmailTexts.English.Subject;
+        => PasswordResetEmailSubjectLocalizer.GetSubject(language);
 
     /// <summary>
     /// Builds the HTML email body for the specified language.
