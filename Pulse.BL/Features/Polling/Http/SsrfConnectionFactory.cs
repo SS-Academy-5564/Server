@@ -16,6 +16,11 @@ public sealed class SsrfConnectionFactory
     private readonly ISsrfGuard _guard;
     private readonly IDnsResolver _dnsResolver;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SsrfConnectionFactory"/> class.
+    /// </summary>
+    /// <param name="guard">The SSRF guard used to validate resolved addresses.</param>
+    /// <param name="dnsResolver">The DNS resolver used to resolve host names at connection time.</param>
     public SsrfConnectionFactory(ISsrfGuard guard, IDnsResolver dnsResolver)
     {
         _guard = guard;
@@ -27,6 +32,9 @@ public sealed class SsrfConnectionFactory
     /// Throws <see cref="HttpRequestException"/> when the destination is blocked,
     /// which the caller records as a failed poll.
     /// </summary>
+    /// <param name="context">The connection context providing the destination endpoint.</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>A stream connected to the destination.</returns>
     public async ValueTask<Stream> ConnectAsync(SocketsHttpConnectionContext context, CancellationToken ct)
     {
         DnsEndPoint endPoint = context.DnsEndPoint;
@@ -62,6 +70,9 @@ public sealed class SsrfConnectionFactory
     /// Resolves the host and returns its addresses only if every resolved address
     /// is permitted; otherwise throws <see cref="HttpRequestException"/>.
     /// </summary>
+    /// <param name="host">The host name or IP literal to resolve and validate.</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>The resolved IP addresses that passed SSRF validation.</returns>
     public async Task<IReadOnlyList<IPAddress>> ResolveAndValidateAsync(string host, CancellationToken ct)
     {
         IPAddress[] addresses = IPAddress.TryParse(host, out IPAddress? literal)

@@ -8,5 +8,11 @@ namespace Pulse.BL.Common.Security.Ssrf;
 /// </summary>
 public interface IDnsResolver
 {
+    /// <summary>
+    /// Resolves a host name to its IP addresses.
+    /// </summary>
+    /// <param name="host">The host name to resolve.</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>The resolved IP addresses.</returns>
     Task<IPAddress[]> ResolveAsync(string host, CancellationToken ct);
 }

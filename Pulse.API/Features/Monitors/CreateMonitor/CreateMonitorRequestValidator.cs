@@ -3,6 +3,10 @@ using Pulse.BL.Common.Security.Ssrf;
 
 namespace Pulse.API.Features.Monitors.CreateMonitor;
 
+/// <summary>
+/// Validates <see cref="CreateMonitorRequest"/> instances, ensuring monitor
+/// configuration is well-formed and the endpoint URL does not target internal hosts.
+/// </summary>
 public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequest>
 {
     private const int MinPollingIntervalSeconds = 60;
@@ -17,6 +21,10 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
 
     private readonly ISsrfGuard _ssrfGuard;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateMonitorRequestValidator"/> class.
+    /// </summary>
+    /// <param name="ssrfGuard">The SSRF guard used to validate that request URLs do not target internal hosts.</param>
     public CreateMonitorRequestValidator(ISsrfGuard ssrfGuard)
     {
         _ssrfGuard = ssrfGuard;
@@ -49,12 +57,22 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
             .WithMessage("Polling timeout must be between 5 and 30 seconds.");
     }
 
+    /// <summary>
+    /// Determines whether the given string is a valid absolute HTTP or HTTPS URL.
+    /// </summary>
+    /// <param name="url">The URL string to validate.</param>
+    /// <returns><c>true</c> if the URL is a valid absolute HTTP or HTTPS URI; otherwise, <c>false</c>.</returns>
     private static bool BeAValidHttpUrl(string? url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
             && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
 
+    /// <summary>
+    /// Determines whether the given URL targets an internal or private host.
+    /// </summary>
+    /// <param name="url">The URL to validate.</param>
+    /// <returns><c>true</c> if the URL does not target an internal host; otherwise, <c>false</c>.</returns>
     private bool NotTargetInternalHost(string? url)
     {
         if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)

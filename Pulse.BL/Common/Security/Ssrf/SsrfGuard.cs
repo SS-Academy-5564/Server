@@ -30,6 +30,10 @@ public sealed class SsrfGuard : ISsrfGuard
     private readonly IReadOnlyList<IPNetwork> _explicitlyBlocked;
     private readonly IReadOnlyList<IPNetwork> _defaultBlocked;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SsrfGuard"/> class.
+    /// </summary>
+    /// <param name="options">The SSRF protection options used to configure blocked and allowed CIDR ranges.</param>
     public SsrfGuard(IOptions<SsrfProtectionOptions> options)
     {
         SsrfProtectionOptions value = options.Value;
@@ -110,9 +114,20 @@ public sealed class SsrfGuard : ISsrfGuard
         return true;
     }
 
+    /// <summary>
+    /// Normalizes an IP address by converting IPv4-mapped IPv6 addresses
+    /// to their IPv4 representation; leaves all other addresses unchanged.
+    /// </summary>
+    /// <param name="address">The IP address to normalize.</param>
+    /// <returns>The normalized IP address.</returns>
     private static IPAddress Normalize(IPAddress address)
         => address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
 
+    /// <summary>
+    /// Parses a collection of CIDR strings into <see cref="IPNetwork"/> instances.
+    /// </summary>
+    /// <param name="cidrs">The CIDR strings to parse.</param>
+    /// <returns>A list of successfully parsed IP networks.</returns>
     private static List<IPNetwork> ParseNetworks(IEnumerable<string> cidrs)
     {
         List<IPNetwork> networks = new();
@@ -129,6 +144,12 @@ public sealed class SsrfGuard : ISsrfGuard
         return networks;
     }
 
+    /// <summary>
+    /// Ensures a CIDR string includes a prefix length, appending the
+    /// appropriate default (/32 for IPv4, /128 for IPv6) when absent.
+    /// </summary>
+    /// <param name="cidr">The CIDR string to normalize.</param>
+    /// <returns>The normalized CIDR string with a prefix length.</returns>
     private static string NormalizeCidr(string cidr)
     {
         if (!cidr.Contains('/'))

@@ -12,6 +12,8 @@ public interface ISsrfGuard
     /// Determines whether a resolved destination IP address is allowed. This is
     /// the authoritative check, intended to run at connection time on every poll.
     /// </summary>
+    /// <param name="address">The resolved IP address to check.</param>
+    /// <returns><c>true</c> if the address is permitted; otherwise <c>false</c>.</returns>
     bool IsAddressAllowed(IPAddress address);
 
     /// <summary>
