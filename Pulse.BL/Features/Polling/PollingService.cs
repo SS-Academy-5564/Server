@@ -46,23 +46,14 @@ public class PollingService : IPollingService
 
     public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
-        IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+        IEnumerable<MonitorPollingRecord> monitors =
+            await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
 
         foreach (MonitorPollingRecord monitor in monitors)
         {
-            try
-            {
-                ct.ThrowIfCancellationRequested();
-                await ProcessMonitorAsync(monitor, ct);
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(exception, "Failed to process monitor. MonitorId: {MonitorId}", monitor.Id);
-            }
+            ct.ThrowIfCancellationRequested();
+
+            await ProcessMonitorAsync(monitor, ct);
         }
 
         return Result.Ok();

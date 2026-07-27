@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,7 +10,6 @@ using Pulse.API.Common.Security.RateLimiting;
 using Pulse.API.Constants;
 using Pulse.API.Documentation;
 using Pulse.API.Responses;
-using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
 
