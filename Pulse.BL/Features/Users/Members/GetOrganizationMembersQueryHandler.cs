@@ -17,6 +17,11 @@ public sealed class GetOrganizationMembersQueryHandler
     private readonly ICurrentUserService _currentUserService;
     private readonly IMemberQueries _memberQueries;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetOrganizationMembersQueryHandler"/> class.
+    /// </summary>
+    /// <param name="currentUserService">The current user service.</param>
+    /// <param name="memberQueries">The member queries interface.</param>
     public GetOrganizationMembersQueryHandler(
         ICurrentUserService currentUserService,
         IMemberQueries memberQueries)
@@ -31,6 +36,7 @@ public sealed class GetOrganizationMembersQueryHandler
     /// <param name="query">The pagination parameters.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The organization members result.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     public async Task<Result<PagedResult<OrganizationMemberResult>>> HandleAsync(
         GetOrganizationMembersQuery query,
         CancellationToken ct = default)

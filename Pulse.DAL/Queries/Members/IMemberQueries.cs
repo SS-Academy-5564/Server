@@ -17,6 +17,7 @@ public interface IMemberQueries : IQueries
     /// A list of the user's organization memberships ordered by <c>JoinedAt</c> ascending
     /// (oldest first), with a stable tiebreaker; an empty list when the user has none.
     /// </returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     Task<IReadOnlyList<UserOrganizationRecord>> GetOrganizationsByUserIdAsync(Guid userId, CancellationToken ct);
 
     /// <summary>
@@ -27,6 +28,7 @@ public interface IMemberQueries : IQueries
     /// <param name="pageSize">The maximum number of records to return.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The requested member records and total number of organization members.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     Task<PagedRecords<MemberRecord>> GetMembersByOrganizationIdAsync(
         Guid organizationId,
         int pageNumber,

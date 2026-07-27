@@ -18,6 +18,10 @@ public sealed class MembersController : PulseControllerBase
         GetOrganizationMembersQuery,
         Result<PagedResult<OrganizationMemberResult>>> _handler;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MembersController"/> class.
+    /// </summary>
+    /// <param name="handler">The handler for getting organization members.</param>
     public MembersController(
         IAsyncHandler<GetOrganizationMembersQuery, Result<PagedResult<OrganizationMemberResult>>> handler)
     {
@@ -30,6 +34,7 @@ public sealed class MembersController : PulseControllerBase
     /// <param name="request">The pagination parameters.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>An action result containing the organization member list.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     [HttpGet]
     public async Task<IActionResult> GetOrganizationMembersAsync(
         [FromQuery][Validate] GetOrganizationMembersRequest request,

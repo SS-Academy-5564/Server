@@ -3,9 +3,15 @@ using Pulse.BL.Common.Pagination;
 
 namespace Pulse.API.Features.Users.Members;
 
+/// <summary>
+/// Validates the <see cref="GetOrganizationMembersRequest"/>.
+/// </summary>
 public sealed class GetOrganizationMembersRequestValidator
     : AbstractValidator<GetOrganizationMembersRequest>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetOrganizationMembersRequestValidator"/> class.
+    /// </summary>
     public GetOrganizationMembersRequestValidator()
     {
         RuleFor(x => x.PageNumber)

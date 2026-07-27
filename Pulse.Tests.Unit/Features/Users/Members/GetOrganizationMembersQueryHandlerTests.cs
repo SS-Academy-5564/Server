@@ -10,12 +10,18 @@ using Pulse.DAL.Queries.Members;
 
 namespace Pulse.Tests.Unit.Features.Users.Members;
 
+/// <summary>
+/// Contains unit tests for the <see cref="GetOrganizationMembersQueryHandler"/>.
+/// </summary>
 public class GetOrganizationMembersQueryHandlerTests
 {
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
     private readonly Mock<IMemberQueries> _memberQueriesMock;
     private readonly GetOrganizationMembersQueryHandler _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetOrganizationMembersQueryHandlerTests"/> class.
+    /// </summary>
     public GetOrganizationMembersQueryHandlerTests()
     {
         _currentUserServiceMock = new();
@@ -23,6 +29,9 @@ public class GetOrganizationMembersQueryHandlerTests
         _sut = new GetOrganizationMembersQueryHandler(_currentUserServiceMock.Object, _memberQueriesMock.Object);
     }
 
+    /// <summary>
+    /// Tests that the handler returns an unauthorized error when the organization ID is missing.
+    /// </summary>
     [Fact]
     public async Task HandleAsync_WhenOrganizationIdIsNull_ReturnsUnauthorized()
     {
@@ -43,6 +52,9 @@ public class GetOrganizationMembersQueryHandlerTests
             Times.Never);
     }
 
+    /// <summary>
+    /// Tests that the handler uses default pagination and returns a page of members when pagination is missing.
+    /// </summary>
     [Fact]
     public async Task HandleAsync_WhenPaginationIsMissing_UsesDefaultsAndReturnsMemberPage()
     {
@@ -78,6 +90,9 @@ public class GetOrganizationMembersQueryHandlerTests
         result.Value.Items[0].Role.Should().Be("Admin");
     }
 
+    /// <summary>
+    /// Tests that the handler passes custom pagination parameters to the query properly.
+    /// </summary>
     [Fact]
     public async Task HandleAsync_WithCustomPagination_PassesPaginationToQueries()
     {

@@ -10,6 +10,9 @@ using Pulse.BL.Features.Users.Members;
 
 namespace Pulse.Tests.Unit.Features.Users.Members;
 
+/// <summary>
+/// Contains unit tests for the <see cref="MembersController"/>.
+/// </summary>
 public class MembersControllerTests
 {
     private readonly Mock<IAsyncHandler<
@@ -17,14 +20,20 @@ public class MembersControllerTests
         Result<PagedResult<OrganizationMemberResult>>>> _handlerMock;
     private readonly MembersController _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MembersControllerTests"/> class.
+    /// </summary>
     public MembersControllerTests()
     {
         _handlerMock = new();
         _sut = new MembersController(_handlerMock.Object);
     }
 
+    /// <summary>
+    /// Tests that the endpoint returns a paged response when successful.
+    /// </summary>
     [Fact]
-    public async Task GetOrganizationMembers_WhenSuccessful_ReturnsPagedResponse()
+    public async Task GetOrganizationMembersAsync_WhenSuccessful_ReturnsPagedResponse()
     {
         IReadOnlyList<OrganizationMemberResult> members = new List<OrganizationMemberResult>
         {

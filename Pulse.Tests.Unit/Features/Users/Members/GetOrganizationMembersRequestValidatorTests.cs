@@ -4,10 +4,16 @@ using Pulse.BL.Common.Pagination;
 
 namespace Pulse.Tests.Unit.Features.Users.Members;
 
+/// <summary>
+/// Contains unit tests for the <see cref="GetOrganizationMembersRequestValidator"/>.
+/// </summary>
 public class GetOrganizationMembersRequestValidatorTests
 {
     private readonly GetOrganizationMembersRequestValidator _validator = new();
 
+    /// <summary>
+    /// Tests that validation succeeds when pagination parameters are missing.
+    /// </summary>
     [Fact]
     public void Validate_WhenPaginationIsMissing_ShouldNotHaveValidationErrors()
     {
@@ -17,6 +23,10 @@ public class GetOrganizationMembersRequestValidatorTests
         result.ShouldNotHaveAnyValidationErrors();
     }
 
+    /// <summary>
+    /// Tests that validation succeeds for valid page numbers.
+    /// </summary>
+    /// <param name="pageNumber">The allowed page number.</param>
     [Theory]
     [InlineData(1)]
     [InlineData(PaginationDefaults.MaxPageNumber)]
@@ -28,6 +38,10 @@ public class GetOrganizationMembersRequestValidatorTests
         result.ShouldNotHaveValidationErrorFor(x => x.PageNumber);
     }
 
+    /// <summary>
+    /// Tests that validation fails when the page number is outside the allowed range.
+    /// </summary>
+    /// <param name="pageNumber">The invalid page number.</param>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -41,6 +55,10 @@ public class GetOrganizationMembersRequestValidatorTests
             .WithErrorMessage($"Page number must be between 1 and {PaginationDefaults.MaxPageNumber}");
     }
 
+    /// <summary>
+    /// Tests that validation succeeds for valid page sizes.
+    /// </summary>
+    /// <param name="pageSize">The allowed page size.</param>
     [Theory]
     [InlineData(1)]
     [InlineData(PaginationDefaults.MaxPageSize)]
@@ -52,6 +70,10 @@ public class GetOrganizationMembersRequestValidatorTests
         result.ShouldNotHaveValidationErrorFor(x => x.PageSize);
     }
 
+    /// <summary>
+    /// Tests that validation fails when the page size is outside the allowed range.
+    /// </summary>
+    /// <param name="pageSize">The invalid page size.</param>
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
