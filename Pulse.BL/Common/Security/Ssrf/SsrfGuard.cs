@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using Microsoft.Extensions.Options;
 
@@ -25,9 +26,9 @@ public sealed class SsrfGuard : ISsrfGuard
     ];
 
     private readonly bool _allowPrivateNetworks;
-    private readonly IReadOnlyList<IpNetwork> _allowed;
-    private readonly IReadOnlyList<IpNetwork> _explicitlyBlocked;
-    private readonly IReadOnlyList<IpNetwork> _defaultBlocked;
+    private readonly IReadOnlyList<IPNetwork> _allowed;
+    private readonly IReadOnlyList<IPNetwork> _explicitlyBlocked;
+    private readonly IReadOnlyList<IPNetwork> _defaultBlocked;
 
     public SsrfGuard(IOptions<SsrfProtectionOptions> options)
     {
@@ -112,18 +113,33 @@ public sealed class SsrfGuard : ISsrfGuard
     private static IPAddress Normalize(IPAddress address)
         => address.IsIPv4MappedToIPv6 ? address.MapToIPv4() : address;
 
-    private static List<IpNetwork> ParseNetworks(IEnumerable<string> cidrs)
+    private static List<IPNetwork> ParseNetworks(IEnumerable<string> cidrs)
     {
-        List<IpNetwork> networks = new();
+        List<IPNetwork> networks = new();
 
         foreach (string cidr in cidrs)
         {
-            if (IpNetwork.TryParse(cidr, out IpNetwork? network) && network is not null)
+            string normalized = NormalizeCidr(cidr);
+            if (IPNetwork.TryParse(normalized, out IPNetwork network))
             {
                 networks.Add(network);
             }
         }
 
         return networks;
+    }
+
+    private static string NormalizeCidr(string cidr)
+    {
+        if (!cidr.Contains('/'))
+        {
+            if (IPAddress.TryParse(cidr, out IPAddress? address))
+            {
+                int prefixLength = address.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
+                return $"{cidr}/{prefixLength}";
+            }
+        }
+
+        return cidr;
     }
 }

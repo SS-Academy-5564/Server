@@ -1,3 +1,6 @@
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using Microsoft.Extensions.Options;
 
 namespace Pulse.BL.Common.Security.Ssrf;
@@ -29,10 +32,25 @@ public sealed class SsrfProtectionOptionsValidator : IValidateOptions<SsrfProtec
 
         foreach (string cidr in cidrs)
         {
-            if (!IpNetwork.TryParse(cidr, out _))
+            string normalized = NormalizeCidr(cidr);
+            if (!IPNetwork.TryParse(normalized, out _))
             {
                 errors.Add($"{SsrfProtectionOptions.SectionName}:{propertyName} contains an invalid CIDR or IP: '{cidr}'.");
             }
         }
+    }
+
+    private static string NormalizeCidr(string cidr)
+    {
+        if (!cidr.Contains('/'))
+        {
+            if (IPAddress.TryParse(cidr, out IPAddress? address))
+            {
+                int prefixLength = address.AddressFamily == AddressFamily.InterNetwork ? 32 : 128;
+                return $"{cidr}/{prefixLength}";
+            }
+        }
+
+        return cidr;
     }
 }
