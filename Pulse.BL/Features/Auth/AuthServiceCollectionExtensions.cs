@@ -8,8 +8,17 @@ using Pulse.BL.Features.Auth.PasswordReset;
 
 namespace Pulse.BL.Features.Auth;
 
+/// <summary>
+/// Registers authentication-related services and options for the business layer.
+/// </summary>
 public static class AuthServiceCollectionExtensions
 {
+    /// <summary>
+    /// Registers password hashing, JWT token generation, lockout logic, and auth-related options.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <returns>The same service collection for chaining.</returns>
     public static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddTransient<IPasswordHasher, PasswordHasher>();

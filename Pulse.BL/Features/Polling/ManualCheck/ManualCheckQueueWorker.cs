@@ -5,12 +5,14 @@ using Pulse.BL.Features.Polling.ManualCheck.Queue;
 
 namespace Pulse.BL.Features.Polling.ManualCheck;
 
+/// <summary>
+/// Background service that dequeues manually-triggered monitor checks and processes them.
+/// </summary>
 public sealed class ManualCheckQueueWorker : BackgroundService
 {
     private readonly IManualCheckQueue _queue;
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ManualCheckQueueWorker> _logger;
-
     public ManualCheckQueueWorker(
         IManualCheckQueue queue,
         IServiceScopeFactory scopeFactory,

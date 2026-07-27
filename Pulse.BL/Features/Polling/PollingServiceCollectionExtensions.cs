@@ -9,8 +9,16 @@ using Pulse.BL.Features.Polling.Options;
 
 namespace Pulse.BL.Features.Polling;
 
+/// <summary>
+/// Registers polling-related services and hosted components for the business layer.
+/// </summary>
 public static class PollingServiceCollectionExtensions
 {
+    /// <summary>
+    /// Registers core polling services for monitor execution and HTTP polling.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The same service collection for chaining.</returns>
     public static IServiceCollection AddPolling(this IServiceCollection services)
     {
         services
@@ -27,6 +35,12 @@ public static class PollingServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers polling worker options from configuration.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <returns>The same service collection for chaining.</returns>
     public static IServiceCollection AddPollingWorkerOptions(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<PollingWorkerOptions>()
@@ -38,6 +52,12 @@ public static class PollingServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Registers the manual-check queue and hosted worker used to process manual monitor checks.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configuration">The application configuration.</param>
+    /// <returns>The same service collection for chaining.</returns>
     public static IServiceCollection AddManualCheck(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<ManualCheckQueueOptions>()
