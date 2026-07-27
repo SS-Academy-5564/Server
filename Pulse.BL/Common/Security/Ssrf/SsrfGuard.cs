@@ -86,7 +86,7 @@ public sealed class SsrfGuard : ISsrfGuard
             return false;
         }
 
-        string trimmed = host.Trim().Trim('[', ']');
+        string trimmed = host.Trim().Trim('[', ']').TrimEnd('.');
 
         if (IPAddress.TryParse(trimmed, out IPAddress? address))
         {

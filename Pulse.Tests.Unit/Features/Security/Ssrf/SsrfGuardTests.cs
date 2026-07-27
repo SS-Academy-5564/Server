@@ -111,6 +111,9 @@ public class SsrfGuardTests
     [InlineData("127.0.0.1")]
     [InlineData("169.254.169.254")]
     [InlineData("[::1]")]
+    [InlineData("localhost.")]
+    [InlineData("service.localhost.")]
+    [InlineData("127.0.0.1.")]
     public void TryValidateHost_InternalHost_ReturnsFalse(string host)
     {
         // Arrange
@@ -128,6 +131,7 @@ public class SsrfGuardTests
     [InlineData("example.com")]
     [InlineData("api.example.com")]
     [InlineData("8.8.8.8")]
+    [InlineData("example.com.")]
     public void TryValidateHost_PublicHost_ReturnsTrue(string host)
     {
         // Arrange
