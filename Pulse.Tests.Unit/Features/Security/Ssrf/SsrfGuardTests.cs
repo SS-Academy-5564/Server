@@ -28,9 +28,14 @@ public class SsrfGuardTests
     [InlineData("::ffff:127.0.0.1")]
     public void IsAddressAllowed_InternalAddress_ReturnsFalse(string ip)
     {
+        // Arrange
         SsrfGuard guard = CreateGuard();
 
-        guard.IsAddressAllowed(IPAddress.Parse(ip)).Should().BeFalse();
+        // Act
+        bool result = guard.IsAddressAllowed(IPAddress.Parse(ip));
+
+        // Assert
+        result.Should().BeFalse();
     }
 
     [Theory]
@@ -40,41 +45,63 @@ public class SsrfGuardTests
     [InlineData("2606:4700:4700::1111")]
     public void IsAddressAllowed_PublicAddress_ReturnsTrue(string ip)
     {
+        // Arrange
         SsrfGuard guard = CreateGuard();
 
-        guard.IsAddressAllowed(IPAddress.Parse(ip)).Should().BeTrue();
+        // Act
+        bool result = guard.IsAddressAllowed(IPAddress.Parse(ip));
+
+        // Assert
+        result.Should().BeTrue();
     }
 
-    [Fact]
+[Fact]
     public void IsAddressAllowed_WhenPrivateNetworksAllowed_ReturnsTrueForInternal()
     {
+        // Arrange
         SsrfGuard guard = CreateGuard(new SsrfProtectionOptions { AllowPrivateNetworks = true });
 
-        guard.IsAddressAllowed(IPAddress.Parse("127.0.0.1")).Should().BeTrue();
-        guard.IsAddressAllowed(IPAddress.Parse("10.0.0.1")).Should().BeTrue();
+        // Act
+        bool result1 = guard.IsAddressAllowed(IPAddress.Parse("127.0.0.1"));
+        bool result2 = guard.IsAddressAllowed(IPAddress.Parse("10.0.0.1"));
+
+        // Assert
+        result1.Should().BeTrue();
+        result2.Should().BeTrue();
     }
 
     [Fact]
     public void IsAddressAllowed_WhenAddressInAllowedCidr_ReturnsTrue()
     {
+        // Arrange
         SsrfGuard guard = CreateGuard(new SsrfProtectionOptions
         {
             AllowedCidrs = ["10.10.0.0/16"]
         });
 
-        guard.IsAddressAllowed(IPAddress.Parse("10.10.5.5")).Should().BeTrue();
-        guard.IsAddressAllowed(IPAddress.Parse("10.20.5.5")).Should().BeFalse();
+        // Act
+        bool allowedResult = guard.IsAddressAllowed(IPAddress.Parse("10.10.5.5"));
+        bool deniedResult = guard.IsAddressAllowed(IPAddress.Parse("10.20.5.5"));
+
+        // Assert
+        allowedResult.Should().BeTrue();
+        deniedResult.Should().BeFalse();
     }
 
     [Fact]
     public void IsAddressAllowed_WhenAddressInExtraBlockedCidr_ReturnsFalse()
     {
+        // Arrange
         SsrfGuard guard = CreateGuard(new SsrfProtectionOptions
         {
             BlockedCidrs = ["203.0.113.0/24"]
         });
 
-        guard.IsAddressAllowed(IPAddress.Parse("203.0.113.7")).Should().BeFalse();
+        // Act
+        bool result = guard.IsAddressAllowed(IPAddress.Parse("203.0.113.7"));
+
+        // Assert
+        result.Should().BeFalse();
     }
 
     [Theory]
@@ -86,10 +113,13 @@ public class SsrfGuardTests
     [InlineData("[::1]")]
     public void TryValidateHost_InternalHost_ReturnsFalse(string host)
     {
+        // Arrange
         SsrfGuard guard = CreateGuard();
 
+        // Act
         bool result = guard.TryValidateHost(host, out string? error);
 
+        // Assert
         result.Should().BeFalse();
         error.Should().NotBeNullOrEmpty();
     }
@@ -100,10 +130,13 @@ public class SsrfGuardTests
     [InlineData("8.8.8.8")]
     public void TryValidateHost_PublicHost_ReturnsTrue(string host)
     {
+        // Arrange
         SsrfGuard guard = CreateGuard();
 
+        // Act
         bool result = guard.TryValidateHost(host, out string? error);
 
+        // Assert
         result.Should().BeTrue();
         error.Should().BeNull();
     }
@@ -111,8 +144,13 @@ public class SsrfGuardTests
     [Fact]
     public void TryValidateHost_WhenPrivateNetworksAllowed_AllowsInternalLiteral()
     {
+        // Arrange
         SsrfGuard guard = CreateGuard(new SsrfProtectionOptions { AllowPrivateNetworks = true });
 
-        guard.TryValidateHost("127.0.0.1", out _).Should().BeTrue();
+        // Act
+        bool result = guard.TryValidateHost("127.0.0.1", out _);
+
+        // Assert
+        result.Should().BeTrue();
     }
 }

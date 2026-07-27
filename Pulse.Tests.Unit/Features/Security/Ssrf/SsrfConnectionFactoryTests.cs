@@ -29,46 +29,57 @@ public class SsrfConnectionFactoryTests
     [Fact]
     public async Task ResolveAndValidateAsync_WhenHostResolvesToInternal_ThrowsAsync()
     {
+        // Arrange
         StubDnsResolver dns = new(IPAddress.Parse("169.254.169.254"));
         SsrfConnectionFactory factory = new(CreateGuard(), dns);
 
+        // Act
         Func<Task> act = () => factory.ResolveAndValidateAsync("metadata.evil.test", CancellationToken.None);
 
+        // Assert
         await act.Should().ThrowAsync<HttpRequestException>();
     }
 
     [Fact]
     public async Task ResolveAndValidateAsync_WhenAnyResolvedAddressIsInternal_ThrowsAsync()
     {
+        // Arrange
         // Public + internal (DNS-rebinding style multi-answer) must be rejected.
         StubDnsResolver dns = new(IPAddress.Parse("8.8.8.8"), IPAddress.Parse("10.0.0.5"));
         SsrfConnectionFactory factory = new(CreateGuard(), dns);
 
+        // Act
         Func<Task> act = () => factory.ResolveAndValidateAsync("rebind.evil.test", CancellationToken.None);
 
+        // Assert
         await act.Should().ThrowAsync<HttpRequestException>();
     }
 
     [Fact]
     public async Task ResolveAndValidateAsync_WhenHostResolvesToPublic_ReturnsAddressesAsync()
     {
+        // Arrange
         StubDnsResolver dns = new(IPAddress.Parse("93.184.216.34"));
         SsrfConnectionFactory factory = new(CreateGuard(), dns);
 
-        IReadOnlyList<IPAddress> addresses =
-            await factory.ResolveAndValidateAsync("example.com", CancellationToken.None);
+        // Act
+        IReadOnlyList<IPAddress> addresses = await factory.ResolveAndValidateAsync("example.com", CancellationToken.None);
 
+        // Assert
         addresses.Should().ContainSingle().Which.Should().Be(IPAddress.Parse("93.184.216.34"));
     }
 
     [Fact]
     public async Task ResolveAndValidateAsync_WhenHostIsInternalIpLiteral_DoesNotResolveDnsAndThrowsAsync()
     {
+        // Arrange
         StubDnsResolver dns = new(IPAddress.Parse("8.8.8.8"));
         SsrfConnectionFactory factory = new(CreateGuard(), dns);
 
+        // Act
         Func<Task> act = () => factory.ResolveAndValidateAsync("127.0.0.1", CancellationToken.None);
 
+        // Assert
         await act.Should().ThrowAsync<HttpRequestException>();
         dns.CallCount.Should().Be(0);
     }
