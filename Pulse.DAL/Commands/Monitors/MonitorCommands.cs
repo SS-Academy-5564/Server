@@ -45,6 +45,37 @@ public class MonitorCommands : IMonitorCommands
     }
 
     ///<inheritdoc/>
+    public async Task<Guid> UpdateAsync(UpdateMonitorInput input, CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
+        const string sql =
+            """
+            UPDATE dbo.Monitors
+            SET
+                Name = @Name,
+                Url = @Url,
+                HttpMethod = (SELECT Id FROM dbo.HttpMethods WHERE Name = @HttpMethod),
+                ResultPath = @ResultPath,
+                StatusId = (SELECT Id FROM dbo.MonitorStatuses WHERE Name = @Status),
+                PollingIntervalSeconds = @PollingIntervalSeconds,
+                PollingTimeoutSeconds = @PollingTimeoutSeconds,
+                CurrentValue = NULL,
+                NextExecutionAt = SYSUTCDATETIME()
+            OUTPUT INSERTED.Id
+            WHERE Id = @Id;
+            """;
+
+        return await session.Connection.ExecuteScalarAsync<Guid>(
+            new CommandDefinition(
+                sql,
+                input,
+                transaction: session.Transaction,
+                cancellationToken: ct));
+    }
+
+    ///<inheritdoc/>
     public async Task UpdateAfterPollAsync(
         UpdateMonitorAfterPollInput input,
         IDbSession session,

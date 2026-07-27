@@ -17,6 +17,14 @@ public interface IMonitorCommands : ICommands
     Task<Guid> CreateAsync(CreateMonitorInput input, CancellationToken ct);
 
     /// <summary>
+    /// Updates existing monitor within the active unit of work.
+    /// </summary>
+    /// <param name="input">The monitor configuration to be updated.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    Task<Guid> UpdateAsync(UpdateMonitorInput input, CancellationToken ct);
+
+    /// <summary>
     /// Updates a monitor after a polling attempt within the specified database session.
     /// When the current value is <see langword="null"/>, the previously stored value is preserved.
     /// </summary>

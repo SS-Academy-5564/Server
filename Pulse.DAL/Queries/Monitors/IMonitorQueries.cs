@@ -16,4 +16,12 @@ public interface IMonitorQueries : IQueries
     Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct);
 
     Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
+
+    /// <summary>
+    /// Retrieves the monitor by its id.
+    /// </summary>
+    /// <param name="id">The monitor id to search by.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A monitor record matching database table.</returns>
+    Task<MonitorRecord?> GetByIdAsync(Guid id, CancellationToken ct);
 }
