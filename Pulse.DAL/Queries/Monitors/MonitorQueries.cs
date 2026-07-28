@@ -35,7 +35,7 @@ public class MonitorQueries : IMonitorQueries
         if (status.HasValue)
         {
             filters.Add("s.Name = @Status ");
-            parameters.Add("@Status", status.Value);
+            parameters.Add("@Status", status.ToString());
         }
 
         if (!string.IsNullOrWhiteSpace(searchString))
