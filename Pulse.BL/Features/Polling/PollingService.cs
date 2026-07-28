@@ -5,6 +5,7 @@ using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.Options;
+using Pulse.BL.Features.Polling.UpdateNotifier;
 using Pulse.DAL.Commands.MonitorPollResults;
 using Pulse.DAL.Commands.Monitors;
 using Pulse.DAL.Common.Constants;
@@ -44,22 +45,22 @@ public class PollingService : IPollingService
         _monitorPollResultCommands = monitorPollResultCommands;
     }
 
-    public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
+    public async Task<Result<List<MonitorUpdate>>>  ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
-        IEnumerable<MonitorPollingRecord> monitors =
-            await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
-
+        IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+        List<MonitorUpdate> mul = new();
         foreach (MonitorPollingRecord monitor in monitors)
         {
             ct.ThrowIfCancellationRequested();
 
-            await ProcessMonitorAsync(monitor, ct);
+            var mu = await ProcessMonitorAsync(monitor, ct);
+            mul.Add(mu.Value);
         }
 
-        return Result.Ok();
+        return Result.Ok(mul);
     }
 
-    public async Task<Result> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
+    public async Task<Result<MonitorUpdate>> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
     {
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(monitorId, ct);
 
@@ -71,13 +72,17 @@ public class PollingService : IPollingService
         return await ProcessMonitorAsync(monitor, ct);
     }
 
-    public async Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
+    public async Task<Result<MonitorUpdate>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
     {
+        MonitorUpdate mu = new();
+
         try
         {
             CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
-            await SavePollResultAsync(monitor, monitorPollResults, ct);
-            return Result.Ok();
+            var monitorAfterPollInput = UpdateMonitorAfterPollInput(monitor, monitorPollResults);
+            await SavePollResultAsync(monitorAfterPollInput, monitorPollResults, ct);
+
+            return Result.Ok(monitorAfterPollInput);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -126,7 +131,19 @@ public class PollingService : IPollingService
             RequestStatus: requestStatus);
     }
 
-    private async Task SavePollResultAsync(MonitorPollingRecord monitor, CreateMonitorPollResultsInput resultInput, CancellationToken ct)
+    private async Task SavePollResultAsync(UpdateMonitorAfterPollInput monitorInput, CreateMonitorPollResultsInput resultInput, CancellationToken ct)
+    {
+        await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
+        IDbSession session = (IDbSession)uof;
+
+        await _monitorPollResultCommands.CreateAsync(resultInput, session, ct);
+        await _monitorCommands.UpdateAfterPollAsync(monitorInput, session, ct);
+
+        await uof.CommitAsync(ct);
+    }
+
+    private UpdateMonitorAfterPollInput UpdateMonitorAfterPollInput(MonitorPollingRecord monitor,
+        CreateMonitorPollResultsInput resultInput)
     {
         DateTime completedAt = DateTime.UtcNow;
         DateTime nextExecutionAt = completedAt.AddSeconds(monitor.PollingIntervalSeconds);
@@ -137,12 +154,6 @@ public class PollingService : IPollingService
 
         UpdateMonitorAfterPollInput monitorInput = new(monitor.Id, resultInput.Value, completedAt, nextExecutionAt, status);
 
-        await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
-        IDbSession session = (IDbSession)uof;
-
-        await _monitorPollResultCommands.CreateAsync(resultInput, session, ct);
-        await _monitorCommands.UpdateAfterPollAsync(monitorInput, session, ct);
-
-        await uof.CommitAsync(ct);
+        return monitorInput;
     }
 }
