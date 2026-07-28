@@ -1,13 +1,14 @@
 using FluentAssertions;
 using FluentResults;
+using Microsoft.Extensions.Options;
 using Moq;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login;
 using Pulse.BL.Features.Auth.Login.LoginLockout;
+using Pulse.DAL.Commands.RefreshTokens;
 using Pulse.DAL.Queries.Users;
-
 namespace Pulse.Tests.Unit.Features.Auth.Login;
 
 public class LoginHandlerTests
@@ -16,6 +17,10 @@ public class LoginHandlerTests
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock;
     private readonly Mock<ILoginLockoutService> _loginLockoutServiceMock;
+    private readonly Mock<IRefreshTokenService> _refreshTokenServiceMock;
+    private readonly Mock<IRefreshTokenCommands> _refreshTokenCommandsMock;
+    private readonly Mock<IOptions<RefreshTokenOptions>> _refreshTokenOptionsMock;
+    private readonly TimeProvider _timeProvider;
     private readonly LoginHandler _sut;
 
     public LoginHandlerTests()
@@ -24,12 +29,24 @@ public class LoginHandlerTests
         _passwordHasherMock = new();
         _jwtTokenGeneratorMock = new();
         _loginLockoutServiceMock = new();
+        _refreshTokenServiceMock = new();
+        _refreshTokenCommandsMock = new();
+
+        RefreshTokenOptions options = new() { ExpirationDays = 14 };
+        _refreshTokenOptionsMock = new();
+        _refreshTokenOptionsMock.Setup(x => x.Value).Returns(options);
+
+        _timeProvider = TimeProvider.System;
 
         _sut = new LoginHandler(
             _userQueriesMock.Object,
             _passwordHasherMock.Object,
             _jwtTokenGeneratorMock.Object,
             _loginLockoutServiceMock.Object,
+            _refreshTokenServiceMock.Object,
+            _refreshTokenCommandsMock.Object,
+            _refreshTokenOptionsMock.Object,
+            _timeProvider,
             new Mock<Microsoft.Extensions.Logging.ILogger<LoginHandler>>().Object);
     }
 
@@ -70,6 +87,9 @@ public class LoginHandlerTests
             .Setup(x => x.GenerateToken(userId, roleName, organizationId, "Test Organization"))
             .Returns(new GeneratedJwtToken(accessToken, expiresAt));
 
+        _refreshTokenServiceMock.Setup(x => x.GenerateToken()).Returns("raw_refresh_token");
+        _refreshTokenServiceMock.Setup(x => x.ComputeHash("raw_refresh_token")).Returns("hashed_refresh_token");
+
         // Act
         Result<LoginResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
@@ -77,6 +97,8 @@ public class LoginHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().Be(accessToken);
         result.Value.ExpiresAt.Should().Be(expiresAt);
+        result.Value.ExpiresAt.Should().Be(expiresAt);
+        result.Value.RefreshToken.Should().Be("raw_refresh_token");
         _loginLockoutServiceMock.Verify(
             x => x.ResetAttemptsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -107,6 +129,9 @@ public class LoginHandlerTests
         _jwtTokenGeneratorMock
             .Setup(x => x.GenerateToken(userId, userRecord.RoleName, organizationId, userRecord.OrganizationName))
             .Returns(new GeneratedJwtToken("token", DateTimeOffset.UtcNow.AddHours(1)));
+
+        _refreshTokenServiceMock.Setup(x => x.GenerateToken()).Returns("raw_refresh_token");
+        _refreshTokenServiceMock.Setup(x => x.ComputeHash("raw_refresh_token")).Returns("hashed_refresh_token");
 
         // Act
         Result<LoginResult> result = await _sut.HandleAsync(
