@@ -1,6 +1,11 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Options;
+using Pulse.BL.Common.Helpers.Json;
+using Pulse.BL.Common.Security.Ssrf;
 using Pulse.BL.Features.Polling;
+using Pulse.BL.Features.Polling.Http;
+using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.DependencyInjection;
 using Pulse.Worker.Polling;
 
@@ -8,6 +13,31 @@ IHostBuilder builder = Host.CreateDefaultBuilder(args);
 
 builder.ConfigureServices((context, services) =>
 {
+    services.AddSsrfProtection(context.Configuration);
+
+    services
+        .AddHttpClient(HttpMonitorClient.ClientName)
+        .ConfigurePrimaryHttpMessageHandler(serviceProvider =>
+        {
+            SsrfConnectionFactory connectionFactory = serviceProvider.GetRequiredService<SsrfConnectionFactory>();
+
+            return new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                PooledConnectionLifetime = TimeSpan.Zero,
+                ConnectCallback = connectionFactory.ConnectAsync
+            };
+        });
+    services.AddOptions<PollingWorkerOptions>()
+        .Bind(context.Configuration.GetRequiredSection(PollingWorkerOptions.SectionName))
+        .ValidateOnStart();
+
+    services.AddSingleton<IValidateOptions<PollingWorkerOptions>, PollingWorkerOptionsValidator>();
+
+    services.AddScoped<IPollingService, PollingService>();
+    services.AddScoped<IHttpMonitorClient, HttpMonitorClient>();
+    services.AddScoped<IJsonPathReader, JsonPathReader>();
+
     services.AddDataAccess();
     services.AddPolling();
     services.AddPollingWorkerOptions(context.Configuration);

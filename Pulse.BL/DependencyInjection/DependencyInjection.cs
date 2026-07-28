@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Pulse.BL.Common.Security.Ssrf;
 using Pulse.BL.Features.Auth;
 using Pulse.BL.Features.Email;
 using Pulse.BL.Features.Organization;
@@ -21,6 +22,8 @@ public static class DependencyInjection
         services.AddManualCheck(configuration);
 
         services.AddScoped<CreateOrganizationHandler>();
+
+        services.AddSsrfProtection(configuration);
 
         return services;
     }
