@@ -23,4 +23,5 @@ public interface IMonitorQueries : IQueries
         CancellationToken ct);
 
     Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
+    Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct);
 }

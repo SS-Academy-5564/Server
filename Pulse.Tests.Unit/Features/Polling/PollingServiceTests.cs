@@ -1,8 +1,10 @@
 using System.Data;
 using FluentAssertions;
+using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Http;
@@ -125,6 +127,59 @@ public class PollingServiceTests
     {
         _updatedMonitor.Should().NotBeNull();
         _updatedMonitor!.CurrentValue.Should().Be(currentValue);
+    }
+
+    [Fact]
+    public async Task ProcessMonitorAsync_WhenMonitorIdDoesNotExist_ReturnsNotFoundError()
+    {
+        // Arrange
+        Guid monitorId = Guid.NewGuid();
+        _monitorQueries
+            .Setup(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((MonitorPollingRecord?)null);
+
+        // Act
+        Result result = await _service.ProcessMonitorAsync(monitorId, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle();
+        result.Errors[0].Should().BeOfType<NotFoundError>();
+    }
+
+    [Fact]
+    public async Task ProcessMonitorAsync_WhenMonitorIdExists_DelegatesToRecordOverload()
+    {
+        // Arrange
+        Guid monitorId = Guid.NewGuid();
+        MonitorPollingRecord monitor = _monitor with { Id = monitorId };
+        HttpMonitorResponse response = new(
+            IsSuccess: true,
+            ResponseTimeMs: 123,
+            RequestStatus: RequestStatusNames.Success)
+        {
+            Body = "{\"data\":{\"status\":\"healthy\"}}",
+            StatusCode = 200
+        };
+
+        _monitorQueries
+            .Setup(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(monitor);
+
+        _httpMonitorClient
+            .Setup(c => c.SendAsync(monitor, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        _jsonPathReader
+            .Setup(r => r.TryReadValue(response.Body, monitor.ResultPath, out It.Ref<string?>.IsAny))
+            .Returns(true);
+
+        // Act
+        Result result = await _service.ProcessMonitorAsync(monitorId, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        _monitorQueries.Verify(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]

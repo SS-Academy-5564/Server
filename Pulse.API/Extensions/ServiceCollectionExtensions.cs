@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,7 +10,6 @@ using Pulse.API.Common.Security.RateLimiting;
 using Pulse.API.Constants;
 using Pulse.API.Documentation;
 using Pulse.API.Responses;
-using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
 
@@ -114,17 +112,27 @@ public static class ServiceCollectionExtensions
                             });
                     });
 
+                    rateLimiterOptions.AddPolicy(RateLimitPolicies.ManualMonitorTrigger, httpContext =>
+                    {
+                        string monitorId = httpContext.Request.RouteValues["id"]?.ToString() ?? "unknown";
+
+                        return RateLimitPartition.GetFixedWindowLimiter(monitorId, _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = 1,
+                            Window = TimeSpan.FromSeconds(30),
+                            QueueLimit = 0
+                        });
+                    });
+
                     rateLimiterOptions.OnRejected = async (onRejectedContext, cancellationToken) =>
                     {
                         HttpContext httpContext = onRejectedContext.HttpContext;
                         httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+                        httpContext.Response.ContentType = "application/json";
 
-                        double retryAfterSeconds = 0;
-                        if (onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter))
-                        {
-                            retryAfterSeconds = Math.Ceiling(retryAfter.TotalSeconds);
-                            httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString(CultureInfo.InvariantCulture);
-                        }
+                        string retryMessage = onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter)
+                            ? $"Please try again in {retryAfter.TotalSeconds:F0} seconds."
+                            : "Please wait before trying again.";
 
                         await httpContext.Response.WriteAsJsonAsync(new ApiResponse
                         {
@@ -133,10 +141,8 @@ public static class ServiceCollectionExtensions
                             [
                                 new ApiError
                                 {
-                                    Code = AppError.Codes.TooManyRequests,
-                                    Message = retryAfterSeconds > 0
-                                        ? $"Too many requests. Retry after {retryAfterSeconds:0} second(s)"
-                                        : "Too many requests."
+                                    Code = RateLimitErrorCodes.RateLimited,
+                                    Message = $"Manual check was already triggered recently. {retryMessage}"
                                 }
                             ]
                         }, cancellationToken);

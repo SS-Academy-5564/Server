@@ -1,6 +1,7 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.Options;
@@ -45,31 +46,48 @@ public class PollingService : IPollingService
 
     public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
-        IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+        IEnumerable<MonitorPollingRecord> monitors =
+            await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
 
         foreach (MonitorPollingRecord monitor in monitors)
         {
-            try
-            {
-                ct.ThrowIfCancellationRequested();
+            ct.ThrowIfCancellationRequested();
 
-                CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
-                await SavePollResultAsync(monitor, monitorPollResults, ct);
-            }
-            catch (OperationCanceledException) when (ct.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception exception)
-            {
-                _logger.LogError(
-                    exception,
-                    "Failed to process monitor. MonitorId: {MonitorId}",
-                    monitor.Id);
-            }
+            await ProcessMonitorAsync(monitor, ct);
         }
 
         return Result.Ok();
+    }
+
+    public async Task<Result> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
+    {
+        MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(monitorId, ct);
+
+        if (monitor is null)
+        {
+            return Result.Fail(new NotFoundError($"Monitor '{monitorId}' was not found."));
+        }
+
+        return await ProcessMonitorAsync(monitor, ct);
+    }
+
+    public async Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
+    {
+        try
+        {
+            CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
+            await SavePollResultAsync(monitor, monitorPollResults, ct);
+            return Result.Ok();
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception)
+        {
+            _logger.LogError(exception, "Failed to process monitor. MonitorId: {MonitorId}", monitor.Id);
+            return Result.Fail("Failed to process monitor.");
+        }
     }
 
     private async Task<CreateMonitorPollResultsInput> GetPollResultAsync(MonitorPollingRecord monitor, CancellationToken ct)
@@ -113,7 +131,9 @@ public class PollingService : IPollingService
         DateTime completedAt = DateTime.UtcNow;
         DateTime nextExecutionAt = completedAt.AddSeconds(monitor.PollingIntervalSeconds);
 
-        string status = resultInput.IsSuccess ? monitor.Status : "Error";
+        string status = resultInput.IsSuccess
+            ? nameof(MonitorStatus.Enabled)
+            : nameof(MonitorStatus.Error);
 
         UpdateMonitorAfterPollInput monitorInput = new(monitor.Id, resultInput.Value, completedAt, nextExecutionAt, status);
 
