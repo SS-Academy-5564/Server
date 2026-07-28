@@ -26,7 +26,7 @@ public sealed class GetMonitorsController : PulseControllerBase
     {
         Result<PagedResult<MonitorListResult>> result = await _handler.HandleAsync(
             new GetMonitorsQuery(request.Status, request.PageNumber, request.PageSize)
-            {SearchString = request.SearchString },
+            { SearchString = request.SearchString },
             ct);
 
         return ToPagedActionResult(result);

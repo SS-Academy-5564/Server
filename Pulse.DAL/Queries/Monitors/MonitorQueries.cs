@@ -29,16 +29,19 @@ public class MonitorQueries : IMonitorQueries
         var filters = new List<string>();
         var parameters = new DynamicParameters();
 
+        parameters.Add("Offset", offset);
+        parameters.Add("PageSize", pageSize);
+
         if (status.HasValue)
         {
-            filters.Add("s.Name = @Status");
+            filters.Add("s.Name = @Status ");
             parameters.Add("@Status", status.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(searchString))
         {
-            filters.Add("m.Name Like %@SearchString%");
-            parameters.Add("SearchString", searchString);
+            filters.Add("m.Name LIKE @SearchString");
+            parameters.Add("SearchString", $"%{searchString.Trim()}%");
         }
 
         string whereClause = filters.Count > 0
@@ -67,16 +70,11 @@ public class MonitorQueries : IMonitorQueries
             {{whereClause}};
             """;
 
-        CommandDefinition command = new(
+        using SqlMapper.GridReader result = await connection.QueryMultipleAsync(new(
             sql,
-            new
-            {
-                Offset = offset,
-                PageSize = pageSize
-            },
-            cancellationToken: ct);
+            parameters,
+            cancellationToken: ct));
 
-        using SqlMapper.GridReader result = await connection.QueryMultipleAsync(command);
         IReadOnlyList<MonitorListRecord> records = (await result.ReadAsync<MonitorListRecord>()).ToList().AsReadOnly();
         int totalCount = await result.ReadSingleAsync<int>();
 
