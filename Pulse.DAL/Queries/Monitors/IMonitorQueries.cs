@@ -20,6 +20,7 @@ public interface IMonitorQueries : IQueries
         MonitorStatus? status,
         int pageNumber,
         int pageSize,
+        string? searchString,
         CancellationToken ct);
 
     Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);

@@ -36,7 +36,7 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
         int pageNumber = query.PageNumber ?? PaginationDefaults.PageNumber;
         int pageSize = query.PageSize ?? PaginationDefaults.PageSize;
 
-        PagedRecords<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, pageNumber, pageSize, ct);
+        PagedRecords<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, pageNumber, pageSize,query.SearchString,ct);
 
         IReadOnlyList<MonitorListResult> results = records.Items
             .Select(r => new MonitorListResult(r.Id, r.Name, r.Url, r.CurrentValue, r.LastCheckedAt, (MonitorStatus)r.Status, r.Interval))

@@ -20,12 +20,31 @@ public class MonitorQueries : IMonitorQueries
         MonitorStatus? status,
         int pageNumber,
         int pageSize,
+        string? searchString,
         CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
         int offset = checked((pageNumber - 1) * pageSize);
 
-        string statusFilter = status is null ? string.Empty : "WHERE s.Name = @Status";
+        var filters = new List<string>();
+        var parameters = new DynamicParameters();
+
+        if (status.HasValue)
+        {
+            filters.Add("s.Name = @Status");
+            parameters.Add("@Status", status.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchString))
+        {
+            filters.Add("m.Name Like %@SearchString%");
+            parameters.Add("SearchString", searchString);
+        }
+
+        string whereClause = filters.Count > 0
+            ? $"WHERE {string.Join(" AND ", filters)}"
+            : string.Empty;
+
         string sql =
             $$"""
             SELECT
@@ -38,21 +57,20 @@ public class MonitorQueries : IMonitorQueries
                 m.PollingIntervalSeconds AS Interval
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            {{statusFilter}}
+            {{whereClause}}
             ORDER BY m.Id
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
             SELECT COUNT(*)
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            {{statusFilter}};
+            {{whereClause}};
             """;
 
         CommandDefinition command = new(
             sql,
             new
             {
-                Status = status?.ToString(),
                 Offset = offset,
                 PageSize = pageSize
             },

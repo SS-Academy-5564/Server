@@ -21,5 +21,8 @@ public class GetMonitorsRequestValidator : AbstractValidator<GetMonitorsRequest>
             .InclusiveBetween(1, PaginationDefaults.MaxPageSize)
             .When(x => x.PageSize.HasValue)
             .WithMessage($"Page size must be between 1 and {PaginationDefaults.MaxPageSize}.");
+
+        RuleFor(x => x.SearchString)
+            .MaximumLength(64).WithMessage("Monitor name must be at most 64 characters.");
     }
 }
