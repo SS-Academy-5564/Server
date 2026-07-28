@@ -32,6 +32,14 @@ public static class DependencyInjection
             .Bind(configuration.GetRequiredSection(JwtOptions.SectionName))
             .ValidateOnStart();
 
+        services.AddSingleton<IValidateOptions<RefreshTokenOptions>, RefreshTokenOptionsValidator>();
+        services
+            .AddOptions<RefreshTokenOptions>()
+            .Bind(configuration.GetRequiredSection(RefreshTokenOptions.SectionName))
+            .ValidateOnStart();
+
+        services.AddTransient<IRefreshTokenService, RefreshTokenService>();
+
         services.AddSingleton<IValidateOptions<PasswordResetOptions>, PasswordResetOptionsValidator>();
         services
             .AddOptions<PasswordResetOptions>()
