@@ -1,11 +1,14 @@
 using FluentValidation.TestHelper;
+using Microsoft.Extensions.Options;
 using Pulse.API.Features.Monitors.CreateMonitor;
+using Pulse.BL.Common.Security.Ssrf;
 
 namespace Pulse.Tests.Unit.Features.Monitors.CreateMonitor;
 
 public class CreateMonitorRequestValidatorTests
 {
-    private readonly CreateMonitorRequestValidator _validator = new();
+    private readonly CreateMonitorRequestValidator _validator =
+        new(new SsrfGuard(Options.Create(new SsrfProtectionOptions())));
 
     private static CreateMonitorRequest ValidRequest()
         => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
@@ -49,6 +52,35 @@ public class CreateMonitorRequestValidatorTests
         TestValidationResult<CreateMonitorRequest> result = _validator.TestValidate(request);
 
         result.ShouldHaveValidationErrorFor(x => x.Url);
+    }
+
+    [Theory]
+    [InlineData("http://127.0.0.1/data")]
+    [InlineData("http://169.254.169.254/latest/meta-data")]
+    [InlineData("http://localhost:6379/data")]
+    [InlineData("http://10.0.0.5/data")]
+    [InlineData("http://[::1]/data")]
+    [InlineData("http://[::]/data")]
+    [InlineData("http://2130706433/data")]
+    public void Validate_InternalHostUrl_ShouldHaveValidationError(string url)
+    {
+        CreateMonitorRequest request = ValidRequest() with { Url = url };
+
+        TestValidationResult<CreateMonitorRequest> result = _validator.TestValidate(request);
+
+        result.ShouldHaveValidationErrorFor(x => x.Url);
+    }
+
+    [Theory]
+    [InlineData("https://api.example.com/data")]
+    [InlineData("http://8.8.8.8/data")]
+    public void Validate_PublicHostUrl_ShouldNotHaveUrlError(string url)
+    {
+        CreateMonitorRequest request = ValidRequest() with { Url = url };
+
+        TestValidationResult<CreateMonitorRequest> result = _validator.TestValidate(request);
+
+        result.ShouldNotHaveValidationErrorFor(x => x.Url);
     }
 
     [Theory]

@@ -1,4 +1,5 @@
 using FluentValidation;
+using Pulse.BL.Common.Security.Ssrf;
 
 namespace Pulse.API.Features.Monitors.CreateMonitor;
 
@@ -14,8 +15,12 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
         "GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"
     ];
 
-    public CreateMonitorRequestValidator()
+    private readonly ISsrfGuard _ssrfGuard;
+
+    public CreateMonitorRequestValidator(ISsrfGuard ssrfGuard)
     {
+        _ssrfGuard = ssrfGuard;
+
         RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Monitor name is required.")
             .MaximumLength(64).WithMessage("Monitor name must be at most 64 characters.");
@@ -23,7 +28,8 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
         RuleFor(x => x.Url)
             .NotEmpty().WithMessage("Endpoint URL is required.")
             .MaximumLength(2083).WithMessage("Endpoint URL must be at most 2083 characters.")
-            .Must(BeAValidHttpUrl).WithMessage("Endpoint URL must be a valid HTTP or HTTPS URL.");
+            .Must(BeAValidHttpUrl).WithMessage("Endpoint URL must be a valid HTTP or HTTPS URL.")
+            .Must(NotTargetInternalHost).WithMessage("Endpoint URL must not target a private or internal address.");
 
         RuleFor(x => x.HttpMethod)
             .NotEmpty().WithMessage("Request method is required.")
@@ -47,5 +53,17 @@ public class CreateMonitorRequestValidator : AbstractValidator<CreateMonitorRequ
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
             && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
+
+    private bool NotTargetInternalHost(string? url)
+    {
+        // Only enforce for well-formed HTTP(S) URLs; malformed URLs are caught by BeAValidHttpUrl.
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        {
+            return true;
+        }
+
+        return _ssrfGuard.TryValidateHost(uri.Host, out _);
     }
 }
