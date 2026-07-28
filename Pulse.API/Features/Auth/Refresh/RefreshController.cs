@@ -1,27 +1,28 @@
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Pulse.API.Attributes;
 using Pulse.API.Common;
-using Pulse.API.Constants;
+using Pulse.API.Controllers;
+using Pulse.API.Features.Auth.Login;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login;
+using Pulse.BL.Features.Auth.Refresh;
 
-namespace Pulse.API.Features.Auth.Login;
+namespace Pulse.API.Features.Auth.Refresh;
 
 [ApiController]
 [Route("api/auth")]
 [AutoValidate]
-public class LoginController : Controllers.PulseControllerBase
+public class RefreshController : PulseControllerBase
 {
-    private readonly IAsyncHandler<LoginCommand, Result<LoginResult>> _handler;
+    private readonly IAsyncHandler<RefreshCommand, Result<LoginResult>> _handler;
     private readonly RefreshTokenOptions _refreshTokenOptions;
     private readonly TimeProvider _timeProvider;
 
-    public LoginController(
-        IAsyncHandler<LoginCommand, Result<LoginResult>> handler,
+    public RefreshController(
+        IAsyncHandler<RefreshCommand, Result<LoginResult>> handler,
         IOptions<RefreshTokenOptions> refreshTokenOptions,
         TimeProvider timeProvider)
     {
@@ -30,17 +31,16 @@ public class LoginController : Controllers.PulseControllerBase
         _timeProvider = timeProvider;
     }
 
-    /// <summary>
-    /// Authenticates a user and returns an access token.
-    /// </summary>
-    /// <param name="request">The login payload containing email and password.</param>
-    /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>200 OK with login result (e.g., JWT token) on success, or an error response on failure.</returns>
-    [HttpPost("login")]
-    [EnableRateLimiting(RateLimitPolicies.Login)]
-    public async Task<IActionResult> LoginAsync([Validate] LoginRequest request, CancellationToken ct)
+    [HttpPost("refresh")]
+    public async Task<IActionResult> RefreshAsync(CancellationToken ct)
     {
-        LoginCommand command = new(request.Email, request.Password);
+        string? refreshToken = Request.Cookies[CookieConstants.RefreshTokenCookieName];
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return Unauthorized();
+        }
+
+        RefreshCommand command = new(refreshToken);
         Result<LoginResult> result = await _handler.HandleAsync(command, ct);
 
         if (result.IsSuccess)
@@ -58,6 +58,7 @@ public class LoginController : Controllers.PulseControllerBase
             return ToActionResult(Result.Ok(new LoginResponse(result.Value.AccessToken, result.Value.ExpiresAt)));
         }
 
-        return ToActionResult(result);
+        // Ensure invalid tokens return 401 instead of generic errors based on mapping
+        return Unauthorized();
     }
 }
