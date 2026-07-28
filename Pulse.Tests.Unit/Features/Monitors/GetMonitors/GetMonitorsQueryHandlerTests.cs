@@ -63,6 +63,72 @@ public class GetMonitorsQueryHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_WhenFilteredBySearch_PassesExactSearchStringToQueries()
+    {
+        const string searchString = "Billing API";
+        GetMonitorsQuery query = new(null, 2, 25) { SearchString = searchString };
+
+        _queriesMock
+            .Setup(q => q.GetAllAsync(null, 2, 25, searchString, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PagedRecords<MonitorListRecord>([], 0));
+
+        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(query);
+
+        result.IsSuccess.Should().BeTrue();
+        _queriesMock.Verify(
+            q => q.GetAllAsync(null, 2, 25, searchString, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenFilteredByStatusAndSearch_PassesBothFiltersToQueries()
+    {
+        const string searchString = "Payments";
+        GetMonitorsQuery query = new(BL.Features.Monitors.MonitorStatus.Disabled, 2, 25)
+        {
+            SearchString = searchString
+        };
+
+        _queriesMock
+            .Setup(q => q.GetAllAsync(
+                DAL.Queries.Monitors.MonitorStatus.Disabled,
+                2,
+                25,
+                searchString,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PagedRecords<MonitorListRecord>([], 0));
+
+        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(query);
+
+        result.IsSuccess.Should().BeTrue();
+        _queriesMock.Verify(
+            q => q.GetAllAsync(
+                DAL.Queries.Monitors.MonitorStatus.Disabled,
+                2,
+                25,
+                searchString,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenSearchIsCleared_PassesEmptySearchStringToQueries()
+    {
+        GetMonitorsQuery query = new(null, null, null) { SearchString = string.Empty };
+
+        _queriesMock
+            .Setup(q => q.GetAllAsync(null, 1, 10, string.Empty, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new PagedRecords<MonitorListRecord>([], 0));
+
+        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(query);
+
+        result.IsSuccess.Should().BeTrue();
+        _queriesMock.Verify(
+            q => q.GetAllAsync(null, 1, 10, string.Empty, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
     public async Task HandleAsync_WhenNoMonitors_ReturnsEmptyList()
     {
         _queriesMock.Setup(q => q.GetAllAsync(null, 1, 10, null, It.IsAny<CancellationToken>()))
