@@ -38,3 +38,4 @@ public sealed class UnauthorizedError(string message) : AppError(message, Codes.
 public sealed class ForbiddenError(string message) : AppError(message, Codes.Forbidden);
 public sealed class ConflictError(string message) : AppError(message, Codes.Conflict);
 public sealed class InternalError(string message) : AppError(message, Codes.Internal);
+public sealed class TooManyRequestsError(string message) : AppError(message, Codes.TooManyRequests);

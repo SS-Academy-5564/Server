@@ -5,13 +5,14 @@ using Moq;
 using Pulse.API.Features.Monitors.GetMonitors;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Pagination;
 using Pulse.BL.Features.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
 
 public class GetMonitorsControllerTests
 {
-    private readonly Mock<IAsyncHandler<GetMonitorsQuery, Result<IReadOnlyList<MonitorListResult>>>> _handlerMock;
+    private readonly Mock<IAsyncHandler<GetMonitorsQuery, Result<PagedResult<MonitorListResult>>>> _handlerMock;
     private readonly GetMonitorsController _sut;
 
     public GetMonitorsControllerTests()
@@ -29,9 +30,9 @@ public class GetMonitorsControllerTests
         }.AsReadOnly();
 
         _handlerMock.Setup(h => h.HandleAsync(It.IsAny<GetMonitorsQuery>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok(monitors));
+            .ReturnsAsync(Result.Ok(new PagedResult<MonitorListResult>(monitors, 1, 10, 21)));
 
-        IActionResult result = await _sut.GetMonitorsAsync(new GetMonitorsRequest(null), CancellationToken.None);
+        IActionResult result = await _sut.GetMonitorsAsync(new GetMonitorsRequest(null, null, null), CancellationToken.None);
 
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(200);
@@ -39,6 +40,11 @@ public class GetMonitorsControllerTests
         ApiResponse<IReadOnlyList<MonitorListResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
         response.Success.Should().BeTrue();
         response.Data.Should().BeEquivalentTo(monitors);
+        response.Pagination.Should().NotBeNull();
+        response.Pagination!.Page.Should().Be(1);
+        response.Pagination.PageSize.Should().Be(10);
+        response.Pagination.TotalCount.Should().Be(21);
+        response.Pagination.TotalPages.Should().Be(3);
     }
 
     [Fact]
@@ -47,16 +53,26 @@ public class GetMonitorsControllerTests
         IReadOnlyList<MonitorListResult> monitors = new List<MonitorListResult>().AsReadOnly();
 
         _handlerMock
-            .Setup(h => h.HandleAsync(It.Is<GetMonitorsQuery>(q => q.Status == MonitorStatus.Disabled), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok(monitors));
+            .Setup(h => h.HandleAsync(
+                It.Is<GetMonitorsQuery>(q =>
+                    q.Status == MonitorStatus.Disabled &&
+                    q.PageNumber == 2 &&
+                    q.PageSize == 25),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(new PagedResult<MonitorListResult>(monitors, 2, 25, 0)));
 
-        IActionResult result = await _sut.GetMonitorsAsync(new GetMonitorsRequest(MonitorStatus.Disabled), CancellationToken.None);
+        IActionResult result = await _sut.GetMonitorsAsync(
+            new GetMonitorsRequest(MonitorStatus.Disabled, 2, 25),
+            CancellationToken.None);
 
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(200);
 
         _handlerMock.Verify(h => h.HandleAsync(
-            It.Is<GetMonitorsQuery>(q => q.Status == MonitorStatus.Disabled),
+            It.Is<GetMonitorsQuery>(q =>
+                q.Status == MonitorStatus.Disabled &&
+                q.PageNumber == 2 &&
+                q.PageSize == 25),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -71,9 +87,9 @@ public class GetMonitorsControllerTests
 
         _handlerMock
             .Setup(h => h.HandleAsync(It.Is<GetMonitorsQuery>(q => q.Status == null), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok(monitors));
+            .ReturnsAsync(Result.Ok(new PagedResult<MonitorListResult>(monitors, 1, 10, 2)));
 
-        IActionResult result = await _sut.GetMonitorsAsync(new GetMonitorsRequest(null), CancellationToken.None);
+        IActionResult result = await _sut.GetMonitorsAsync(new GetMonitorsRequest(null, null, null), CancellationToken.None);
 
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ApiResponse<IReadOnlyList<MonitorListResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
