@@ -1,0 +1,11 @@
+TRUNCATE TABLE RefreshTokens;
+
+DROP INDEX IDX_RefreshTokens_Token ON RefreshTokens;
+ALTER TABLE RefreshTokens DROP COLUMN Token;
+ALTER TABLE RefreshTokens ADD TokenHash VARCHAR(100) NOT NULL;
+ALTER TABLE RefreshTokens ADD FamilyId UNIQUEIDENTIFIER NOT NULL;
+ALTER TABLE RefreshTokens ADD UsedAt DATETIMEOFFSET NULL;
+ALTER TABLE RefreshTokens ADD ReplacedByTokenId UNIQUEIDENTIFIER NULL;
+ALTER TABLE RefreshTokens ADD RevocationReason NVARCHAR(100) NULL;
+
+ALTER TABLE RefreshTokens ADD CONSTRAINT FK_RefreshTokens_ReplacedBy FOREIGN KEY (ReplacedByTokenId) REFERENCES RefreshTokens (Id);
