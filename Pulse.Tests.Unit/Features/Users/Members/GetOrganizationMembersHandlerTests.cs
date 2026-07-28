@@ -11,22 +11,22 @@ using Pulse.DAL.Queries.Members;
 namespace Pulse.Tests.Unit.Features.Users.Members;
 
 /// <summary>
-/// Contains unit tests for the <see cref="GetOrganizationMembersQueryHandler"/>.
+/// Contains unit tests for the <see cref="GetOrganizationMembersHandler"/>.
 /// </summary>
-public class GetOrganizationMembersQueryHandlerTests
+public class GetOrganizationMembersHandlerTests
 {
     private readonly Mock<ICurrentUserService> _currentUserServiceMock;
     private readonly Mock<IMemberQueries> _memberQueriesMock;
-    private readonly GetOrganizationMembersQueryHandler _sut;
+    private readonly GetOrganizationMembersHandler _sut;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="GetOrganizationMembersQueryHandlerTests"/> class.
+    /// Initializes a new instance of the <see cref="GetOrganizationMembersHandlerTests"/> class.
     /// </summary>
-    public GetOrganizationMembersQueryHandlerTests()
+    public GetOrganizationMembersHandlerTests()
     {
         _currentUserServiceMock = new();
         _memberQueriesMock = new();
-        _sut = new GetOrganizationMembersQueryHandler(_currentUserServiceMock.Object, _memberQueriesMock.Object);
+        _sut = new GetOrganizationMembersHandler(_currentUserServiceMock.Object, _memberQueriesMock.Object);
     }
 
     /// <summary>

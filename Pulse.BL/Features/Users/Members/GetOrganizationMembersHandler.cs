@@ -11,18 +11,18 @@ namespace Pulse.BL.Features.Users.Members;
 /// <summary>
 /// Handles queries for organization members.
 /// </summary>
-public sealed class GetOrganizationMembersQueryHandler
+public sealed class GetOrganizationMembersHandler
     : IAsyncHandler<GetOrganizationMembersQuery, Result<PagedResult<OrganizationMemberResult>>>
 {
     private readonly ICurrentUserService _currentUserService;
     private readonly IMemberQueries _memberQueries;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="GetOrganizationMembersQueryHandler"/> class.
+    /// Initializes a new instance of the <see cref="GetOrganizationMembersHandler"/> class.
     /// </summary>
     /// <param name="currentUserService">The current user service.</param>
     /// <param name="memberQueries">The member queries interface.</param>
-    public GetOrganizationMembersQueryHandler(
+    public GetOrganizationMembersHandler(
         ICurrentUserService currentUserService,
         IMemberQueries memberQueries)
     {
