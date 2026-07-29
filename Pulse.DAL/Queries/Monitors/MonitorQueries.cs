@@ -34,6 +34,8 @@ public class MonitorQueries : IMonitorQueries
         parameters.Add("Offset", offset);
         parameters.Add("PageSize", pageSize);
 
+        filters.Add("m.OrganizationId = @OrganizationId");
+
         if (status.HasValue)
         {
             filters.Add("s.Name = @Status");
@@ -46,7 +48,7 @@ public class MonitorQueries : IMonitorQueries
             parameters.Add("SearchString", $"%{searchString.Trim()}%");
         }
 
-        string whereClause = filters.Count > 0
+        string whereClause = filters.Count > 1
             ? $"WHERE {string.Join(" AND ", filters)}"
             : string.Empty;
 
@@ -63,7 +65,6 @@ public class MonitorQueries : IMonitorQueries
                 m.OrganizationId
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            WHERE m.OrganizationId = @OrganizationId
             {{whereClause}}
             ORDER BY m.Id
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -71,7 +72,6 @@ public class MonitorQueries : IMonitorQueries
             SELECT COUNT(*)
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            WHERE m.OrganizationId = @OrganizationId
             {{whereClause}};
             """;
 
@@ -86,6 +86,7 @@ public class MonitorQueries : IMonitorQueries
         return new PagedRecords<MonitorListRecord>(records, totalCount);
     }
 
+    /// <inheritdoc/>
     public async Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(Guid? organizationId, int max, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
