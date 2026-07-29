@@ -51,6 +51,7 @@ public class RefreshTokenCommands : IRefreshTokenCommands
                 cancellationToken: ct));
     }
 
+    /// <inheritdoc/>
     public async Task<bool> RotateAsync(RefreshTokenRecord oldRecord, RefreshTokenRecord newRecord, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
@@ -64,7 +65,7 @@ public class RefreshTokenCommands : IRefreshTokenCommands
             UPDATE RefreshTokens
             SET
                 UsedAt = @UsedAt,
-                ReplacedByTokenId = @ReplacedByTokenId
+                ReplacedByTokenId = @NewId
             WHERE Id = @OldId AND UsedAt IS NULL AND RevokedAt IS NULL AND ExpiresAt > SYSUTCDATETIME();
 
             SET @Updated = @@ROWCOUNT;
@@ -91,7 +92,6 @@ public class RefreshTokenCommands : IRefreshTokenCommands
                 {
                     OldId = oldRecord.Id,
                     oldRecord.UsedAt,
-                    oldRecord.ReplacedByTokenId,
                     NewId = newRecord.Id,
                     newRecord.UserId,
                     NewTokenHash = newRecord.TokenHash,

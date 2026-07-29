@@ -163,7 +163,7 @@ public static class ServiceCollectionExtensions
                                 new ApiError
                                 {
                                     Code = RateLimitErrorCodes.RateLimited,
-                                    Message = $"Manual check was already triggered recently. {retryMessage}"
+                                    Message = $"Too many requests. {retryMessage}"
                                 }
                             ]
                         }, cancellationToken);
