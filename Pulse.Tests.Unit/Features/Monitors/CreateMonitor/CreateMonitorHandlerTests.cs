@@ -37,7 +37,7 @@ public class CreateMonitorHandlerTests
     }
 
     private static CreateMonitorCommand ValidCommand()
-        => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10, Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+        => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
 
     [Fact]
     public async Task HandleAsync_ValidCommand_ReturnsCreatedMonitorInEnabledStatus()

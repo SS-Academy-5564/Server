@@ -6,7 +6,6 @@ using Pulse.API.Features.Monitors.CreateMonitor;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
-using Pulse.BL.Common.Security;
 using Pulse.BL.Features.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Monitors.CreateMonitor;
@@ -14,15 +13,11 @@ namespace Pulse.Tests.Unit.Features.Monitors.CreateMonitor;
 public class CreateMonitorControllerTests
 {
     private readonly Mock<IAsyncHandler<CreateMonitorCommand, Result<MonitorListResult>>> _handlerMock = new();
-    private readonly Mock<ICurrentUserService> _currentUserServiceMock = new();
     private readonly CreateMonitorController _sut;
 
     public CreateMonitorControllerTests()
     {
-        _currentUserServiceMock
-            .Setup(x => x.OrganizationId)
-            .Returns(Guid.Parse("B1000000-0000-0000-0000-000000000001"));
-        _sut = new CreateMonitorController(_handlerMock.Object, _currentUserServiceMock.Object);
+        _sut = new CreateMonitorController(_handlerMock.Object);
     }
 
     private static CreateMonitorRequest ValidRequest()
@@ -64,8 +59,7 @@ public class CreateMonitorControllerTests
                 c.HttpMethod == "GET" &&
                 c.ResultPath == "data.usd.rate" &&
                 c.PollingIntervalSeconds == 300 &&
-                c.PollingTimeoutSeconds == 10 &&
-                c.OrganizationId == Guid.Parse("B1000000-0000-0000-0000-000000000001")),
+                c.PollingTimeoutSeconds == 10),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -80,18 +74,5 @@ public class CreateMonitorControllerTests
 
         ObjectResult objectResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(400);
-    }
-
-    [Fact]
-    public async Task CreateMonitor_NoOrganizationId_Returns401()
-    {
-        _currentUserServiceMock
-            .Setup(x => x.OrganizationId)
-            .Returns((Guid?)null);
-
-        IActionResult result = await _sut.CreateMonitorAsync(ValidRequest(), CancellationToken.None);
-
-        ObjectResult objectResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
-        objectResult.StatusCode.Should().Be(401);
     }
 }

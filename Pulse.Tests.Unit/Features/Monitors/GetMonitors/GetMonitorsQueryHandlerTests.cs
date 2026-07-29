@@ -38,7 +38,7 @@ public class GetMonitorsQueryHandlerTests
         _queriesMock.Setup(q => q.GetAllAsync(DefaultOrgId, null, 1, 10, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PagedRecords<MonitorListRecord>(records, 21));
 
-        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(DefaultOrgId, null, null, null));
+        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(null, null, null));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().HaveCount(1);
@@ -61,7 +61,7 @@ public class GetMonitorsQueryHandlerTests
             .ReturnsAsync(new PagedRecords<MonitorListRecord>(records, 0));
 
         Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(
-            new GetMonitorsQuery(DefaultOrgId, BL.Features.Monitors.MonitorStatus.Disabled, 2, 25));
+            new GetMonitorsQuery(BL.Features.Monitors.MonitorStatus.Disabled, 2, 25));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().BeEmpty();
@@ -75,7 +75,7 @@ public class GetMonitorsQueryHandlerTests
     public async Task HandleAsync_WhenFilteredBySearch_PassesExactSearchStringToQueries()
     {
         const string searchString = "Billing API";
-        GetMonitorsQuery query = new(DefaultOrgId, null, null, null) { SearchString = searchString };
+        GetMonitorsQuery query = new(null, null, null) { SearchString = searchString };
 
         _queriesMock
             .Setup(q => q.GetAllAsync(DefaultOrgId, null, 1, 10, searchString, It.IsAny<CancellationToken>()))
@@ -93,7 +93,7 @@ public class GetMonitorsQueryHandlerTests
     public async Task HandleAsync_WhenFilteredByStatusAndSearch_PassesBothFiltersToQueries()
     {
         const string searchString = "Payments";
-        GetMonitorsQuery query = new(DefaultOrgId, BL.Features.Monitors.MonitorStatus.Disabled, 2, 25)
+        GetMonitorsQuery query = new(BL.Features.Monitors.MonitorStatus.Disabled, 2, 25)
         {
             SearchString = searchString
         };
@@ -125,7 +125,7 @@ public class GetMonitorsQueryHandlerTests
     [Fact]
     public async Task HandleAsync_WhenSearchIsCleared_PassesEmptySearchStringToQueries()
     {
-        GetMonitorsQuery query = new(DefaultOrgId, null, null, null) { SearchString = string.Empty };
+        GetMonitorsQuery query = new(null, null, null) { SearchString = string.Empty };
 
         _queriesMock
             .Setup(q => q.GetAllAsync(DefaultOrgId, null, 1, 10, string.Empty, It.IsAny<CancellationToken>()))
@@ -145,7 +145,7 @@ public class GetMonitorsQueryHandlerTests
         _queriesMock.Setup(q => q.GetAllAsync(DefaultOrgId, null, 1, 10, null, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PagedRecords<MonitorListRecord>([], 0));
 
-        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(DefaultOrgId, null, null, null));
+        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(null, null, null));
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Items.Should().BeEmpty();
@@ -158,7 +158,7 @@ public class GetMonitorsQueryHandlerTests
             .Setup(x => x.OrganizationId)
             .Returns((Guid?)null);
 
-        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(DefaultOrgId, null, null, null));
+        Result<PagedResult<MonitorListResult>> result = await _sut.HandleAsync(new GetMonitorsQuery(null, null, null));
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is UnauthorizedError);
