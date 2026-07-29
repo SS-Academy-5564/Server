@@ -63,6 +63,7 @@ public class MonitorQueries : IMonitorQueries
                 m.OrganizationId
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
+            WHERE m.OrganizationId = @OrganizationId
             {{whereClause}}
             ORDER BY m.Id
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -70,6 +71,7 @@ public class MonitorQueries : IMonitorQueries
             SELECT COUNT(*)
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
+            WHERE m.OrganizationId = @OrganizationId
             {{whereClause}};
             """;
 
