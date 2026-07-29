@@ -64,7 +64,7 @@ public class RefreshTokenCommands : IRefreshTokenCommands
 
             UPDATE RefreshTokens
             SET
-                UsedAt = @UsedAt,
+                UsedAt = SYSUTCDATETIME(),
                 ReplacedByTokenId = @NewId
             WHERE Id = @OldId AND UsedAt IS NULL AND RevokedAt IS NULL AND ExpiresAt > SYSUTCDATETIME();
 
@@ -91,7 +91,6 @@ public class RefreshTokenCommands : IRefreshTokenCommands
                 new
                 {
                     OldId = oldRecord.Id,
-                    oldRecord.UsedAt,
                     NewId = newRecord.Id,
                     newRecord.UserId,
                     NewTokenHash = newRecord.TokenHash,
