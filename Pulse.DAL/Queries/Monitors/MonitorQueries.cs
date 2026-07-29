@@ -17,6 +17,7 @@ public class MonitorQueries : IMonitorQueries
 
     /// <inheritdoc/>
     public async Task<PagedRecords<MonitorListRecord>> GetAllAsync(
+        Guid organizationId,
         MonitorStatus? status,
         int pageNumber,
         int pageSize,
@@ -29,13 +30,14 @@ public class MonitorQueries : IMonitorQueries
         var filters = new List<string>();
         var parameters = new DynamicParameters();
 
+        parameters.Add("OrganizationId", organizationId);
         parameters.Add("Offset", offset);
         parameters.Add("PageSize", pageSize);
 
         if (status.HasValue)
         {
-            filters.Add("s.Name = @Status ");
-            parameters.Add("@Status", status.ToString());
+            filters.Add("s.Name = @Status");
+            parameters.Add("Status", status.ToString());
         }
 
         if (!string.IsNullOrWhiteSpace(searchString))
@@ -57,7 +59,8 @@ public class MonitorQueries : IMonitorQueries
                 m.CurrentValue,
                 m.LastCheckedAt,
                 s.Name AS Status,
-                m.PollingIntervalSeconds AS Interval
+                m.PollingIntervalSeconds AS Interval,
+                m.OrganizationId
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
             {{whereClause}}
@@ -81,20 +84,25 @@ public class MonitorQueries : IMonitorQueries
         return new PagedRecords<MonitorListRecord>(records, totalCount);
     }
 
-    public async Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct)
+    public async Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(Guid? organizationId, int max, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
 
+        string orgFilter = organizationId.HasValue
+            ? "WHERE m.OrganizationId = @OrganizationId "
+            : string.Empty;
+
         return await connection.QueryAsync<MonitorPollingRecord>(
             new CommandDefinition(
-                "SELECT TOP (@Max) m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status " +
-                "FROM Monitors AS m " +
-                "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
-                "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
-                "WHERE m.NextExecutionAt <= SYSUTCDATETIME() " +
-                "   AND s.Name = 'Enabled' " +
-                "Order By m.NextExecutionAt ASC;",
-                new { Max = max },
+                $"SELECT TOP (@Max) m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status, m.OrganizationId " +
+                $"FROM Monitors AS m " +
+                $"JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
+                $"JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
+                $"{orgFilter}" +
+                $"AND m.NextExecutionAt <= SYSUTCDATETIME() " +
+                $"AND s.Name = 'Enabled' " +
+                $"Order By m.NextExecutionAt ASC;",
+                new { Max = max, OrganizationId = organizationId },
                 cancellationToken: ct)
         );
     }
@@ -106,7 +114,7 @@ public class MonitorQueries : IMonitorQueries
 
         return await connection.QuerySingleOrDefaultAsync<MonitorPollingRecord>(
             new CommandDefinition(
-                "SELECT m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status " +
+                "SELECT m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status, m.OrganizationId " +
                 "FROM Monitors AS m " +
                 "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
                 "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +

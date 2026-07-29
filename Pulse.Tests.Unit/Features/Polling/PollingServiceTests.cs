@@ -33,7 +33,8 @@ public class PollingServiceTests
         "data.status",
         60,
         30,
-        "Enabled");
+        "Enabled",
+        Guid.Parse("B1000000-0000-0000-0000-000000000001"));
     private readonly PollingService _service;
     private CreateMonitorPollResultsInput? _createdMonitorPollResults;
     private UpdateMonitorAfterPollInput? _updatedMonitor;
@@ -96,7 +97,7 @@ public class PollingServiceTests
 
     private void SetupDueMonitors(params MonitorPollingRecord[] monitors)
         => _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetDueEnabledAsync(It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(monitors);
 
     private void SetupHttpResponse(MonitorPollingRecord monitor, HttpMonitorResponse response)
@@ -351,7 +352,7 @@ public class PollingServiceTests
         };
 
         _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetDueEnabledAsync(It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([_monitor, second]);
         _httpMonitorClient
             .Setup(c => c.SendAsync(It.IsAny<MonitorPollingRecord>(), It.IsAny<CancellationToken>()))
@@ -375,7 +376,7 @@ public class PollingServiceTests
     {
         // Arrange
         _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetDueEnabledAsync(It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([]);
 
         // Act
@@ -398,7 +399,7 @@ public class PollingServiceTests
     {
         // Arrange
         _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetDueEnabledAsync(It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync([_monitor]);
 
         using var cts = new CancellationTokenSource();

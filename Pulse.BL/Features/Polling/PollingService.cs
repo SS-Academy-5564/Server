@@ -47,7 +47,7 @@ public class PollingService : IPollingService
     public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
         IEnumerable<MonitorPollingRecord> monitors =
-            await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+            await _monitorQueries.GetDueEnabledAsync(null, _options.BatchSize, ct);
 
         foreach (MonitorPollingRecord monitor in monitors)
         {

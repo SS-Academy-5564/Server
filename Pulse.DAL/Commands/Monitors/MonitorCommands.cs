@@ -22,7 +22,7 @@ public class MonitorCommands : IMonitorCommands
         const string sql =
             """
             INSERT INTO dbo.Monitors
-                (Name, Url, HttpMethod, ResultPath, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
+                (Name, Url, HttpMethod, ResultPath, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
             OUTPUT INSERTED.Id
             VALUES
                 (
@@ -32,7 +32,8 @@ public class MonitorCommands : IMonitorCommands
                     @ResultPath,
                     (SELECT Id FROM dbo.MonitorStatuses WHERE Name = 'Enabled'),
                     @PollingIntervalSeconds,
-                    @PollingTimeoutSeconds
+                    @PollingTimeoutSeconds,
+                    @OrganizationId
                 );
             """;
 

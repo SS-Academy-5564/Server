@@ -1,5 +1,7 @@
 using FluentResults;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Security;
 using Pulse.DAL.Commands.Monitors;
 using Pulse.DAL.Common.Repository;
 
@@ -9,13 +11,16 @@ public class CreateMonitorHandler : IAsyncHandler<CreateMonitorCommand, Result<M
 {
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IMonitorCommands _monitorCommands;
+    private readonly ICurrentUserService _currentUserService;
 
     public CreateMonitorHandler(
         IUnitOfWorkFactory unitOfWorkFactory,
-        IMonitorCommands monitorCommands)
+        IMonitorCommands monitorCommands,
+        ICurrentUserService currentUserService)
     {
         _unitOfWorkFactory = unitOfWorkFactory;
         _monitorCommands = monitorCommands;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -25,8 +30,17 @@ public class CreateMonitorHandler : IAsyncHandler<CreateMonitorCommand, Result<M
     /// <param name="command">The monitor configuration to create.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The newly created monitor in list-projection shape.</returns>
-    public async Task<Result<MonitorListResult>> HandleAsync(CreateMonitorCommand command, CancellationToken ct = default)
+    public async Task<Result<MonitorListResult>> HandleAsync(
+        CreateMonitorCommand command,
+        CancellationToken ct = default)
     {
+        Guid? organizationId = _currentUserService.OrganizationId;
+
+        if (organizationId is null)
+        {
+            return Result.Fail(new UnauthorizedError("User is not associated with an organization."));
+        }
+
         await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct: ct);
 
         Guid monitorId = await _monitorCommands.CreateAsync(
@@ -36,7 +50,8 @@ public class CreateMonitorHandler : IAsyncHandler<CreateMonitorCommand, Result<M
                 command.HttpMethod,
                 command.ResultPath,
                 command.PollingIntervalSeconds,
-                command.PollingTimeoutSeconds),
+                command.PollingTimeoutSeconds,
+                organizationId.Value),
             ct);
 
         await uow.CommitAsync(ct);
@@ -48,7 +63,8 @@ public class CreateMonitorHandler : IAsyncHandler<CreateMonitorCommand, Result<M
             CurrentValue: null,
             LastCheckedAt: null,
             MonitorStatus.Enabled,
-            command.PollingIntervalSeconds);
+            command.PollingIntervalSeconds,
+            organizationId.Value);
 
         return Result.Ok(result);
     }

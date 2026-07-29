@@ -7,5 +7,6 @@ public sealed record MonitorListResult(
     string? CurrentValue,
     DateTimeOffset? LastCheckedAt,
     MonitorStatus Status,
-    int Interval);
+    int Interval,
+    Guid OrganizationId);
 

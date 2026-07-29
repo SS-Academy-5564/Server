@@ -6,4 +6,5 @@ public sealed record CreateMonitorInput(
     string HttpMethod,
     string ResultPath,
     int PollingIntervalSeconds,
-    int PollingTimeoutSeconds);
+    int PollingTimeoutSeconds,
+    Guid OrganizationId);

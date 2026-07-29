@@ -2,6 +2,8 @@ using System.Data;
 using FluentAssertions;
 using FluentResults;
 using Moq;
+using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Security;
 using Pulse.BL.Features.Monitors;
 using Pulse.DAL.Commands.Monitors;
 using Pulse.DAL.Common.Repository;
@@ -13,6 +15,7 @@ public class CreateMonitorHandlerTests
     private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock = new();
     private readonly Mock<IUnitOfWork> _uowMock = new();
     private readonly Mock<IMonitorCommands> _commandsMock = new();
+    private readonly Mock<ICurrentUserService> _currentUserServiceMock = new();
 
     private readonly CreateMonitorHandler _sut;
 
@@ -26,11 +29,15 @@ public class CreateMonitorHandlerTests
             .Setup(x => x.CreateAsync(It.IsAny<CreateMonitorInput>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
 
-        _sut = new CreateMonitorHandler(_uowFactoryMock.Object, _commandsMock.Object);
+        _currentUserServiceMock
+            .Setup(x => x.OrganizationId)
+            .Returns(Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+
+        _sut = new CreateMonitorHandler(_uowFactoryMock.Object, _commandsMock.Object, _currentUserServiceMock.Object);
     }
 
     private static CreateMonitorCommand ValidCommand()
-        => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10);
+        => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", 300, 10, Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
     [Fact]
     public async Task HandleAsync_ValidCommand_ReturnsCreatedMonitorInEnabledStatus()
@@ -50,6 +57,7 @@ public class CreateMonitorHandlerTests
         result.Value.Interval.Should().Be(300);
         result.Value.CurrentValue.Should().BeNull();
         result.Value.LastCheckedAt.Should().BeNull();
+        result.Value.OrganizationId.Should().Be(Guid.Parse("B1000000-0000-0000-0000-000000000001"));
     }
 
     [Fact]
@@ -64,7 +72,8 @@ public class CreateMonitorHandlerTests
                 i.HttpMethod == "GET" &&
                 i.ResultPath == "data.usd.rate" &&
                 i.PollingIntervalSeconds == 300 &&
-                i.PollingTimeoutSeconds == 10),
+                i.PollingTimeoutSeconds == 10 &&
+                i.OrganizationId == Guid.Parse("B1000000-0000-0000-0000-000000000001")),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -74,5 +83,18 @@ public class CreateMonitorHandlerTests
         await _sut.HandleAsync(ValidCommand(), CancellationToken.None);
 
         _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoOrganizationId_ReturnsUnauthorizedError()
+    {
+        _currentUserServiceMock
+            .Setup(x => x.OrganizationId)
+            .Returns((Guid?)null);
+
+        Result<MonitorListResult> result = await _sut.HandleAsync(ValidCommand(), CancellationToken.None);
+
+        result.IsFailed.Should().BeTrue();
+        result.Errors.Should().ContainSingle(e => e is UnauthorizedError);
     }
 }

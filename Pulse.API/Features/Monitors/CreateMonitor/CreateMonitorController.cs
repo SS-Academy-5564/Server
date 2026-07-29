@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Attributes;
 using Pulse.API.Controllers;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Security;
 using Pulse.BL.Features.Monitors;
 
 namespace Pulse.API.Features.Monitors.CreateMonitor;
@@ -17,14 +19,19 @@ namespace Pulse.API.Features.Monitors.CreateMonitor;
 public sealed class CreateMonitorController : PulseControllerBase
 {
     private readonly IAsyncHandler<CreateMonitorCommand, Result<MonitorListResult>> _handler;
+    private readonly ICurrentUserService _currentUserService;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateMonitorController"/> class.
     /// </summary>
     /// <param name="handler">The handler for creating monitors.</param>
-    public CreateMonitorController(IAsyncHandler<CreateMonitorCommand, Result<MonitorListResult>> handler)
+    /// <param name="currentUserService">The current user service to resolve organization context.</param>
+    public CreateMonitorController(
+        IAsyncHandler<CreateMonitorCommand, Result<MonitorListResult>> handler,
+        ICurrentUserService currentUserService)
     {
         _handler = handler;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -36,13 +43,21 @@ public sealed class CreateMonitorController : PulseControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateMonitorAsync([Validate] CreateMonitorRequest request, CancellationToken ct)
     {
+        Guid? organizationId = _currentUserService.OrganizationId;
+
+        if (organizationId is null)
+        {
+            return ToActionResult(Result.Fail<MonitorListResult>(new UnauthorizedError("User is not associated with an organization.")));
+        }
+
         CreateMonitorCommand command = new(
             request.Name,
             request.Url,
             request.HttpMethod,
             request.ResultPath,
             request.PollingIntervalSeconds,
-            request.PollingTimeoutSeconds);
+            request.PollingTimeoutSeconds,
+            organizationId.Value);
 
         Result<MonitorListResult> result = await _handler.HandleAsync(command, ct);
         return ToActionResult(result);

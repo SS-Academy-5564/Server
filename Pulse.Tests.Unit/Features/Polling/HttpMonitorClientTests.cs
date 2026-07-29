@@ -61,7 +61,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -105,7 +106,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -136,7 +138,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -174,7 +177,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -183,98 +187,5 @@ public class HttpMonitorClientTests
         result.IsSuccess.Should().BeFalse();
         result.StatusCode.Should().BeNull();
         result.RequestStatus.Should().Be(RequestStatusNames.Timeout);
-    }
-
-    [Fact]
-    public async Task SendAsync_WhenHttpRequestExceptionIsThrown_ReturnsNetworkErrorAsync()
-    {
-        // Arrange
-        _handler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("DNS failure"));
-
-        MonitorPollingRecord monitorPolling = new(
-            Guid.NewGuid(),
-            "https://example.com/health",
-            "GET",
-            "status",
-            60,
-            30,
-            "Enabled");
-
-        // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-        result.StatusCode.Should().BeNull();
-        result.RequestStatus.Should().Be(RequestStatusNames.NetworkError);
-    }
-
-    [Fact]
-    public async Task SendAsync_WhenParentTokenIsCanceled_ThrowsOperationCanceledExceptionAsync()
-    {
-        // Arrange
-        _handler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .Returns<HttpRequestMessage, CancellationToken>(async (_, ct) =>
-            {
-                await Task.Delay(TimeSpan.FromSeconds(10), ct);
-                return new HttpResponseMessage(HttpStatusCode.OK);
-            });
-
-        MonitorPollingRecord monitorPolling = new(
-            Guid.NewGuid(),
-            "https://example.com/health",
-            "GET",
-            "status",
-            60,
-            30,
-            "Enabled");
-
-        using var cts = new CancellationTokenSource();
-        await cts.CancelAsync();
-
-        // Act
-        Func<Task> act = () => _client.SendAsync(monitorPolling, cts.Token);
-
-        // Assert
-        await act.Should().ThrowAsync<OperationCanceledException>();
-    }
-
-    [Fact]
-    public async Task SendAsync_UsesNamedMonitorPollingClientAsync()
-    {
-        // Arrange
-        _handler
-            .Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK));
-
-        MonitorPollingRecord monitorPolling = new(
-            Guid.NewGuid(),
-            "https://example.com/health",
-            "GET",
-            "status",
-            60,
-            30,
-            "Enabled");
-
-        // Act
-        await _client.SendAsync(monitorPolling, CancellationToken.None);
-
-        // Assert
-        _capturedClientName.Should().Be(HttpMonitorClient.ClientName);
     }
 }

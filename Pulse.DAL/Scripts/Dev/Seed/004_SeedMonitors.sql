@@ -6,50 +6,52 @@ DECLARE @MethodGet UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM HttpMethods WHERE Na
 DECLARE @MethodPost UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM HttpMethods WHERE Name = 'POST');
 DECLARE @MethodPut UNIQUEIDENTIFIER = (SELECT TOP 1 Id FROM HttpMethods WHERE Name = 'PUT');
 
+DECLARE @DefaultOrgId UNIQUEIDENTIFIER = 'B1000000-0000-0000-0000-000000000001';
+
 IF NOT EXISTS (SELECT 1 FROM Monitors WHERE Name = 'Billing Service API')
 BEGIN
-    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
-    VALUES ('Billing Service API', 'https://api.pulse.dev/billing/v1/health', @MethodGet, '$.status', '99.98%', DATEADD(minute, -2, SYSDATETIMEOFFSET()), @StatusEnabled, 60, 10);
+    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
+    VALUES ('Billing Service API', 'https://api.pulse.dev/billing/v1/health', @MethodGet, '$.status', '99.98%', DATEADD(minute, -2, SYSDATETIMEOFFSET()), @StatusEnabled, 60, 10, @DefaultOrgId);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Monitors WHERE Name = 'User Authentication Server')
 BEGIN
-    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
-    VALUES ('User Authentication Server', 'https://auth.pulse.dev/oauth2/token', @MethodPost, '$.active_sessions', '342', DATEADD(second, -45, SYSDATETIMEOFFSET()), @StatusEnabled, 60, 5);
+    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
+    VALUES ('User Authentication Server', 'https://auth.pulse.dev/oauth2/token', @MethodPost, '$.active_sessions', '342', DATEADD(second, -45, SYSDATETIMEOFFSET()), @StatusEnabled, 60, 5, @DefaultOrgId);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Monitors WHERE Name = 'Stripe Payment Gateway')
 BEGIN
-    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
-    VALUES ('Stripe Payment Gateway', 'https://api.stripe.com/v3/charges', @MethodGet, '$.total_processed', '$67,420', DATEADD(minute, -15, SYSDATETIMEOFFSET()), @StatusEnabled, 900, 15);
+    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
+    VALUES ('Stripe Payment Gateway', 'https://api.stripe.com/v3/charges', @MethodGet, '$.total_processed', '$67,420', DATEADD(minute, -15, SYSDATETIMEOFFSET()), @StatusEnabled, 900, 15, @DefaultOrgId);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Monitors WHERE Name = 'Database Backup Worker')
 BEGIN
-    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
-    VALUES ('Database Backup Worker', 'https://backup.pulse.dev/status', @MethodGet, '$.completed_count', '14', DATEADD(hour, -4, SYSDATETIMEOFFSET()), @StatusEnabled, 1800, 30);
+    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
+    VALUES ('Database Backup Worker', 'https://backup.pulse.dev/status', @MethodGet, '$.completed_count', '14', DATEADD(hour, -4, SYSDATETIMEOFFSET()), @StatusEnabled, 1800, 30, @DefaultOrgId);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Monitors WHERE Name = 'Email Dispatcher Service')
 BEGIN
-    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
-    VALUES ('Email Dispatcher Service', 'https://mail.pulse.dev/queue/length', @MethodGet, '$.queue_size', '0', DATEADD(minute, -8, SYSDATETIMEOFFSET()), @StatusDisabled, 300, 10);
+    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
+    VALUES ('Email Dispatcher Service', 'https://mail.pulse.dev/queue/length', @MethodGet, '$.queue_size', '0', DATEADD(minute, -8, SYSDATETIMEOFFSET()), @StatusDisabled, 300, 10, @DefaultOrgId);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Monitors WHERE Name = 'Legacy Inventory Sync API')
 BEGIN
-    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
-    VALUES ('Legacy Inventory Sync API', 'https://legacy.inventory.pulse.dev/sync', @MethodPut, '$.status', NULL, DATEADD(minute, -1, SYSDATETIMEOFFSET()), @StatusError, 60, 5);
+    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
+    VALUES ('Legacy Inventory Sync API', 'https://legacy.inventory.pulse.dev/sync', @MethodPut, '$.status', NULL, DATEADD(minute, -1, SYSDATETIMEOFFSET()), @StatusError, 60, 5, @DefaultOrgId);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Monitors WHERE Name = 'Notification Dispatch Gateway')
 BEGIN
-    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
-    VALUES ('Notification Dispatch Gateway', 'https://notify.pulse.dev/webhook', @MethodPost, '$.delivery_rate', '98.5%', DATEADD(minute, -10, SYSDATETIMEOFFSET()), @StatusEnabled, 600, 15);
+    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
+    VALUES ('Notification Dispatch Gateway', 'https://notify.pulse.dev/webhook', @MethodPost, '$.delivery_rate', '98.5%', DATEADD(minute, -10, SYSDATETIMEOFFSET()), @StatusEnabled, 600, 15, @DefaultOrgId);
 END;
 
 IF NOT EXISTS (SELECT 1 FROM Monitors WHERE Name = 'External Status Page API')
 BEGIN
-    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds)
-    VALUES ('External Status Page API', 'https://status.thirdparty.com/api', @MethodGet, '$.uptime', NULL, DATEADD(minute, -25, SYSDATETIMEOFFSET()), @StatusError, 900, 20);
+    INSERT INTO Monitors (Name, Url, HttpMethod, ResultPath, CurrentValue, LastCheckedAt, StatusId, PollingIntervalSeconds, PollingTimeoutSeconds, OrganizationId)
+    VALUES ('External Status Page API', 'https://status.thirdparty.com/api', @MethodGet, '$.uptime', NULL, DATEADD(minute, -25, SYSDATETIMEOFFSET()), @StatusError, 900, 20, @DefaultOrgId);
 END;
