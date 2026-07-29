@@ -59,7 +59,8 @@ public class LoginControllerTests
         ApiResponse<LoginResponse> response = okResult.Value.Should().BeOfType<ApiResponse<LoginResponse>>().Subject;
         response.Success.Should().BeTrue();
         response.Errors.Should().BeEmpty();
-        response.Data.AccessToken.Should().Be(loginResult.AccessToken);
+        response.Data.Should().NotBeNull();
+        response.Data!.AccessToken.Should().Be(loginResult.AccessToken);
         response.Data.ExpiresAt.Should().Be(loginResult.ExpiresAt);
     }
 

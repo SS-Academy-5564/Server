@@ -26,7 +26,7 @@ public class LogoutController : PulseControllerBase
         string? refreshToken = Request.Cookies[CookieConstants.RefreshTokenCookieName];
 
         LogoutCommand command = new(refreshToken);
-        await _handler.HandleAsync(command, ct); // Logout is idempotent
+        Result result = await _handler.HandleAsync(command, ct);
 
         Response.Cookies.Delete(CookieConstants.RefreshTokenCookieName, new CookieOptions
         {
@@ -35,6 +35,6 @@ public class LogoutController : PulseControllerBase
             SameSite = SameSiteMode.Lax
         });
 
-        return NoContent();
+        return ToActionResult(result);
     }
 }

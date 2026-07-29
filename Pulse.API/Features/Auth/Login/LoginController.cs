@@ -54,10 +54,8 @@ public class LoginController : Controllers.PulseControllerBase
             };
 
             Response.Cookies.Append(CookieConstants.RefreshTokenCookieName, result.Value.RefreshToken, cookieOptions);
-
-            return ToActionResult(Result.Ok(new LoginResponse(result.Value.AccessToken, result.Value.ExpiresAt)));
         }
 
-        return ToActionResult(result);
+        return ToActionResult(result.Map(r => new LoginResponse(r.AccessToken, r.ExpiresAt)));
     }
 }

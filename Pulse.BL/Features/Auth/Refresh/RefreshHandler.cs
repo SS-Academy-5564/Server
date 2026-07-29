@@ -68,11 +68,7 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
             return Result.Fail(new UnauthorizedError("Invalid refresh token."));
         }
 
-        UserAuthRecord? user = await _userQueries.GetByIdAsync(currentRecord.UserId, ct) switch
-        {
-            null => null,
-            var u => await _userQueries.GetByEmailForAuthAsync(u.Email, ct)
-        };
+        UserAuthRecord? user = await _userQueries.GetByIdForAuthAsync(currentRecord.UserId, ct);
 
         if (user is null || user.IsLocked)
         {
@@ -80,24 +76,32 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
             return Result.Fail(new UnauthorizedError("Invalid user state."));
         }
 
-        // Generate new refresh token
+        (RefreshTokenRecord? newRecord, string? newRawRefreshToken) = await RotateRefreshTokenAsync(currentRecord, user.Id, now, ct);
+
+        GeneratedJwtToken generatedToken =
+            _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
+
+        return Result.Ok(new LoginResult(
+            generatedToken.Token,
+            generatedToken.ExpiresAt,
+            newRawRefreshToken));
+    }
+
+    private async Task<(RefreshTokenRecord, string)> RotateRefreshTokenAsync(
+        RefreshTokenRecord currentRecord, Guid userId, DateTimeOffset now, CancellationToken ct)
+    {
         string newRawRefreshToken = _refreshTokenService.GenerateToken();
         string newRefreshTokenHash = _refreshTokenService.ComputeHash(newRawRefreshToken);
 
         RefreshTokenRecord newRecord = new(
             Id: Guid.NewGuid(),
-            UserId: user.Id,
+            UserId: userId,
             TokenHash: newRefreshTokenHash,
             FamilyId: currentRecord.FamilyId,
             CreatedAt: now,
-            ExpiresAt: now.AddDays(_refreshTokenOptions.ExpirationDays),
-            UsedAt: null,
-            RevokedAt: null,
-            ReplacedByTokenId: null,
-            RevocationReason: null
+            ExpiresAt: now.AddDays(_refreshTokenOptions.ExpirationDays)
         );
 
-        // Update current record
         RefreshTokenRecord updatedCurrentRecord = currentRecord with
         {
             UsedAt = now,
@@ -107,12 +111,6 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
         await _refreshTokenCommands.CreateAsync(newRecord, ct);
         await _refreshTokenCommands.UpdateAsync(updatedCurrentRecord, ct);
 
-        GeneratedJwtToken generatedToken =
-            _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
-
-        return Result.Ok(new LoginResult(
-            generatedToken.Token,
-            generatedToken.ExpiresAt,
-            newRawRefreshToken));
+        return (newRecord, newRawRefreshToken);
     }
 }

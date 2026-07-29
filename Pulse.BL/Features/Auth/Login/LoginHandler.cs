@@ -101,11 +101,7 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
             TokenHash: refreshTokenHash,
             FamilyId: Guid.NewGuid(),
             CreatedAt: now,
-            ExpiresAt: now.AddDays(_refreshTokenOptions.ExpirationDays),
-            UsedAt: null,
-            RevokedAt: null,
-            ReplacedByTokenId: null,
-            RevocationReason: null
+            ExpiresAt: now.AddDays(_refreshTokenOptions.ExpirationDays)
         );
 
         await _refreshTokenCommands.CreateAsync(refreshTokenRecord, ct);

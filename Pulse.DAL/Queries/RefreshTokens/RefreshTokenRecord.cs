@@ -7,8 +7,8 @@ public record RefreshTokenRecord(
     Guid FamilyId,
     DateTimeOffset CreatedAt,
     DateTimeOffset ExpiresAt,
-    DateTimeOffset? UsedAt,
-    DateTimeOffset? RevokedAt,
-    Guid? ReplacedByTokenId,
-    string? RevocationReason
+    DateTimeOffset? UsedAt = null,
+    DateTimeOffset? RevokedAt = null,
+    Guid? ReplacedByTokenId = null,
+    string? RevocationReason = null
 );

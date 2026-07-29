@@ -5,6 +5,7 @@ using Pulse.API.Attributes;
 using Pulse.API.Common;
 using Pulse.API.Controllers;
 using Pulse.API.Features.Auth.Login;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login;
@@ -37,7 +38,7 @@ public class RefreshController : PulseControllerBase
         string? refreshToken = Request.Cookies[CookieConstants.RefreshTokenCookieName];
         if (string.IsNullOrWhiteSpace(refreshToken))
         {
-            return Unauthorized();
+            return ToActionResult(Result.Fail(new UnauthorizedError("Refresh token is missing.")));
         }
 
         RefreshCommand command = new(refreshToken);
@@ -54,11 +55,8 @@ public class RefreshController : PulseControllerBase
             };
 
             Response.Cookies.Append(CookieConstants.RefreshTokenCookieName, result.Value.RefreshToken, cookieOptions);
-
-            return ToActionResult(Result.Ok(new LoginResponse(result.Value.AccessToken, result.Value.ExpiresAt)));
         }
 
-        // Ensure invalid tokens return 401 instead of generic errors based on mapping
-        return Unauthorized();
+        return ToActionResult(result.Map(r => new LoginResponse(r.AccessToken, r.ExpiresAt)));
     }
 }
