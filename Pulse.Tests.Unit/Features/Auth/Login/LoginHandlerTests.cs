@@ -97,7 +97,6 @@ public class LoginHandlerTests
         result.IsSuccess.Should().BeTrue();
         result.Value.AccessToken.Should().Be(accessToken);
         result.Value.ExpiresAt.Should().Be(expiresAt);
-        result.Value.ExpiresAt.Should().Be(expiresAt);
         result.Value.RefreshToken.Should().Be("raw_refresh_token");
         _loginLockoutServiceMock.Verify(
             x => x.ResetAttemptsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
