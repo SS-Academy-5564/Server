@@ -41,11 +41,12 @@ public class PasswordResetController : PulseControllerBase
     [HttpPost("request")]
     [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
     public async Task<IActionResult> RequestCodeAsync(
-        [Validate] RequestPasswordResetRequest request, CancellationToken ct)
+        [Validate] RequestPasswordResetRequest request,
+        CancellationToken ct,
+        [FromHeader(Name = "Accept-Language")] string? acceptLanguage = null)
     {
-        // Resolve language from Accept-Language header (falls back to English if missing/unsupported)
-        string acceptLanguage = Request.Headers.AcceptLanguage.ToString() ?? string.Empty;
-        string language = EmailLanguageResolver.Resolve(acceptLanguage);
+        // Read header via model binding; fallback to HttpContext for direct unit-test invocation.
+        string language = EmailLanguageResolver.Resolve(acceptLanguage ?? Request.Headers.AcceptLanguage.ToString());
 
         SendPasswordResetCodeCommand command = new(request.Email, language);
         Result<SendCodeResult> result = await _requestHandler.HandleAsync(command, ct);

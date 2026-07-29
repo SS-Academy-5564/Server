@@ -29,14 +29,12 @@ internal static class EmailLanguageResolver
 
         LanguagePreference? bestMatch = null;
 
-        foreach ((string language, double quality, int index) in ParsePreferences(acceptLanguageHeader))
+        foreach (LanguagePreference candidate in ParsePreferences(acceptLanguageHeader))
         {
-            if (!SupportedLanguages.Contains(language))
+            if (!SupportedLanguages.Contains(candidate.Language))
             {
                 continue;
             }
-
-            LanguagePreference candidate = new(language, quality, index);
 
             if (bestMatch is null || candidate.IsHigherPriorityThan(bestMatch))
             {
@@ -47,7 +45,7 @@ internal static class EmailLanguageResolver
         return bestMatch?.Language ?? FallbackLanguage;
     }
 
-    private static IEnumerable<(string language, double quality, int index)> ParsePreferences(string header)
+    private static IEnumerable<LanguagePreference> ParsePreferences(string header)
     {
         string[] segments = header.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
@@ -95,7 +93,7 @@ internal static class EmailLanguageResolver
                 continue;
             }
 
-            yield return (normalizedLanguage, quality, i);
+            yield return new LanguagePreference(normalizedLanguage, quality, i);
         }
     }
 
