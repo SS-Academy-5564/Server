@@ -1,10 +1,12 @@
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
-using Pulse.API.Attributes;
 using Pulse.API.Common;
+using Pulse.API.Constants;
 using Pulse.API.Controllers;
 using Pulse.API.Features.Auth.Login;
+using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security.Tokens;
@@ -15,7 +17,6 @@ namespace Pulse.API.Features.Auth.Refresh;
 
 [ApiController]
 [Route("api/auth")]
-[AutoValidate]
 public class RefreshController : PulseControllerBase
 {
     private readonly IAsyncHandler<RefreshCommand, Result<LoginResult>> _handler;
@@ -32,8 +33,14 @@ public class RefreshController : PulseControllerBase
         _timeProvider = timeProvider;
     }
 
+    /// <summary>
+    /// Refreshes the user's authentication token using a refresh token from cookies.
+    /// </summary>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>200 OK with new login result on success, or an error response on failure.</returns>
     [HttpPost("refresh")]
-    public async Task<IActionResult> RefreshAsync(CancellationToken ct)
+    [EnableRateLimiting(RateLimitPolicies.Refresh)]
+    public async Task<ActionResult<ApiResponse<LoginResponse>>> RefreshAsync(CancellationToken ct)
     {
         string? refreshToken = Request.Cookies[CookieConstants.RefreshTokenCookieName];
         if (string.IsNullOrWhiteSpace(refreshToken))

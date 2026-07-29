@@ -42,6 +42,12 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
         _logger = logger;
     }
 
+    /// <summary>
+    /// Handles the refresh token request.
+    /// </summary>
+    /// <param name="command">The refresh command.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A result containing the login result on success, or an error on failure.</returns>
     public async Task<Result<LoginResult>> HandleAsync(RefreshCommand command, CancellationToken ct)
     {
         string tokenHash = _refreshTokenService.ComputeHash(command.RefreshToken);
@@ -63,7 +69,8 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
 
         if (currentRecord.UsedAt is not null)
         {
-            _logger.LogWarning("Refresh token reuse detected for FamilyId: {FamilyId}. Revoking entire family.", currentRecord.FamilyId);
+            _logger.LogWarning("Refresh token reuse detected for FamilyId: {FamilyId}. Revoking entire family.",
+                currentRecord.FamilyId);
             await _refreshTokenCommands.RevokeFamilyAsync(currentRecord.FamilyId, "RefreshTokenReuse", ct);
             return Result.Fail(new UnauthorizedError("Invalid refresh token."));
         }
@@ -76,7 +83,15 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
             return Result.Fail(new UnauthorizedError("Invalid user state."));
         }
 
-        (RefreshTokenRecord? newRecord, string? newRawRefreshToken) = await RotateRefreshTokenAsync(currentRecord, user.Id, now, ct);
+        Result<(RefreshTokenRecord NewRecord, string NewRawRefreshToken)> rotateResult =
+            await RotateRefreshTokenAsync(currentRecord, user.Id, now, ct);
+
+        if (rotateResult.IsFailed)
+        {
+            return rotateResult.ToResult();
+        }
+
+        (RefreshTokenRecord _, string newRawRefreshToken) = rotateResult.Value;
 
         GeneratedJwtToken generatedToken =
             _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
@@ -87,7 +102,7 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
             newRawRefreshToken));
     }
 
-    private async Task<(RefreshTokenRecord, string)> RotateRefreshTokenAsync(
+    private async Task<Result<(RefreshTokenRecord, string)>> RotateRefreshTokenAsync(
         RefreshTokenRecord currentRecord, Guid userId, DateTimeOffset now, CancellationToken ct)
     {
         string newRawRefreshToken = _refreshTokenService.GenerateToken();
@@ -102,15 +117,18 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
             ExpiresAt: now.AddDays(_refreshTokenOptions.ExpirationDays)
         );
 
-        RefreshTokenRecord updatedCurrentRecord = currentRecord with
+        RefreshTokenRecord updatedCurrentRecord = currentRecord with { UsedAt = now, ReplacedByTokenId = newRecord.Id };
+
+        bool rotated = await _refreshTokenCommands.RotateAsync(updatedCurrentRecord, newRecord, ct);
+
+        if (!rotated)
         {
-            UsedAt = now,
-            ReplacedByTokenId = newRecord.Id
-        };
+            _logger.LogWarning("Concurrent refresh token reuse detected for FamilyId: {FamilyId}. Revoking entire family.",
+                currentRecord.FamilyId);
+            await _refreshTokenCommands.RevokeFamilyAsync(currentRecord.FamilyId, "RefreshTokenReuse", ct);
+            return Result.Fail(new UnauthorizedError("Invalid refresh token."));
+        }
 
-        await _refreshTokenCommands.CreateAsync(newRecord, ct);
-        await _refreshTokenCommands.UpdateAsync(updatedCurrentRecord, ct);
-
-        return (newRecord, newRawRefreshToken);
+        return Result.Ok((newRecord, newRawRefreshToken));
     }
 }

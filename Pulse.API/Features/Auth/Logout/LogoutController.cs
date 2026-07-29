@@ -1,8 +1,8 @@
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
-using Pulse.API.Attributes;
 using Pulse.API.Common;
 using Pulse.API.Controllers;
+using Pulse.API.Responses;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Auth.Logout;
 
@@ -10,7 +10,6 @@ namespace Pulse.API.Features.Auth.Logout;
 
 [ApiController]
 [Route("api/auth")]
-[AutoValidate]
 public class LogoutController : PulseControllerBase
 {
     private readonly IAsyncHandler<LogoutCommand, Result> _handler;
@@ -21,7 +20,7 @@ public class LogoutController : PulseControllerBase
     }
 
     [HttpPost("logout")]
-    public async Task<IActionResult> LogoutAsync(CancellationToken ct)
+    public async Task<ActionResult<ApiResponse>> LogoutAsync(CancellationToken ct)
     {
         string? refreshToken = Request.Cookies[CookieConstants.RefreshTokenCookieName];
 

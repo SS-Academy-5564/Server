@@ -4,7 +4,6 @@ using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
-using Pulse.DAL.Commands.RefreshTokens;
 using Pulse.DAL.Commands.Users;
 
 namespace Pulse.BL.Features.Auth.PasswordReset.ResetPassword;
@@ -15,20 +14,17 @@ public class ResetPasswordHandler : IAsyncHandler<ResetPasswordCommand, Result>
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUserCommands _userCommands;
-    private readonly IRefreshTokenCommands _refreshTokenCommands;
     private readonly ILogger<ResetPasswordHandler> _logger;
 
     public ResetPasswordHandler(
         IJwtTokenGenerator jwtTokenGenerator,
         IPasswordHasher passwordHasher,
         IUserCommands userCommands,
-        IRefreshTokenCommands refreshTokenCommands,
         ILogger<ResetPasswordHandler> logger)
     {
         _jwtTokenGenerator = jwtTokenGenerator;
         _passwordHasher = passwordHasher;
         _userCommands = userCommands;
-        _refreshTokenCommands = refreshTokenCommands;
         _logger = logger;
     }
 
@@ -62,8 +58,6 @@ public class ResetPasswordHandler : IAsyncHandler<ResetPasswordCommand, Result>
         }
 
         _logger.LogInformation("Password successfully reset for user {UserId}.", userId);
-
-        await _refreshTokenCommands.RevokeAllForUserAsync(userId, "PasswordChanged", ct);
 
         return Result.Ok();
     }

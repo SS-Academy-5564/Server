@@ -51,6 +51,59 @@ public class RefreshTokenCommands : IRefreshTokenCommands
                 cancellationToken: ct));
     }
 
+    public async Task<bool> RotateAsync(RefreshTokenRecord oldRecord, RefreshTokenRecord newRecord, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        string sql = @"
+            SET XACT_ABORT ON;
+            BEGIN TRAN;
+
+            DECLARE @Updated INT;
+
+            UPDATE RefreshTokens
+            SET
+                UsedAt = @UsedAt,
+                ReplacedByTokenId = @ReplacedByTokenId
+            WHERE Id = @OldId AND UsedAt IS NULL AND RevokedAt IS NULL AND ExpiresAt > SYSUTCDATETIME();
+
+            SET @Updated = @@ROWCOUNT;
+
+            IF @Updated = 1
+            BEGIN
+                INSERT INTO RefreshTokens (
+                    Id, UserId, TokenHash, FamilyId, CreatedAt, ExpiresAt, UsedAt, RevokedAt, ReplacedByTokenId, RevocationReason
+                )
+                VALUES (
+                    @NewId, @UserId, @NewTokenHash, @FamilyId, @CreatedAt, @ExpiresAt, NULL, NULL, NULL, NULL
+                );
+            END
+
+            COMMIT TRAN;
+
+            SELECT @Updated;
+        ";
+
+        int result = await connection.ExecuteScalarAsync<int>(
+            new CommandDefinition(
+                sql,
+                new
+                {
+                    OldId = oldRecord.Id,
+                    oldRecord.UsedAt,
+                    oldRecord.ReplacedByTokenId,
+                    NewId = newRecord.Id,
+                    newRecord.UserId,
+                    NewTokenHash = newRecord.TokenHash,
+                    newRecord.FamilyId,
+                    newRecord.CreatedAt,
+                    newRecord.ExpiresAt
+                },
+                cancellationToken: ct));
+
+        return result == 1;
+    }
+
     public async Task RevokeFamilyAsync(Guid familyId, string reason, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();

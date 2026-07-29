@@ -6,8 +6,6 @@ using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.PasswordReset.ResetPassword;
-using Pulse.DAL.Commands.PasswordResetCodes;
-using Pulse.DAL.Commands.RefreshTokens;
 using Pulse.DAL.Commands.Users;
 
 namespace Pulse.Tests.Unit.Features.Auth.PasswordReset;
@@ -17,8 +15,6 @@ public class ResetPasswordHandlerTests
     private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock;
     private readonly Mock<IUserCommands> _userCommandsMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
-    private readonly Mock<IPasswordResetCodeCommands> _codeCommandsMock;
-    private readonly Mock<IRefreshTokenCommands> _refreshTokenCommandsMock;
     private readonly ResetPasswordHandler _sut;
 
     public ResetPasswordHandlerTests()
@@ -26,14 +22,11 @@ public class ResetPasswordHandlerTests
         _jwtTokenGeneratorMock = new Mock<IJwtTokenGenerator>();
         _userCommandsMock = new Mock<IUserCommands>();
         _passwordHasherMock = new Mock<IPasswordHasher>();
-        _codeCommandsMock = new Mock<IPasswordResetCodeCommands>();
-        _refreshTokenCommandsMock = new Mock<IRefreshTokenCommands>();
 
         _sut = new ResetPasswordHandler(
             _jwtTokenGeneratorMock.Object,
             _passwordHasherMock.Object,
             _userCommandsMock.Object,
-            _refreshTokenCommandsMock.Object,
             new Mock<ILogger<ResetPasswordHandler>>().Object);
     }
 
