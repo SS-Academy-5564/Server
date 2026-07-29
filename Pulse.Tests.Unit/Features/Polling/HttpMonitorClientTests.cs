@@ -180,8 +180,10 @@ public class HttpMonitorClientTests
             "Enabled",
             Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
+        using var cts = new CancellationTokenSource();
+
         // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
+        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, cts.Token);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

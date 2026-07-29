@@ -96,5 +96,8 @@ public class CreateMonitorHandlerTests
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is UnauthorizedError);
+
+        _commandsMock.Verify(x => x.CreateAsync(It.IsAny<CreateMonitorInput>(), It.IsAny<CancellationToken>()), Times.Never);
+        _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

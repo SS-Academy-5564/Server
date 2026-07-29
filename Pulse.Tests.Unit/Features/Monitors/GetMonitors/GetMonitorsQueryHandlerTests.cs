@@ -162,5 +162,7 @@ public class GetMonitorsQueryHandlerTests
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is UnauthorizedError);
+
+        _queriesMock.Verify(q => q.GetAllAsync(It.IsAny<Guid>(), It.IsAny<DAL.Queries.Monitors.MonitorStatus?>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
