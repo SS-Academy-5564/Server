@@ -40,9 +40,10 @@ public class LanguageTagNormalizerTests
     [InlineData("toolongtag")]
     [InlineData("en- US")]
     [InlineData("*")]
+    [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void NormalizePrimarySubtag_WhenTagIsInvalid_ReturnsEmpty(string input)
+    public void NormalizePrimarySubtag_WhenTagIsInvalid_ReturnsEmpty(string? input)
     {
         // Act
         string normalized = LanguageTagNormalizer.NormalizePrimarySubtag(input);
