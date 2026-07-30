@@ -1,11 +1,14 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login.LoginLockout;
+using Pulse.DAL.Commands.RefreshTokens;
+using Pulse.DAL.Queries.RefreshTokens;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.Login;
@@ -17,6 +20,10 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly ILoginLockoutService _loginLockoutService;
+    private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IRefreshTokenCommands _refreshTokenCommands;
+    private readonly RefreshTokenOptions _refreshTokenOptions;
+    private readonly TimeProvider _timeProvider;
     private readonly ILogger<LoginHandler> _logger;
 
     public LoginHandler(
@@ -24,12 +31,20 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
         IPasswordHasher passwordHasher,
         IJwtTokenGenerator jwtTokenGenerator,
         ILoginLockoutService loginLockoutService,
+        IRefreshTokenService refreshTokenService,
+        IRefreshTokenCommands refreshTokenCommands,
+        IOptions<RefreshTokenOptions> refreshTokenOptions,
+        TimeProvider timeProvider,
         ILogger<LoginHandler> logger)
     {
         _userQueries = userQueries;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
         _loginLockoutService = loginLockoutService;
+        _refreshTokenService = refreshTokenService;
+        _refreshTokenCommands = refreshTokenCommands;
+        _refreshTokenOptions = refreshTokenOptions.Value;
+        _timeProvider = timeProvider;
         _logger = logger;
     }
 
@@ -76,9 +91,25 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
         GeneratedJwtToken generatedToken =
             _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
 
+        string rawRefreshToken = _refreshTokenService.GenerateToken();
+        string refreshTokenHash = _refreshTokenService.ComputeHash(rawRefreshToken);
+
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+        RefreshTokenRecord refreshTokenRecord = new(
+            Id: Guid.NewGuid(),
+            UserId: user.Id,
+            TokenHash: refreshTokenHash,
+            FamilyId: Guid.NewGuid(),
+            CreatedAt: now,
+            ExpiresAt: now.AddDays(_refreshTokenOptions.ExpirationDays)
+        );
+
+        await _refreshTokenCommands.CreateAsync(refreshTokenRecord, ct);
+
         return Result.Ok(new LoginResult(
             generatedToken.Token,
-            generatedToken.ExpiresAt));
+            generatedToken.ExpiresAt,
+            rawRefreshToken));
     }
 
     private void LogFailure(string reason, string email)

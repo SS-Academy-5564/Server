@@ -24,6 +24,14 @@ public interface IUserQueries : IQueries
     Task<UserAuthRecord?> GetByEmailForAuthAsync(string email, CancellationToken ct);
 
     /// <summary>
+    /// Retrieves authentication information for a user by their unique identifier.
+    /// </summary>
+    /// <param name="id">The unique identifier of the user.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>The authentication record for the user when found; otherwise <c>null</c>.</returns>
+    Task<UserAuthRecord?> GetByIdForAuthAsync(Guid id, CancellationToken ct);
+
+    /// <summary>
     /// Retrieves profile information for a user by their unique identifier.
     /// </summary>
     /// <param name="id">The unique identifier of the user.</param>

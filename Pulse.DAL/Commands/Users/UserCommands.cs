@@ -68,6 +68,10 @@ public class UserCommands : IUserCommands
                 UPDATE Users
                 SET PasswordHash = @PasswordHash, UpdatedAt = @Now
                 WHERE Id = @UserId;
+
+                UPDATE RefreshTokens
+                SET RevokedAt = @Now, RevocationReason = 'PasswordChanged'
+                WHERE UserId = @UserId AND RevokedAt IS NULL AND ExpiresAt > @Now;
             END
 
             COMMIT TRAN;

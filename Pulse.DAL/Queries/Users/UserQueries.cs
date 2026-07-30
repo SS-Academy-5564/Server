@@ -47,6 +47,27 @@ public class UserQueries : IUserQueries
     }
 
     /// <inheritdoc/>
+    public async Task<UserAuthRecord?> GetByIdForAuthAsync(Guid id, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        return await connection.QuerySingleOrDefaultAsync<UserAuthRecord>(
+            new CommandDefinition(
+                "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, r.Name AS RoleName, o.Name AS OrganizationName, " +
+                "COALESCE(ula.FailedAttempts, 0) AS FailedAttempts, " +
+                "CAST(CASE WHEN ula.LockedUntil > SYSUTCDATETIME() THEN 1 ELSE 0 END AS BIT) AS IsLocked " +
+                "FROM Users u " +
+                "JOIN Members m ON m.UserId = u.Id " +
+                "JOIN Roles r ON r.Id = m.RoleId " +
+                "JOIN Organizations o ON o.Id = m.OrganizationId " +
+                "LEFT JOIN UserLoginAttempts ula ON ula.UserId = u.Id " +
+                "WHERE u.Id = @Id " +
+                "ORDER BY m.JoinedAt DESC",
+                new { Id = id },
+                cancellationToken: ct));
+    }
+
+    /// <inheritdoc/>
     public async Task<UserProfileRecord?> GetByIdAsync(Guid id, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
