@@ -11,6 +11,9 @@ using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.Refresh;
 
+/// <summary>
+/// Handles the <see cref="RefreshCommand"/> to generate new authentication tokens.
+/// </summary>
 public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
 {
     private readonly IRefreshTokenService _refreshTokenService;
@@ -22,6 +25,17 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
     private readonly TimeProvider _timeProvider;
     private readonly ILogger<RefreshHandler> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RefreshHandler"/> class.
+    /// </summary>
+    /// <param name="refreshTokenService">Service for refresh token operations.</param>
+    /// <param name="refreshTokenQueries">Queries for accessing refresh tokens.</param>
+    /// <param name="refreshTokenCommands">Commands for modifying refresh tokens.</param>
+    /// <param name="userQueries">Queries for accessing user data.</param>
+    /// <param name="jwtTokenGenerator">Generator for JWT access tokens.</param>
+    /// <param name="refreshTokenOptions">Options for refresh token configuration.</param>
+    /// <param name="timeProvider">Provider for current time.</param>
+    /// <param name="logger">Logger for this handler.</param>
     public RefreshHandler(
         IRefreshTokenService refreshTokenService,
         IRefreshTokenQueries refreshTokenQueries,

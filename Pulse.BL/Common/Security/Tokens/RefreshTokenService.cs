@@ -3,8 +3,12 @@ using System.Text;
 
 namespace Pulse.BL.Common.Security.Tokens;
 
+/// <summary>
+/// Service for generating and hashing refresh tokens.
+/// </summary>
 public class RefreshTokenService : IRefreshTokenService
 {
+    /// <inheritdoc/>
     public string GenerateToken()
     {
         byte[] randomBytes = new byte[32];
@@ -16,6 +20,7 @@ public class RefreshTokenService : IRefreshTokenService
         return Convert.ToBase64String(randomBytes);
     }
 
+    /// <inheritdoc/>
     public string ComputeHash(string token)
     {
         byte[] bytes = Encoding.UTF8.GetBytes(token);

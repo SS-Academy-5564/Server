@@ -15,6 +15,9 @@ using Pulse.BL.Features.Auth.Refresh;
 
 namespace Pulse.API.Features.Auth.Refresh;
 
+/// <summary>
+/// Provides endpoints for refreshing authentication tokens.
+/// </summary>
 [ApiController]
 [Route("api/auth")]
 public class RefreshController : PulseControllerBase
@@ -23,6 +26,12 @@ public class RefreshController : PulseControllerBase
     private readonly RefreshTokenOptions _refreshTokenOptions;
     private readonly TimeProvider _timeProvider;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RefreshController"/> class.
+    /// </summary>
+    /// <param name="handler">The handler for processing the refresh command.</param>
+    /// <param name="refreshTokenOptions">The configuration options for refresh tokens.</param>
+    /// <param name="timeProvider">The provider for time-related operations.</param>
     public RefreshController(
         IAsyncHandler<RefreshCommand, Result<LoginResult>> handler,
         IOptions<RefreshTokenOptions> refreshTokenOptions,

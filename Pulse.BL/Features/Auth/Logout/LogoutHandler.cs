@@ -6,6 +6,9 @@ using Pulse.DAL.Queries.RefreshTokens;
 
 namespace Pulse.BL.Features.Auth.Logout;
 
+/// <summary>
+/// Handles the <see cref="LogoutCommand"/> to perform user logout.
+/// </summary>
 public class LogoutHandler : IAsyncHandler<LogoutCommand, Result>
 {
     private readonly IRefreshTokenService _refreshTokenService;
@@ -13,6 +16,13 @@ public class LogoutHandler : IAsyncHandler<LogoutCommand, Result>
     private readonly IRefreshTokenCommands _refreshTokenCommands;
     private readonly TimeProvider _timeProvider;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogoutHandler"/> class.
+    /// </summary>
+    /// <param name="refreshTokenService">Service for refresh token operations.</param>
+    /// <param name="refreshTokenQueries">Queries for accessing refresh tokens.</param>
+    /// <param name="refreshTokenCommands">Commands for modifying refresh tokens.</param>
+    /// <param name="timeProvider">Provider for current time.</param>
     public LogoutHandler(
         IRefreshTokenService refreshTokenService,
         IRefreshTokenQueries refreshTokenQueries,
@@ -25,6 +35,12 @@ public class LogoutHandler : IAsyncHandler<LogoutCommand, Result>
         _timeProvider = timeProvider;
     }
 
+    /// <summary>
+    /// Handles the execution of the logout command by revoking the provided refresh token.
+    /// </summary>
+    /// <param name="command">The command containing the logout request data.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A successful result upon completion.</returns>
     public async Task<Result> HandleAsync(LogoutCommand command, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(command.RefreshToken))

@@ -8,17 +8,29 @@ using Pulse.BL.Features.Auth.Logout;
 
 namespace Pulse.API.Features.Auth.Logout;
 
+/// <summary>
+/// Provides endpoints for user logout operations.
+/// </summary>
 [ApiController]
 [Route("api/auth")]
 public class LogoutController : PulseControllerBase
 {
     private readonly IAsyncHandler<LogoutCommand, Result> _handler;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogoutController"/> class.
+    /// </summary>
+    /// <param name="handler">The handler for processing the logout command.</param>
     public LogoutController(IAsyncHandler<LogoutCommand, Result> handler)
     {
         _handler = handler;
     }
 
+    /// <summary>
+    /// Logs out the current user by revoking their refresh token.
+    /// </summary>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A 200 OK response on success.</returns>
     [HttpPost("logout")]
     public async Task<ActionResult<ApiResponse>> LogoutAsync(CancellationToken ct)
     {

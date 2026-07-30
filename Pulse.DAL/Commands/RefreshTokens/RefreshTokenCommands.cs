@@ -5,15 +5,23 @@ using Pulse.DAL.Queries.RefreshTokens;
 
 namespace Pulse.DAL.Commands.RefreshTokens;
 
+/// <summary>
+/// Provides commands for interacting with refresh tokens in the database.
+/// </summary>
 public class RefreshTokenCommands : IRefreshTokenCommands
 {
     private readonly IDbConnectionFactory _connectionFactory;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="RefreshTokenCommands"/> class.
+    /// </summary>
+    /// <param name="connectionFactory">The factory to create database connections.</param>
     public RefreshTokenCommands(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }
 
+    /// <inheritdoc/>
     public async Task CreateAsync(RefreshTokenRecord record, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
@@ -32,6 +40,7 @@ public class RefreshTokenCommands : IRefreshTokenCommands
                 cancellationToken: ct));
     }
 
+    /// <inheritdoc/>
     public async Task UpdateAsync(RefreshTokenRecord record, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
@@ -103,6 +112,7 @@ public class RefreshTokenCommands : IRefreshTokenCommands
         return result == 1;
     }
 
+    /// <inheritdoc/>
     public async Task RevokeFamilyAsync(Guid familyId, string reason, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
@@ -118,6 +128,7 @@ public class RefreshTokenCommands : IRefreshTokenCommands
                 cancellationToken: ct));
     }
 
+    /// <inheritdoc/>
     public async Task RevokeAllForUserAsync(Guid userId, string reason, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
