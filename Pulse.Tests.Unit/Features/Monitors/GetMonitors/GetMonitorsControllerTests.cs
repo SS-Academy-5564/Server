@@ -37,7 +37,8 @@ public class GetMonitorsControllerTests
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(200);
 
-        ApiResponse<IReadOnlyList<MonitorListResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
+        ApiResponse<IReadOnlyList<MonitorListResult>> response =
+            ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
         response.Success.Should().BeTrue();
         response.Data.Should().BeEquivalentTo(monitors);
         response.Pagination.Should().NotBeNull();
@@ -82,7 +83,8 @@ public class GetMonitorsControllerTests
         IReadOnlyList<MonitorListResult> monitors = new List<MonitorListResult>
         {
             new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, MonitorStatus.Enabled, 60),
-            new(Guid.NewGuid(), "Broken Service", "https://broken.com", null, DateTimeOffset.UtcNow, MonitorStatus.Error, 120),
+            new(Guid.NewGuid(), "Broken Service", "https://broken.com", null, DateTimeOffset.UtcNow, MonitorStatus.Error,
+                120),
         }.AsReadOnly();
 
         _handlerMock
@@ -92,7 +94,8 @@ public class GetMonitorsControllerTests
         IActionResult result = await _sut.GetMonitorsAsync(new GetMonitorsRequest(null, null, null), CancellationToken.None);
 
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
-        ApiResponse<IReadOnlyList<MonitorListResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
+        ApiResponse<IReadOnlyList<MonitorListResult>> response =
+            ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
         response.Data.Should().Contain(m => m.Status == MonitorStatus.Error);
     }
 }
