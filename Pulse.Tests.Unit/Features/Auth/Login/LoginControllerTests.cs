@@ -1,6 +1,7 @@
 using FluentAssertions;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Moq;
 using Pulse.API.Features.Auth.Login;
@@ -16,6 +17,7 @@ public class LoginControllerTests
 {
     private readonly Mock<IAsyncHandler<LoginCommand, Result<LoginResult>>> _handlerMock;
     private readonly Mock<IOptions<RefreshTokenOptions>> _refreshTokenOptionsMock;
+    private readonly Mock<IHostEnvironment> _environmentMock;
     private readonly TimeProvider _timeProvider;
     private readonly LoginController _sut;
 
@@ -25,9 +27,15 @@ public class LoginControllerTests
         RefreshTokenOptions options = new() { ExpirationDays = 14 };
         _refreshTokenOptionsMock = new();
         _refreshTokenOptionsMock.Setup(x => x.Value).Returns(options);
+        _environmentMock = new();
+        _environmentMock.Setup(x => x.EnvironmentName).Returns(Environments.Development);
         _timeProvider = TimeProvider.System;
 
-        _sut = new LoginController(_handlerMock.Object, _refreshTokenOptionsMock.Object, _timeProvider)
+        _sut = new LoginController(
+            _handlerMock.Object,
+            _refreshTokenOptionsMock.Object,
+            _timeProvider,
+            _environmentMock.Object)
         {
             ControllerContext = new ControllerContext
             {
@@ -62,6 +70,7 @@ public class LoginControllerTests
         response.Data.Should().NotBeNull();
         response.Data!.AccessToken.Should().Be(loginResult.AccessToken);
         response.Data.ExpiresAt.Should().Be(loginResult.ExpiresAt);
+        _sut.Response.Headers.SetCookie.ToString().Should().Contain("httponly").And.Contain("samesite=lax");
     }
 
     [Fact]
@@ -86,6 +95,29 @@ public class LoginControllerTests
         response.Errors.Should().NotBeEmpty();
         response.Errors[0].Message.Should().Be("Invalid email or password.");
         response.Errors[0].Code.Should().Be(AppError.Codes.Unauthorized);
+    }
+
+    [Fact]
+    public async Task Login_WhenProduction_IssuesSecureCrossSiteRefreshCookieAsync()
+    {
+        // Arrange
+        _environmentMock.Setup(x => x.EnvironmentName).Returns(Environments.Production);
+        LoginRequest request = new("user@example.com", "ValidPassword123");
+        LoginResult loginResult = new(
+            "jwt_token_here",
+            DateTimeOffset.UtcNow.AddHours(1),
+            "raw_refresh_token");
+
+        _handlerMock
+            .Setup(x => x.HandleAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(loginResult));
+
+        // Act
+        await _sut.LoginAsync(request, CancellationToken.None);
+
+        // Assert
+        string setCookie = _sut.Response.Headers.SetCookie.ToString().ToLowerInvariant();
+        setCookie.Should().Contain("httponly").And.Contain("secure").And.Contain("samesite=none");
     }
 
     [Fact]
