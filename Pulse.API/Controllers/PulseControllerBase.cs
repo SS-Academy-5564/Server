@@ -44,7 +44,7 @@ public abstract class PulseControllerBase : ControllerBase
                 Data = page.Items,
                 Pagination = new ApiPagination
                 {
-                    Page = page.PageNumber,
+                    PageNumber = page.PageNumber,
                     PageSize = page.PageSize,
                     TotalCount = page.TotalCount
                 }

@@ -63,7 +63,7 @@ public class MembersControllerTests
         response.Success.Should().BeTrue();
         response.Data.Should().BeEquivalentTo(members);
         response.Pagination.Should().NotBeNull();
-        response.Pagination!.Page.Should().Be(2);
+        response.Pagination!.PageNumber.Should().Be(2);
         response.Pagination.PageSize.Should().Be(25);
         response.Pagination.TotalCount.Should().Be(51);
         response.Pagination.TotalPages.Should().Be(3);
