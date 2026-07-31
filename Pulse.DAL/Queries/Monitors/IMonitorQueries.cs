@@ -29,11 +29,10 @@ public interface IMonitorQueries : IQueries
     /// <summary>
     /// Retrieves enabled monitors that are due for polling.
     /// </summary>
-    /// <param name="organizationId">The organization ID to filter monitors by, or <c>null</c> to retrieve across all organizations.</param>
     /// <param name="max">The maximum number of monitors to return.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>A collection of monitors ready for polling.</returns>
-    Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(Guid? organizationId, int max, CancellationToken ct = default);
+    Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
 
     Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct);
 }

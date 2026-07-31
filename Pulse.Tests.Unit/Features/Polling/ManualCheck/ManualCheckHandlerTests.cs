@@ -53,8 +53,7 @@ public class ManualCheckHandlerTests
             "status",
             60,
             10,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         _monitorQueries
             .Setup(q => q.GetByIdForPollingAsync(monitor.Id, It.IsAny<CancellationToken>()))
@@ -85,8 +84,7 @@ public class ManualCheckHandlerTests
             "status",
             60,
             10,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         _monitorQueries
             .Setup(q => q.GetByIdForPollingAsync(monitor.Id, It.IsAny<CancellationToken>()))

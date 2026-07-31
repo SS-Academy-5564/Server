@@ -61,8 +61,7 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -106,8 +105,7 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -138,8 +136,7 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -177,8 +174,7 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         using var cts = new CancellationTokenSource();
 
@@ -210,8 +206,7 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -245,8 +240,7 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -277,8 +271,7 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled",
-            Guid.Parse("B1000000-0000-0000-0000-000000000001"));
+            "Enabled");
 
         // Act
         await _client.SendAsync(monitorPolling, CancellationToken.None);
