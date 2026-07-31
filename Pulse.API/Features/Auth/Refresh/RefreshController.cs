@@ -25,6 +25,7 @@ public class RefreshController : PulseControllerBase
     private readonly IAsyncHandler<RefreshCommand, Result<LoginResult>> _handler;
     private readonly RefreshTokenOptions _refreshTokenOptions;
     private readonly TimeProvider _timeProvider;
+    private readonly IHostEnvironment _environment;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RefreshController"/> class.
@@ -32,14 +33,17 @@ public class RefreshController : PulseControllerBase
     /// <param name="handler">The handler for processing the refresh command.</param>
     /// <param name="refreshTokenOptions">The configuration options for refresh tokens.</param>
     /// <param name="timeProvider">The provider for time-related operations.</param>
+    /// <param name="environment">The current hosting environment.</param>
     public RefreshController(
         IAsyncHandler<RefreshCommand, Result<LoginResult>> handler,
         IOptions<RefreshTokenOptions> refreshTokenOptions,
-        TimeProvider timeProvider)
+        TimeProvider timeProvider,
+        IHostEnvironment environment)
     {
         _handler = handler;
         _refreshTokenOptions = refreshTokenOptions.Value;
         _timeProvider = timeProvider;
+        _environment = environment;
     }
 
     /// <summary>
@@ -48,6 +52,7 @@ public class RefreshController : PulseControllerBase
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>200 OK with new login result on success, or an error response on failure.</returns>
     [HttpPost("refresh")]
+    [Consumes("application/json")]
     [EnableRateLimiting(RateLimitPolicies.Refresh)]
     public async Task<ActionResult<ApiResponse<LoginResponse>>> RefreshAsync(CancellationToken ct)
     {
@@ -62,13 +67,10 @@ public class RefreshController : PulseControllerBase
 
         if (result.IsSuccess)
         {
-            CookieOptions cookieOptions = new()
-            {
-                HttpOnly = true,
-                Secure = Request.IsHttps,
-                SameSite = SameSiteMode.Lax,
-                Expires = _timeProvider.GetUtcNow().AddDays(_refreshTokenOptions.ExpirationDays)
-            };
+            CookieOptions cookieOptions = RefreshTokenCookieFactory.Create(
+                Request,
+                _environment,
+                _timeProvider.GetUtcNow().AddDays(_refreshTokenOptions.ExpirationDays));
 
             Response.Cookies.Append(CookieConstants.RefreshTokenCookieName, result.Value.RefreshToken, cookieOptions);
         }

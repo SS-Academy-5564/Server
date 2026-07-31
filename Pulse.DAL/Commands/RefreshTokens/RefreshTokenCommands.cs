@@ -73,8 +73,7 @@ public class RefreshTokenCommands : IRefreshTokenCommands
 
             UPDATE RefreshTokens
             SET
-                UsedAt = SYSUTCDATETIME(),
-                ReplacedByTokenId = @NewId
+                UsedAt = SYSUTCDATETIME()
             WHERE Id = @OldId AND UsedAt IS NULL AND RevokedAt IS NULL AND ExpiresAt > SYSUTCDATETIME();
 
             SET @Updated = @@ROWCOUNT;
@@ -87,6 +86,10 @@ public class RefreshTokenCommands : IRefreshTokenCommands
                 VALUES (
                     @NewId, @UserId, @NewTokenHash, @FamilyId, @CreatedAt, @ExpiresAt, NULL, NULL, NULL, NULL
                 );
+
+                UPDATE RefreshTokens
+                SET ReplacedByTokenId = @NewId
+                WHERE Id = @OldId;
             END
 
             COMMIT TRAN;
