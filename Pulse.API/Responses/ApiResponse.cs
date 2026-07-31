@@ -14,6 +14,10 @@ public sealed class ApiResponse<T> : ApiResponse
 
 public sealed class ApiPagination
 {
+    /// <summary>
+    /// Gets the current page number.
+    /// </summary>
+    /// <value>The 1-based page number.</value>
     public int PageNumber { get; init; }
     public int PageSize { get; init; }
     public int TotalCount { get; init; }

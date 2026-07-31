@@ -121,6 +121,12 @@ public class PulseControllerBaseTests
     {
         public IActionResult InvokeToActionResult(Result result) => ToActionResult(result);
 
+        /// <summary>
+        /// Invokes the protected ToPagedActionResult method on the base controller.
+        /// </summary>
+        /// <typeparam name="T">The type of items in the paged result.</typeparam>
+        /// <param name="result">The result from the business layer.</param>
+        /// <returns>An IActionResult representing the HTTP response.</returns>
         public IActionResult InvokeToPagedActionResult<T>(Result<PagedResult<T>> result) => ToPagedActionResult(result);
     }
 }
