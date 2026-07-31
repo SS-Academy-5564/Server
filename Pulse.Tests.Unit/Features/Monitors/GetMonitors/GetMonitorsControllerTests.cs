@@ -36,7 +36,8 @@ public class GetMonitorsControllerTests
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(200);
 
-        ApiResponse<IReadOnlyList<MonitorListResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
+        ApiResponse<IReadOnlyList<MonitorListResult>> response =
+            ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
         response.Success.Should().BeTrue();
         response.Data.Should().BeEquivalentTo(monitors);
         response.Pagination.Should().NotBeNull();
@@ -91,7 +92,8 @@ public class GetMonitorsControllerTests
         IActionResult result = await _sut.GetMonitorsAsync(new GetMonitorsRequest(null, null, null), CancellationToken.None);
 
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
-        ApiResponse<IReadOnlyList<MonitorListResult>> response = ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
+        ApiResponse<IReadOnlyList<MonitorListResult>> response =
+            ok.Value.Should().BeOfType<ApiResponse<IReadOnlyList<MonitorListResult>>>().Subject;
         response.Data.Should().Contain(m => m.Status == MonitorStatus.Error);
     }
 }

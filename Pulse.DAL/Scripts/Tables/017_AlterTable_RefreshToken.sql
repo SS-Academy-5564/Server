@@ -1,0 +1,1 @@
+ALTER TABLE RefreshTokens DROP COLUMN Token;

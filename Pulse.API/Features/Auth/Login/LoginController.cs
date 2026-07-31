@@ -1,9 +1,12 @@
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Pulse.API.Attributes;
+using Pulse.API.Common;
 using Pulse.API.Constants;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Security.Tokens;
 using Pulse.BL.Features.Auth.Login;
 
 namespace Pulse.API.Features.Auth.Login;
@@ -14,9 +17,17 @@ namespace Pulse.API.Features.Auth.Login;
 public class LoginController : Controllers.PulseControllerBase
 {
     private readonly IAsyncHandler<LoginCommand, Result<LoginResult>> _handler;
-    public LoginController(IAsyncHandler<LoginCommand, Result<LoginResult>> handler)
+    private readonly RefreshTokenOptions _refreshTokenOptions;
+    private readonly TimeProvider _timeProvider;
+
+    public LoginController(
+        IAsyncHandler<LoginCommand, Result<LoginResult>> handler,
+        IOptions<RefreshTokenOptions> refreshTokenOptions,
+        TimeProvider timeProvider)
     {
         _handler = handler;
+        _refreshTokenOptions = refreshTokenOptions.Value;
+        _timeProvider = timeProvider;
     }
 
     /// <summary>
@@ -31,6 +42,20 @@ public class LoginController : Controllers.PulseControllerBase
     {
         LoginCommand command = new(request.Email, request.Password);
         Result<LoginResult> result = await _handler.HandleAsync(command, ct);
-        return ToActionResult(result);
+
+        if (result.IsSuccess)
+        {
+            CookieOptions cookieOptions = new()
+            {
+                HttpOnly = true,
+                Secure = Request.IsHttps,
+                SameSite = SameSiteMode.Lax,
+                Expires = _timeProvider.GetUtcNow().AddDays(_refreshTokenOptions.ExpirationDays)
+            };
+
+            Response.Cookies.Append(CookieConstants.RefreshTokenCookieName, result.Value.RefreshToken, cookieOptions);
+        }
+
+        return ToActionResult(result.Map(r => new LoginResponse(r.AccessToken, r.ExpiresAt)));
     }
 }

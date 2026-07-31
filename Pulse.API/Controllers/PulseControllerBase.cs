@@ -12,7 +12,7 @@ namespace Pulse.API.Controllers;
 [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status500InternalServerError)]
 public abstract class PulseControllerBase : ControllerBase
 {
-    protected IActionResult ToActionResult<T>(Result<T> result)
+    protected ActionResult ToActionResult<T>(Result<T> result)
     {
         if (result.IsSuccess)
         {
@@ -22,7 +22,7 @@ public abstract class PulseControllerBase : ControllerBase
         return MapErrorToResponse(result);
     }
 
-    protected IActionResult ToActionResult(Result result)
+    protected ActionResult ToActionResult(Result result)
     {
         if (result.IsSuccess)
         {
@@ -32,7 +32,7 @@ public abstract class PulseControllerBase : ControllerBase
         return MapErrorToResponse(result);
     }
 
-    protected IActionResult ToPagedActionResult<T>(Result<PagedResult<T>> result)
+    protected ActionResult ToPagedActionResult<T>(Result<PagedResult<T>> result)
     {
         if (result.IsSuccess)
         {
@@ -54,7 +54,7 @@ public abstract class PulseControllerBase : ControllerBase
         return MapErrorToResponse(result);
     }
 
-    protected IActionResult MapErrorToResponse(ResultBase result)
+    protected ActionResult MapErrorToResponse(ResultBase result)
     {
         (int statusCode, object? body) = ResultMapper.Map(result);
         return StatusCode(statusCode, body);

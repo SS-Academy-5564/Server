@@ -14,4 +14,9 @@ public static class RateLimitSections
     /// Configuration section for password reset request rate limiting.
     /// </summary>
     public const string PasswordReset = "RateLimit:PasswordReset";
+
+    /// <summary>
+    /// Configuration section for refresh token rate limiting.
+    /// </summary>
+    public const string Refresh = "RateLimit:Refresh";
 }

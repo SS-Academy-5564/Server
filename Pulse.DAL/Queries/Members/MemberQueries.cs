@@ -1,5 +1,7 @@
 using System.Data;
+using System.Data.Common;
 using Dapper;
+using Pulse.DAL.Common.Pagination;
 using Pulse.DAL.Connection;
 
 namespace Pulse.DAL.Queries.Members;
@@ -34,9 +36,14 @@ public class MemberQueries : IMemberQueries
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<MemberRecord>> GetMembersByOrganizationIdAsync(Guid organizationId, CancellationToken ct)
+    public async Task<PagedRecords<MemberRecord>> GetMembersByOrganizationIdAsync(
+        Guid organizationId,
+        int pageNumber,
+        int pageSize,
+        CancellationToken ct)
     {
-        using IDbConnection connection = _connectionFactory.CreateConnection();
+        using DbConnection connection = _connectionFactory.CreateConnection();
+        int offset = checked((pageNumber - 1) * pageSize);
 
         const string sql = """
             SELECT u.Id AS UserId,
@@ -50,14 +57,27 @@ public class MemberQueries : IMemberQueries
             JOIN Roles r ON r.Id = m.RoleId
             WHERE m.OrganizationId = @OrganizationId
             ORDER BY m.JoinedAt ASC, m.Id ASC
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+
+            SELECT COUNT(*)
+            FROM Members m
+            WHERE m.OrganizationId = @OrganizationId;
             """;
 
-        IEnumerable<MemberRecord> records = await connection.QueryAsync<MemberRecord>(
-            new CommandDefinition(
-                sql,
-                new { OrganizationId = organizationId },
-                cancellationToken: ct));
+        CommandDefinition command = new(
+            sql,
+            new
+            {
+                OrganizationId = organizationId,
+                Offset = offset,
+                PageSize = pageSize
+            },
+            cancellationToken: ct);
 
-        return records.AsList();
+        using SqlMapper.GridReader result = await connection.QueryMultipleAsync(command);
+        IReadOnlyList<MemberRecord> records = (await result.ReadAsync<MemberRecord>()).ToList().AsReadOnly();
+        int totalCount = await result.ReadSingleAsync<int>();
+
+        return new PagedRecords<MemberRecord>(records, totalCount);
     }
 }
