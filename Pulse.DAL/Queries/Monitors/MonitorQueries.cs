@@ -48,7 +48,7 @@ public class MonitorQueries : IMonitorQueries
             parameters.Add("SearchString", $"%{searchString.Trim()}%");
         }
 
-        string whereClause = filters.Count > 1
+        string whereClause = filters.Count > 0
             ? $"WHERE {string.Join(" AND ", filters)}"
             : string.Empty;
 
