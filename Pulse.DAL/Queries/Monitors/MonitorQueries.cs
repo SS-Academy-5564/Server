@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.Common;
 using Dapper;
+using Pulse.DAL.Common.Pagination;
 using Pulse.DAL.Connection;
 
 namespace Pulse.DAL.Queries.Monitors;
@@ -15,39 +16,69 @@ public class MonitorQueries : IMonitorQueries
     }
 
     /// <inheritdoc/>
-    public async Task<IReadOnlyList<MonitorListRecord>> GetAllAsync(MonitorStatus? status, CancellationToken ct)
+    public async Task<PagedRecords<MonitorListRecord>> GetAllAsync(
+        MonitorStatus? status,
+        int pageNumber,
+        int pageSize,
+        string? searchString,
+        CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
+        int offset = checked((pageNumber - 1) * pageSize);
 
-        Guid? statusId = null;
-        if (status is not null)
+        var filters = new List<string>();
+        var parameters = new DynamicParameters();
+
+        parameters.Add("Offset", offset);
+        parameters.Add("PageSize", pageSize);
+
+        if (status.HasValue)
         {
-            statusId = await connection.ExecuteScalarAsync<Guid?>(
-                new CommandDefinition(
-                    "SELECT Id FROM dbo.MonitorStatuses WHERE Name = @Name",
-                    new { Name = status.Value.ToString() },
-                    cancellationToken: ct));
-
-            if (statusId is null)
-            {
-                return new List<MonitorListRecord>().AsReadOnly();
-            }
+            filters.Add("s.Name = @Status ");
+            parameters.Add("@Status", status.ToString());
         }
+
+        if (!string.IsNullOrWhiteSpace(searchString))
+        {
+            filters.Add("m.Name LIKE @SearchString");
+            parameters.Add("SearchString", $"%{searchString.Trim()}%");
+        }
+
+        string whereClause = filters.Count > 0
+            ? $"WHERE {string.Join(" AND ", filters)}"
+            : string.Empty;
 
         string sql =
-            "SELECT m.Id, m.Name, m.Url, m.CurrentValue, m.LastCheckedAt, s.Name AS Status, m.PollingIntervalSeconds AS Interval " +
-            "FROM dbo.Monitors m " +
-            "JOIN dbo.MonitorStatuses s ON m.StatusId = s.Id";
+            $$"""
+            SELECT
+                m.Id,
+                m.Name,
+                m.Url,
+                m.CurrentValue,
+                m.LastCheckedAt,
+                s.Name AS Status,
+                m.PollingIntervalSeconds AS Interval
+            FROM dbo.Monitors AS m
+            JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
+            {{whereClause}}
+            ORDER BY m.Id
+            OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
-        if (statusId is not null)
-        {
-            sql += " WHERE m.StatusId = @StatusId";
-        }
+            SELECT COUNT(*)
+            FROM dbo.Monitors AS m
+            JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
+            {{whereClause}};
+            """;
 
-        IEnumerable<MonitorListRecord> records = await connection.QueryAsync<MonitorListRecord>(
-            new CommandDefinition(sql, new { StatusId = statusId }, cancellationToken: ct));
+        using SqlMapper.GridReader result = await connection.QueryMultipleAsync(new(
+            sql,
+            parameters,
+            cancellationToken: ct));
 
-        return records.ToList().AsReadOnly();
+        IReadOnlyList<MonitorListRecord> records = (await result.ReadAsync<MonitorListRecord>()).ToList().AsReadOnly();
+        int totalCount = await result.ReadSingleAsync<int>();
+
+        return new PagedRecords<MonitorListRecord>(records, totalCount);
     }
 
     public async Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct)
@@ -96,5 +127,21 @@ public class MonitorQueries : IMonitorQueries
 
         return await connection.QuerySingleOrDefaultAsync<MonitorRecord>(
             new CommandDefinition(sql, new { Id = id }, cancellationToken: ct));
+    }
+
+    public async Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        return await connection.QuerySingleOrDefaultAsync<MonitorPollingRecord>(
+            new CommandDefinition(
+                "SELECT m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status " +
+                "FROM Monitors AS m " +
+                "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
+                "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
+                "WHERE m.Id = @Id " +
+                "   AND s.Name IN ('Enabled', 'Error');",
+                new { Id = id },
+                cancellationToken: ct));
     }
 }

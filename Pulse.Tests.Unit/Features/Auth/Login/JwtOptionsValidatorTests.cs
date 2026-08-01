@@ -22,7 +22,7 @@ public class JwtOptionsValidatorTests
             Issuer = "https://pulse.local",
             Audience = "https://pulse.local",
             SecretKey = "super-secret-key-minimum-32-characters-long!",
-            ExpirationMinutes = 60
+            ExpirationMinutes = 10
         };
 
         // Act
@@ -41,7 +41,7 @@ public class JwtOptionsValidatorTests
             Issuer = string.Empty,
             Audience = "https://pulse.local",
             SecretKey = "super-secret-key-minimum-32-characters-long!",
-            ExpirationMinutes = 60
+            ExpirationMinutes = 10
         };
 
         // Act
@@ -61,7 +61,7 @@ public class JwtOptionsValidatorTests
             Issuer = "https://pulse.local",
             Audience = string.Empty,
             SecretKey = "super-secret-key-minimum-32-characters-long!",
-            ExpirationMinutes = 60
+            ExpirationMinutes = 10
         };
 
         // Act
@@ -81,7 +81,7 @@ public class JwtOptionsValidatorTests
             Issuer = "https://pulse.local",
             Audience = "https://pulse.local",
             SecretKey = string.Empty,
-            ExpirationMinutes = 60
+            ExpirationMinutes = 10
         };
 
         // Act
@@ -101,7 +101,7 @@ public class JwtOptionsValidatorTests
             Issuer = "https://pulse.local",
             Audience = "https://pulse.local",
             SecretKey = "short-key",
-            ExpirationMinutes = 60
+            ExpirationMinutes = 10
         };
 
         // Act
@@ -129,7 +129,7 @@ public class JwtOptionsValidatorTests
 
         // Assert
         result.Succeeded.Should().BeFalse();
-        result.Failures.Should().Contain("Jwt:ExpirationMinutes must be greater than zero.");
+        result.Failures.Should().Contain("Jwt:ExpirationMinutes must be between 5 and 15.");
     }
 
     [Fact]
@@ -152,6 +152,6 @@ public class JwtOptionsValidatorTests
         result.Failures.Should().Contain("Jwt:Issuer is required.");
         result.Failures.Should().Contain("Jwt:Audience is required.");
         result.Failures.Should().Contain("Jwt:SecretKey must be at least 32 characters long.");
-        result.Failures.Should().Contain("Jwt:ExpirationMinutes must be greater than zero.");
+        result.Failures.Should().Contain("Jwt:ExpirationMinutes must be between 5 and 15.");
     }
 }

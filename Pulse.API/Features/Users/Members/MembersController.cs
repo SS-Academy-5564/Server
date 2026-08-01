@@ -1,8 +1,10 @@
 using FluentResults;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Pulse.API.Attributes;
 using Pulse.API.Controllers;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Pagination;
 using Pulse.BL.Features.Users.Members;
 
 namespace Pulse.API.Features.Users.Members;
@@ -12,21 +14,36 @@ namespace Pulse.API.Features.Users.Members;
 [Authorize]
 public sealed class MembersController : PulseControllerBase
 {
-    private readonly IAsyncQueryHandler<Result<OrganizationMembersResult>> _query;
+    private readonly IAsyncHandler<
+        GetOrganizationMembersQuery,
+        Result<PagedResult<OrganizationMemberResult>>> _handler;
 
-    public MembersController(IAsyncQueryHandler<Result<OrganizationMembersResult>> query)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MembersController"/> class.
+    /// </summary>
+    /// <param name="handler">The handler for getting organization members.</param>
+    public MembersController(
+        IAsyncHandler<GetOrganizationMembersQuery, Result<PagedResult<OrganizationMemberResult>>> handler)
     {
-        _query = query;
+        _handler = handler;
     }
 
     /// <summary>
     /// Retrieves the members of the current user's organization.
     /// </summary>
+    /// <param name="request">The pagination parameters.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>An action result containing the organization member list.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     [HttpGet]
-    public async Task<IActionResult> GetOrganizationMembersAsync(CancellationToken ct)
+    public async Task<IActionResult> GetOrganizationMembersAsync(
+        [FromQuery][Validate] GetOrganizationMembersRequest request,
+        CancellationToken ct)
     {
-        return ToActionResult(await _query.HandleAsync(ct));
+        Result<PagedResult<OrganizationMemberResult>> result = await _handler.HandleAsync(
+            new GetOrganizationMembersQuery(request.PageNumber, request.PageSize),
+            ct);
+
+        return ToPagedActionResult(result);
     }
 }

@@ -1,12 +1,15 @@
 using FluentValidation.TestHelper;
+using Microsoft.Extensions.Options;
 using Pulse.API.Features.Monitors.UpdateMonitor;
+using Pulse.BL.Common.Security.Ssrf;
 using Pulse.BL.Features.Monitors;
 
 namespace Pulse.Tests.Unit.Features.Monitors.UpdateMonitor;
 
 public class UpdateMonitorRequestValidatorTests
 {
-    private readonly UpdateMonitorRequestValidator _validator = new();
+    private readonly UpdateMonitorRequestValidator _validator =
+        new(new SsrfGuard(Options.Create(new SsrfProtectionOptions())));
 
     private static UpdateMonitorRequest ValidRequest()
         => new("EUR/USD Rate", "https://api.example.com/data", "GET", "data.usd.rate", MonitorStatus.Enabled, 300, 10);

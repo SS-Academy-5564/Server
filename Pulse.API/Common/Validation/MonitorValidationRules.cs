@@ -1,4 +1,5 @@
 using FluentValidation;
+using Pulse.BL.Common.Security.Ssrf;
 using Pulse.BL.Features.Monitors;
 
 namespace Pulse.API.Common.Validation;
@@ -44,13 +45,15 @@ public static class MonitorValidationRules
     /// </summary>
     /// <typeparam name="T">The type of the object being validated.</typeparam>
     /// <param name="ruleBuilder">The rule builder for the target property.</param>
+    /// <param name="ssrfGuard">The SSRF guard used to reject requests targeting internal or private hosts.</param>
     /// <returns>The <see cref="IRuleBuilderOptions{T, Property}"/> instance allowing further rule chaining.</returns>
-    public static IRuleBuilderOptions<T, string> ApplyUrlRules<T>(this IRuleBuilder<T, string> ruleBuilder)
+    public static IRuleBuilderOptions<T, string> ApplyUrlRules<T>(this IRuleBuilder<T, string> ruleBuilder, ISsrfGuard ssrfGuard)
     {
         return ruleBuilder
             .NotEmpty().WithMessage("Endpoint URL is required.")
             .MaximumLength(2083).WithMessage("Endpoint URL must be at most 2083 characters.")
-            .Must(BeAValidHttpUrl).WithMessage("Endpoint URL must be a valid HTTP or HTTPS URL.");
+            .Must(BeAValidHttpsUrl).WithMessage("Endpoint URL must be a valid HTTP or HTTPS URL.")
+            .Must(url => NotTargetInternalHost(url, ssrfGuard)).WithMessage("Endpoint URL must not target a private or internal address.");
     }
 
     /// <summary>
@@ -125,9 +128,30 @@ public static class MonitorValidationRules
             .WithMessage("Polling timeout must be between 5 and 30 seconds.");
     }
 
-    private static bool BeAValidHttpUrl(string? url)
+    /// <summary>
+    /// Determines whether the given string is a valid absolute HTTPS URL.
+    /// </summary>
+    /// <param name="url">The URL string to validate.</param>
+    /// <returns><c>true</c> if the URL is a valid absolute HTTPS URI; otherwise, <c>false</c>.</returns>
+    private static bool BeAValidHttpsUrl(string? url)
     {
         return Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
-            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+            && uri.Scheme == Uri.UriSchemeHttps;
+    }
+
+    /// <summary>
+    /// Determines whether the given URL targets an internal or private host.
+    /// </summary>
+    /// <param name="url">The URL to validate.</param>
+    /// <returns><c>true</c> if the URL does not target an internal host; otherwise, <c>false</c>.</returns>
+    private static bool NotTargetInternalHost(string? url, ISsrfGuard ssrfGuard)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri)
+            || uri.Scheme != Uri.UriSchemeHttps)
+        {
+            return true;
+        }
+
+        return ssrfGuard.TryValidateHost(uri.Host, out _);
     }
 }

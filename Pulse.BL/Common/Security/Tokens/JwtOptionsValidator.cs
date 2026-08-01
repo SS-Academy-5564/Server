@@ -36,9 +36,9 @@ public class JwtOptionsValidator : IValidateOptions<JwtOptions>
             errors.Add("Jwt:SecretKey must be at least 32 characters long.");
         }
 
-        if (options.ExpirationMinutes <= 0)
+        if (options.ExpirationMinutes is < 5 or > 15)
         {
-            errors.Add("Jwt:ExpirationMinutes must be greater than zero.");
+            errors.Add("Jwt:ExpirationMinutes must be between 5 and 15.");
         }
 
         return errors.Count > 0
