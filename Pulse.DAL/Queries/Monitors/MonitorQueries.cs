@@ -93,13 +93,13 @@ public class MonitorQueries : IMonitorQueries
 
         return await connection.QueryAsync<MonitorPollingRecord>(
             new CommandDefinition(
-                $"SELECT TOP (@Max) m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status " +
-                $"FROM Monitors AS m " +
-                $"JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
-                $"JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
-                $"WHERE m.NextExecutionAt <= SYSUTCDATETIME() " +
-                $"AND s.Name = 'Enabled' " +
-                $"Order By m.NextExecutionAt ASC;",
+                "SELECT TOP (@Max) m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status " +
+                "FROM Monitors AS m " +
+                "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
+                "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
+                "WHERE m.NextExecutionAt <= SYSUTCDATETIME() " +
+                "AND s.Name = 'Enabled' " +
+                "ORDER BY m.NextExecutionAt ASC;",
                 new { Max = max },
                 cancellationToken: ct)
         );
