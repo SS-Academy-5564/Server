@@ -176,8 +176,10 @@ public class HttpMonitorClientTests
             30,
             "Enabled");
 
+        using var cts = new CancellationTokenSource();
+
         // Act
-        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
+        HttpMonitorResponse result = await _client.SendAsync(monitorPolling, cts.Token);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

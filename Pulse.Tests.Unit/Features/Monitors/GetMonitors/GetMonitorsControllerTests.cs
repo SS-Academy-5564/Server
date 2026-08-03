@@ -12,12 +12,11 @@ namespace Pulse.Tests.Unit.Features.Monitors.GetMonitors;
 
 public class GetMonitorsControllerTests
 {
-    private readonly Mock<IAsyncHandler<GetMonitorsQuery, Result<PagedResult<MonitorListResult>>>> _handlerMock;
+    private readonly Mock<IAsyncHandler<GetMonitorsQuery, Result<PagedResult<MonitorListResult>>>> _handlerMock = new();
     private readonly GetMonitorsController _sut;
 
     public GetMonitorsControllerTests()
     {
-        _handlerMock = new();
         _sut = new GetMonitorsController(_handlerMock.Object);
     }
 
@@ -26,7 +25,7 @@ public class GetMonitorsControllerTests
     {
         IReadOnlyList<MonitorListResult> monitors = new List<MonitorListResult>
         {
-            new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, MonitorStatus.Enabled, 60)
+            new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, MonitorStatus.Enabled, 60, Guid.Parse("B1000000-0000-0000-0000-000000000001"))
         }.AsReadOnly();
 
         _handlerMock.Setup(h => h.HandleAsync(It.IsAny<GetMonitorsQuery>(), It.IsAny<CancellationToken>()))
@@ -82,9 +81,8 @@ public class GetMonitorsControllerTests
     {
         IReadOnlyList<MonitorListResult> monitors = new List<MonitorListResult>
         {
-            new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, MonitorStatus.Enabled, 60),
-            new(Guid.NewGuid(), "Broken Service", "https://broken.com", null, DateTimeOffset.UtcNow, MonitorStatus.Error,
-                120),
+            new(Guid.NewGuid(), "Billing API", "https://api.com", "99%", DateTimeOffset.UtcNow, MonitorStatus.Enabled, 60, Guid.Parse("B1000000-0000-0000-0000-000000000001")),
+            new(Guid.NewGuid(), "Broken Service", "https://broken.com", null, DateTimeOffset.UtcNow, MonitorStatus.Error, 120, Guid.Parse("B1000000-0000-0000-0000-000000000001")),
         }.AsReadOnly();
 
         _handlerMock

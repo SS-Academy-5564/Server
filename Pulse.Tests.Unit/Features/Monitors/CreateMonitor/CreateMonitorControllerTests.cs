@@ -27,7 +27,7 @@ public class CreateMonitorControllerTests
     public async Task CreateMonitor_WhenSuccess_Returns200WithCreatedMonitor()
     {
         MonitorListResult created = new(
-            Guid.NewGuid(), "EUR/USD Rate", "https://api.example.com/data", null, null, MonitorStatus.Enabled, 300);
+            Guid.NewGuid(), "EUR/USD Rate", "https://api.example.com/data", null, null, MonitorStatus.Enabled, 300, Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
         _handlerMock
             .Setup(h => h.HandleAsync(It.IsAny<CreateMonitorCommand>(), It.IsAny<CancellationToken>()))
@@ -48,7 +48,7 @@ public class CreateMonitorControllerTests
         _handlerMock
             .Setup(h => h.HandleAsync(It.IsAny<CreateMonitorCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(new MonitorListResult(
-                Guid.NewGuid(), "EUR/USD Rate", "https://api.example.com/data", null, null, MonitorStatus.Enabled, 300)));
+                Guid.NewGuid(), "EUR/USD Rate", "https://api.example.com/data", null, null, MonitorStatus.Enabled, 300, Guid.Parse("B1000000-0000-0000-0000-000000000001"))));
 
         await _sut.CreateMonitorAsync(ValidRequest(), CancellationToken.None);
 
