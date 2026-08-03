@@ -45,6 +45,7 @@ internal static class EmailLanguageResolver
         return bestMatch?.Language ?? FallbackLanguage;
     }
 
+    // Parses "lang;q=value" segments from a comma-separated Accept-Language header, yielding valid preferences in order.
     private static IEnumerable<LanguagePreference> ParsePreferences(string header)
     {
         string[] segments = header.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
