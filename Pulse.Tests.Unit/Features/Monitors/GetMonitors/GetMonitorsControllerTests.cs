@@ -41,7 +41,7 @@ public class GetMonitorsControllerTests
         response.Success.Should().BeTrue();
         response.Data.Should().BeEquivalentTo(monitors);
         response.Pagination.Should().NotBeNull();
-        response.Pagination!.Page.Should().Be(1);
+        response.Pagination!.PageNumber.Should().Be(1);
         response.Pagination.PageSize.Should().Be(10);
         response.Pagination.TotalCount.Should().Be(21);
         response.Pagination.TotalPages.Should().Be(3);

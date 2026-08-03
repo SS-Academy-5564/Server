@@ -1,9 +1,11 @@
+using System.Text.Json;
 using FluentAssertions;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Controllers;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
+using Pulse.BL.Common.Pagination;
 
 namespace Pulse.Tests.Unit.Controllers;
 
@@ -95,8 +97,36 @@ public class PulseControllerBaseTests
         response.Errors.Should().BeEmpty();
     }
 
+    /// <summary>
+    /// Verifies that paged responses expose the page number under the client-facing JSON contract.
+    /// </summary>
+    [Fact]
+    public void ToPagedActionResult_WhenResultIsSuccess_SerializesPageNumber()
+    {
+        PagedResult<string> page = new(["member"], 2, 10, 21);
+        TestController controller = new();
+
+        IActionResult actionResult = controller.InvokeToPagedActionResult(Result.Ok(page));
+
+        OkObjectResult okResult = actionResult.Should().BeOfType<OkObjectResult>().Subject;
+        string json = JsonSerializer.Serialize(okResult.Value, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        using JsonDocument document = JsonDocument.Parse(json);
+        JsonElement pagination = document.RootElement.GetProperty("pagination");
+
+        pagination.GetProperty("pageNumber").GetInt32().Should().Be(2);
+        pagination.TryGetProperty("page", out _).Should().BeFalse();
+    }
+
     private sealed class TestController : PulseControllerBase
     {
         public IActionResult InvokeToActionResult(Result result) => ToActionResult(result);
+
+        /// <summary>
+        /// Invokes the protected ToPagedActionResult method on the base controller.
+        /// </summary>
+        /// <typeparam name="T">The type of items in the paged result.</typeparam>
+        /// <param name="result">The result from the business layer.</param>
+        /// <returns>An IActionResult representing the HTTP response.</returns>
+        public IActionResult InvokeToPagedActionResult<T>(Result<PagedResult<T>> result) => ToPagedActionResult(result);
     }
 }
