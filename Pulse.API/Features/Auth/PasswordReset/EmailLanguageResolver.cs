@@ -10,8 +10,8 @@ namespace Pulse.API.Features.Auth.PasswordReset;
 /// </summary>
 internal static class EmailLanguageResolver
 {
-    private const string FallbackLanguage = "en";
-    private static readonly IReadOnlySet<string> SupportedLanguages = new HashSet<string> { "en", "uk" };
+    private static readonly string FallbackLanguage = LanguageCodes.English;
+    private static readonly IReadOnlySet<string> SupportedLanguages = LanguageCodes.Supported;
 
     /// <summary>
     /// Resolves the best-matching email language from the Accept-Language header.

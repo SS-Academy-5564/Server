@@ -1,3 +1,5 @@
+using Pulse.BL.Common.Localization;
+
 namespace Pulse.BL.Features.Auth.PasswordReset;
 
 /// <summary>
@@ -10,12 +12,10 @@ internal static class PasswordResetConstants
     /// </summary>
     public static class SupportedLanguages
     {
-        public const string English = "en";
-        public const string Ukrainian = "uk";
+        public static string English => LanguageCodes.English;
+        public static string Ukrainian => LanguageCodes.Ukrainian;
 
-        /// <summary>
-        /// Gets all supported language codes.
-        /// </summary>
-        public static IReadOnlySet<string> All { get; } = new HashSet<string> { English, Ukrainian };
+        /// <summary>All supported language codes (delegates to <see cref="LanguageCodes.Supported"/>).</summary>
+        public static IReadOnlySet<string> All => LanguageCodes.Supported;
     }
 }

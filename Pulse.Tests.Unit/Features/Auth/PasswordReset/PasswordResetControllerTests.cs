@@ -80,7 +80,7 @@ public class PasswordResetControllerTests
     {
         // Arrange
         RequestPasswordResetRequest request = new("test@example.com");
-        SetAcceptLanguageHeader("de-DE,de;q=0.9");
+        SetAcceptLanguageHeader("und,und-XX;q=0.9");
         SendCodeResult sendCodeResult = new(60);
 
         _requestHandlerMock

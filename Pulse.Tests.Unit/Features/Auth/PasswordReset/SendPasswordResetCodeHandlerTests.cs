@@ -194,7 +194,7 @@ public class SendPasswordResetCodeHandlerTests
         // Arrange
         string email = "test@example.com";
         Guid userId = Guid.NewGuid();
-        SendPasswordResetCodeCommand command = new(email, "de-DE");
+        SendPasswordResetCodeCommand command = new(email, "und");
 
         _userQueriesMock
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
