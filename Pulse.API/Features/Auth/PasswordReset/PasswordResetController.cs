@@ -31,7 +31,9 @@ public class PasswordResetController : PulseControllerBase
 
     /// <summary>
     /// Requests a password reset code to be sent to the provided email.
-    /// Always returns 200 OK to prevent email enumeration.
+    /// Automatically detects the preferred language from the Accept-Language request header
+    /// and sends the email in that language (defaults to English if unsupported).
+    /// Always returns 200 OK to prevent email enumeration attacks.
     /// </summary>
     /// <param name="request">The request containing the user's email address.</param>
     /// <param name="ct">A token to cancel the operation.</param>
@@ -39,9 +41,14 @@ public class PasswordResetController : PulseControllerBase
     [HttpPost("request")]
     [EnableRateLimiting(RateLimitPolicies.PasswordReset)]
     public async Task<IActionResult> RequestCodeAsync(
-        [Validate] RequestPasswordResetRequest request, CancellationToken ct)
+        [Validate] RequestPasswordResetRequest request,
+        CancellationToken ct,
+        [FromHeader(Name = "Accept-Language")] string? acceptLanguage = null)
     {
-        SendPasswordResetCodeCommand command = new(request.Email);
+        // Read header via model binding; fallback to HttpContext for direct unit-test invocation.
+        string language = EmailLanguageResolver.Resolve(acceptLanguage ?? Request.Headers.AcceptLanguage.ToString());
+
+        SendPasswordResetCodeCommand command = new(request.Email, language);
         Result<SendCodeResult> result = await _requestHandler.HandleAsync(command, ct);
         return ToActionResult(result);
     }

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using FluentResults;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Pulse.API.Features.Auth.PasswordReset;
@@ -36,10 +37,11 @@ public class PasswordResetControllerTests
     {
         // Arrange
         RequestPasswordResetRequest request = new("test@example.com");
+        SetAcceptLanguageHeader(null);
         SendCodeResult sendCodeResult = new(60);
 
         _requestHandlerMock
-            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email), It.IsAny<CancellationToken>()))
+            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(sendCodeResult));
 
         // Act
@@ -49,6 +51,94 @@ public class PasswordResetControllerTests
         result.Should().BeOfType<OkObjectResult>()
             .Which.Value.Should().BeOfType<ApiResponse<SendCodeResult>>()
             .Which.Data.Should().Be(sendCodeResult);
+    }
+
+    [Fact]
+    public async Task RequestCodeAsync_WhenAcceptLanguageIsSupported_PassesSupportedLanguageToCommand()
+    {
+        // Arrange
+        RequestPasswordResetRequest request = new("test@example.com");
+        SetAcceptLanguageHeader("uk-UA,uk;q=0.9,en;q=0.8");
+        SendCodeResult sendCodeResult = new(60);
+
+        _requestHandlerMock
+            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "uk"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(sendCodeResult));
+
+        // Act
+        IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        _requestHandlerMock.Verify(
+            x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "uk"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RequestCodeAsync_WhenAcceptLanguageIsUnsupported_FallsBackToEnglish()
+    {
+        // Arrange
+        RequestPasswordResetRequest request = new("test@example.com");
+        SetAcceptLanguageHeader("und,und-XX;q=0.9");
+        SendCodeResult sendCodeResult = new(60);
+
+        _requestHandlerMock
+            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(sendCodeResult));
+
+        // Act
+        IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        _requestHandlerMock.Verify(
+            x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RequestCodeAsync_WhenAcceptLanguageHasOutOfRangeQ_IgnoresInvalidPreference()
+    {
+        // Arrange
+        RequestPasswordResetRequest request = new("test@example.com");
+        SetAcceptLanguageHeader("uk;q=2,en;q=0.8");
+        SendCodeResult sendCodeResult = new(60);
+
+        _requestHandlerMock
+            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(sendCodeResult));
+
+        // Act
+        IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        _requestHandlerMock.Verify(
+            x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RequestCodeAsync_WhenAcceptLanguageHasMalformedQ_IgnoresInvalidPreference()
+    {
+        // Arrange
+        RequestPasswordResetRequest request = new("test@example.com");
+        SetAcceptLanguageHeader("uk;q=abc,en;q=0.8");
+        SendCodeResult sendCodeResult = new(60);
+
+        _requestHandlerMock
+            .Setup(x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(sendCodeResult));
+
+        // Act
+        IActionResult result = await _sut.RequestCodeAsync(request, CancellationToken.None);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+        _requestHandlerMock.Verify(
+            x => x.HandleAsync(It.Is<SendPasswordResetCodeCommand>(c => c.Email == request.Email && c.Language == "en"), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -128,5 +218,20 @@ public class PasswordResetControllerTests
             .Which.StatusCode.Should().Be(401);
         ((ObjectResult)result).Value.Should().BeOfType<ApiResponse>()
             .Which.Success.Should().BeFalse();
+    }
+
+    private void SetAcceptLanguageHeader(string? value)
+    {
+        DefaultHttpContext httpContext = new();
+
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            httpContext.Request.Headers.AcceptLanguage = value;
+        }
+
+        _sut.ControllerContext = new ControllerContext
+        {
+            HttpContext = httpContext
+        };
     }
 }

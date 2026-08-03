@@ -58,7 +58,7 @@ public class SendPasswordResetCodeHandlerTests
         // Arrange
         string email = "test@example.com";
         Guid userId = Guid.NewGuid();
-        SendPasswordResetCodeCommand command = new(email);
+        SendPasswordResetCodeCommand command = new(email, "en");
 
         _userQueriesMock
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
@@ -100,7 +100,7 @@ public class SendPasswordResetCodeHandlerTests
     {
         // Arrange
         string email = "notfound@example.com";
-        SendPasswordResetCodeCommand command = new(email);
+        SendPasswordResetCodeCommand command = new(email, "en");
 
         _userQueriesMock
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
@@ -118,12 +118,12 @@ public class SendPasswordResetCodeHandlerTests
     }
 
     [Fact]
-    public async Task RequestAsync_WhenEmailFails_ReturnsOkButLogsError()
+    public async Task RequestAsync_WhenEmailFails_ReturnsOkButDoesNotCreateCode()
     {
         // Arrange
         string email = "test@example.com";
         Guid userId = Guid.NewGuid();
-        SendPasswordResetCodeCommand command = new(email);
+        SendPasswordResetCodeCommand command = new(email, "en");
 
         _userQueriesMock
             .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
@@ -148,6 +148,85 @@ public class SendPasswordResetCodeHandlerTests
 
         _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
+    [Fact]
+    public async Task RequestAsync_WhenLanguageIsUkrainian_SendsLocalizedSubjectAndBody()
+    {
+        // Arrange
+        string email = "test@example.com";
+        Guid userId = Guid.NewGuid();
+        SendPasswordResetCodeCommand command = new(email, "uk-UA");
+
+        _userQueriesMock
+            .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userId);
+
+        _passwordHasherMock
+            .Setup(x => x.HashPassword(It.IsAny<string>()))
+            .Returns("hashed_code");
+
+        _codeQueriesMock
+            .Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PasswordResetCodeRecord?)null);
+
+        _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
+
+        _emailServiceMock
+            .Setup(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+
+        // Act
+        Result<SendCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ResendCooldownSeconds.Should().Be(60);
+        _emailServiceMock.Verify(x => x.SendEmailAsync(
+            It.Is<SendEmailDto>(dto =>
+                dto.Subject == "Код для скидання пароля Pulse" &&
+                dto.HtmlBody != null && dto.HtmlBody.Contains("Скидання пароля") &&
+                dto.PlainTextBody != null && dto.PlainTextBody.Contains("Ваш код підтвердження")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RequestAsync_WhenLanguageIsUnsupported_FallsBackToEnglishSubjectAndBody()
+    {
+        // Arrange
+        string email = "test@example.com";
+        Guid userId = Guid.NewGuid();
+        SendPasswordResetCodeCommand command = new(email, "und");
+
+        _userQueriesMock
+            .Setup(x => x.GetIdByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userId);
+
+        _passwordHasherMock
+            .Setup(x => x.HashPassword(It.IsAny<string>()))
+            .Returns("hashed_code");
+
+        _codeQueriesMock
+            .Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((PasswordResetCodeRecord?)null);
+
+        _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
+
+        _emailServiceMock
+            .Setup(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok());
+
+        // Act
+        Result<SendCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.ResendCooldownSeconds.Should().Be(60);
+        _emailServiceMock.Verify(x => x.SendEmailAsync(
+            It.Is<SendEmailDto>(dto =>
+                dto.Subject == "Your Pulse password reset code" &&
+                dto.HtmlBody != null && dto.HtmlBody.Contains("Reset your password") &&
+                dto.PlainTextBody != null && dto.PlainTextBody.Contains("Your verification code")),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
 
     [Fact]
     public async Task RequestAsync_WhenCooldownNotExpired_ReturnsOk_DoesNotResend()
@@ -155,7 +234,7 @@ public class SendPasswordResetCodeHandlerTests
         // Arrange
         string email = "test@example.com";
         Guid userId = Guid.NewGuid();
-        SendPasswordResetCodeCommand command = new(email);
+        SendPasswordResetCodeCommand command = new(email, "en");
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(now);
@@ -189,7 +268,7 @@ public class SendPasswordResetCodeHandlerTests
         // Arrange
         string email = "test@example.com";
         Guid userId = Guid.NewGuid();
-        SendPasswordResetCodeCommand command = new(email);
+        SendPasswordResetCodeCommand command = new(email, "en");
 
         DateTimeOffset now = DateTimeOffset.UtcNow;
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(now);

@@ -11,7 +11,11 @@ using Pulse.DAL.Queries.Users;
 
 namespace Pulse.BL.Features.Auth.PasswordReset.RequestCode;
 
-/// <inheritdoc/>
+/// <summary>
+/// Handles password reset code requests with localized email notifications.
+/// Always returns success to prevent email enumeration attacks.
+/// Emails are sent in the requested language (with English as fallback).
+/// </summary>
 public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeCommand, Result<SendCodeResult>>
 {
     private readonly IUserQueries _userQueries;
@@ -44,15 +48,17 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
     }
 
     /// <summary>
-    /// Processes a password reset request for the given email.
-    /// Always returns success to prevent email enumeration.
-    /// If the email exists, a 6-digit OTP code is generated and sent via email.
+    /// Processes a password reset request by generating a 6-digit OTP code and sending it via email.
+    /// Always returns success (even for non-existent emails) to prevent email enumeration attacks.
     /// </summary>
-    /// <param name="command">The command containing the email address.</param>
-    /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>Always a successful result.</returns>
+    /// <param name="command">The password reset request with email and desired language.</param>
+    /// <param name="ct">Cancellation token for the operation.</param>
+    /// <returns>Always returns a successful result with resend cooldown info.</returns>
     public async Task<Result<SendCodeResult>> HandleAsync(SendPasswordResetCodeCommand command, CancellationToken ct)
     {
+        // Fallback to English if language is unsupported (should not happen due to EmailLanguageResolver, but defensive)
+        string language = command.IsLanguageSupported() ? command.Language : PasswordResetConstants.SupportedLanguages.English;
+
         Guid? userId = await _userQueries.GetIdByEmailAsync(command.Email, ct);
 
         // Always return Ok to prevent email enumeration
@@ -84,9 +90,9 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
         // Send the email first
         Result emailResult = await _emailService.SendEmailAsync(new SendEmailDto(
             To: [command.Email],
-            Subject: PasswordResetEmailBuilder.BuildSubject(),
-            HtmlBody: PasswordResetEmailBuilder.BuildHtmlBody(plainCode, _options.CodeTtlMinutes),
-            PlainTextBody: PasswordResetEmailBuilder.BuildPlainTextBody(plainCode, _options.CodeTtlMinutes),
+            Subject: PasswordResetEmailBuilder.BuildSubject(language),
+            HtmlBody: PasswordResetEmailBuilder.BuildHtmlBody(plainCode, _options.CodeTtlMinutes, language),
+            PlainTextBody: PasswordResetEmailBuilder.BuildPlainTextBody(plainCode, _options.CodeTtlMinutes, language),
             ReplyTo: null), ct);
 
         if (emailResult.IsFailed)
