@@ -1,5 +1,4 @@
 using FluentResults;
-using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Pagination;
 using Pulse.BL.Common.Security;
@@ -35,11 +34,11 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
         GetMonitorsQuery query,
         CancellationToken ct = default)
     {
-        Guid? organizationId = _currentUserService.OrganizationId;
+        Result<Guid> organizationIdResult = _currentUserService.RequireOrganizationId();
 
-        if (organizationId is null)
+        if (organizationIdResult.IsFailed)
         {
-            return Result.Fail(new UnauthorizedError("User is not associated with an organization."));
+            return organizationIdResult.ToResult();
         }
 
         DAL.Queries.Monitors.MonitorStatus? dalStatus = query.Status is null
@@ -50,7 +49,7 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
         int pageSize = query.PageSize ?? PaginationDefaults.PageSize;
 
         PagedRecords<MonitorListRecord> records = await _monitorQueries.GetAllAsync(
-            organizationId.Value,
+            organizationIdResult.Value,
             dalStatus,
             pageNumber,
             pageSize,

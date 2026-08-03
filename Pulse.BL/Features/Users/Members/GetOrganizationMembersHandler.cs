@@ -1,5 +1,4 @@
 using FluentResults;
-using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Pagination;
 using Pulse.BL.Common.Security;
@@ -41,17 +40,18 @@ public sealed class GetOrganizationMembersHandler
         GetOrganizationMembersQuery query,
         CancellationToken ct = default)
     {
-        Guid? organizationId = _currentUserService.OrganizationId;
-        if (organizationId is null)
+        Result<Guid> organizationIdResult = _currentUserService.RequireOrganizationId();
+
+        if (organizationIdResult.IsFailed)
         {
-            return Result.Fail(new UnauthorizedError("Organization identity not found."));
+            return organizationIdResult.ToResult();
         }
 
         int pageNumber = query.PageNumber ?? PaginationDefaults.PageNumber;
         int pageSize = query.PageSize ?? PaginationDefaults.PageSize;
 
         PagedRecords<MemberRecord> memberRecords = await _memberQueries.GetMembersByOrganizationIdAsync(
-            organizationId.Value,
+            organizationIdResult.Value,
             pageNumber,
             pageSize,
             ct);

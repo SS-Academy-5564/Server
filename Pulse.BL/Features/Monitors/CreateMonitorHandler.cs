@@ -1,5 +1,4 @@
 using FluentResults;
-using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.DAL.Commands.Monitors;
@@ -34,11 +33,11 @@ public class CreateMonitorHandler : IAsyncHandler<CreateMonitorCommand, Result<M
         CreateMonitorCommand command,
         CancellationToken ct = default)
     {
-        Guid? organizationId = _currentUserService.OrganizationId;
+        Result<Guid> organizationIdResult = _currentUserService.RequireOrganizationId();
 
-        if (organizationId is null)
+        if (organizationIdResult.IsFailed)
         {
-            return Result.Fail(new UnauthorizedError("User is not associated with an organization."));
+            return organizationIdResult.ToResult();
         }
 
         await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct: ct);
@@ -51,7 +50,7 @@ public class CreateMonitorHandler : IAsyncHandler<CreateMonitorCommand, Result<M
                 command.ResultPath,
                 command.PollingIntervalSeconds,
                 command.PollingTimeoutSeconds,
-                organizationId.Value),
+                organizationIdResult.Value),
             ct);
 
         await uow.CommitAsync(ct);
@@ -64,7 +63,7 @@ public class CreateMonitorHandler : IAsyncHandler<CreateMonitorCommand, Result<M
             LastCheckedAt: null,
             MonitorStatus.Enabled,
             command.PollingIntervalSeconds,
-            organizationId.Value);
+            organizationIdResult.Value);
 
         return Result.Ok(result);
     }
