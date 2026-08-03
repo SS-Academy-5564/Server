@@ -2,24 +2,49 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Pulse.API.Common.Security;
-
+using Pulse.BL.Features.Monitors;
 using Pulse.DAL.Common.Constants;
 
 namespace Pulse.API.Hubs;
 
 [Authorize]
-public class BaseNotificationHub(CurrentUserService userService) : Hub
+public sealed class PulseNotificationHub : Hub
 {
+    private readonly CurrentUserService _userService;
+    public PulseNotificationHub(CurrentUserService userService)
+    {
+        _userService = userService;
+    }
     public override async Task OnConnectedAsync()
     {
-        Guid organizationId = userService.OrganizationId ?? SeededIds.Organizations.Default;
+        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
         await Groups.AddToGroupAsync(Context.ConnectionId, organizationId.ToString());
         await base.OnConnectedAsync();
     }
 
-    public async Task SendMessage(List<MonitorUpdateResult> monitors)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        Guid organizationId = userService.OrganizationId ?? SeededIds.Organizations.Default;
-        await Clients.Groups(organizationId.ToString()).SendAsync("ReceiveMessage", monitors);
+        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
+        await Groups.RemoveFromGroupAsync(Context.ConnectionId, organizationId.ToString());
+        await base.OnDisconnectedAsync(exception);
+    }
+
+
+    public async Task<MonitorListResult> SendUpdatedMonitorAsync(MonitorListResult monitor){
+        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
+        await Clients.Groups(organizationId.ToString()).SendAsync("Updated Monitor",monitor);
+
+        return monitor;
+    }
+
+    /// <summary>
+    /// Will be called by the Poller Worker
+    /// </summary>
+    /// <param name="monitors"></param>
+    public async Task<List<MonitorListResult>> SendUpdatedMonitorsAsync(List<MonitorListResult> monitors){
+        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
+        await Clients.Groups(organizationId.ToString()).SendAsync("Updated Monitors",monitors);
+
+        return monitors;
     }
 }

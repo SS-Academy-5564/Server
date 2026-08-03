@@ -86,7 +86,7 @@ app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<BaseNotificationHub>("/hubs/monitors");
+app.MapHub<PulseNotificationHub>("/hubs/monitors");
 
 app.MapControllers();
 
