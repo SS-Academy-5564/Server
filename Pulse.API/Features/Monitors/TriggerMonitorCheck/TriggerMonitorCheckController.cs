@@ -41,6 +41,7 @@ public sealed class TriggerMonitorCheckController : PulseControllerBase
             await _hubContext.Clients.Groups(organizationId.ToString()).SendAsync("Updated Monitors",result.Value);
         }
 
+
         return ToActionResult(result);
     }
 }

@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Pulse.API.Common.Security;
@@ -8,7 +7,7 @@ using Pulse.DAL.Common.Constants;
 namespace Pulse.API.Hubs;
 
 [Authorize]
-public sealed class PulseNotificationHub : Hub
+public sealed class PulseNotificationHub : Hub<INotificationHub>
 {
     private readonly CurrentUserService _userService;
     public PulseNotificationHub(CurrentUserService userService)
@@ -32,7 +31,7 @@ public sealed class PulseNotificationHub : Hub
 
     public async Task<MonitorListResult> SendUpdatedMonitorAsync(MonitorListResult monitor){
         Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
-        await Clients.Groups(organizationId.ToString()).SendAsync("Updated Monitor",monitor);
+        await Clients.Groups(organizationId.ToString()).SendUpdatedMonitorAsync(monitor);
 
         return monitor;
     }
@@ -43,8 +42,18 @@ public sealed class PulseNotificationHub : Hub
     /// <param name="monitors"></param>
     public async Task<List<MonitorListResult>> SendUpdatedMonitorsAsync(List<MonitorListResult> monitors){
         Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
-        await Clients.Groups(organizationId.ToString()).SendAsync("Updated Monitors",monitors);
+        await Clients.Groups(organizationId.ToString()).SendUpdatedMonitorsAsync(monitors);
 
         return monitors;
     }
+}
+
+public interface INotificationHub
+{
+    /// <summary>
+    /// Will be called by the Poller Worker
+    /// </summary>
+    /// <param name="monitors"></param>
+    Task SendUpdatedMonitorsAsync(List<MonitorListResult> monitors);
+    Task SendUpdatedMonitorAsync(MonitorListResult monitor);
 }
