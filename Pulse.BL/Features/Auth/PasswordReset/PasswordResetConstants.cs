@@ -12,10 +12,16 @@ internal static class PasswordResetConstants
     /// </summary>
     public static class SupportedLanguages
     {
+        /// <summary>BCP 47 primary subtag for English.</summary>
+        /// <returns>"en"</returns>
         public static string English => LanguageCodes.English;
+
+        /// <summary>BCP 47 primary subtag for Ukrainian.</summary>
+        /// <returns>"uk"</returns>
         public static string Ukrainian => LanguageCodes.Ukrainian;
 
-        /// <summary>All supported language codes (delegates to <see cref="LanguageCodes.Supported"/>).</summary>
+        /// <summary>All language codes supported for password reset email notifications.</summary>
+        /// <returns>A read-only set of supported language codes.</returns>
         public static IReadOnlySet<string> All => LanguageCodes.Supported;
     }
 }
