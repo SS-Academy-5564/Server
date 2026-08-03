@@ -20,10 +20,9 @@ namespace Pulse.API.Features.Monitors.TriggerMonitorCheck;
 public sealed class TriggerMonitorCheckController : PulseControllerBase
 {
     private readonly IAsyncHandler<ManualCheckCommand, Result> _handler;
-    private readonly IHubContext<PulseNotificationHub> _hubContext;
-    private readonly CurrentUserService _userService;
+    private readonly INotificationService _hubContext;
 
-    public TriggerMonitorCheckController(IAsyncHandler<ManualCheckCommand, Result> handler , IHubContext<PulseNotificationHub> hubContext)
+    public TriggerMonitorCheckController(IAsyncHandler<ManualCheckCommand, Result> handler ,INotificationService hubContext)
     {
         _handler = handler;
         _hubContext = hubContext;
@@ -37,8 +36,7 @@ public sealed class TriggerMonitorCheckController : PulseControllerBase
 
         if (result.IsSuccess)
         {
-            Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
-            await _hubContext.Clients.Groups(organizationId.ToString()).SendAsync("Updated Monitors",result.Value);
+            await _hubContext.NotifyAsync(result.Value, ct);
         }
 
 

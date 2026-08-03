@@ -9,6 +9,7 @@ using Pulse.API.Common.Security;
 using Pulse.API.Common.Security.RateLimiting;
 using Pulse.API.Constants;
 using Pulse.API.Documentation;
+using Pulse.API.Hubs;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
@@ -195,6 +196,14 @@ public static class ServiceCollectionExtensions
                 options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
                 options.AddOperationTransformer<BearerSecurityOperationTransformer>();
             });
+
+            return services;
+        }
+
+        public IServiceCollection AddPulseSignalR()
+        {
+            services.AddTransient<INotificationService,MonitorUpdate>();
+            services.AddSignalR();
 
             return services;
         }

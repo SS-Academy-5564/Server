@@ -25,8 +25,7 @@ builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
 builder.Services.AddCurrentUserService();
-
-builder.Services.AddSignalR();
+builder.Services.AddPulseSignalR();
 
 string[] allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];

@@ -7,7 +7,7 @@ using Pulse.DAL.Common.Constants;
 namespace Pulse.API.Hubs;
 
 [Authorize]
-public sealed class PulseNotificationHub : Hub<INotificationHub>
+public sealed class PulseNotificationHub : Hub<INotificationClient>
 {
     private readonly CurrentUserService _userService;
     public PulseNotificationHub(CurrentUserService userService)
@@ -28,27 +28,17 @@ public sealed class PulseNotificationHub : Hub<INotificationHub>
         await base.OnDisconnectedAsync(exception);
     }
 
-
-    public async Task<MonitorListResult> SendUpdatedMonitorAsync(MonitorListResult monitor){
-        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
-        await Clients.Groups(organizationId.ToString()).SendUpdatedMonitorAsync(monitor);
-
-        return monitor;
-    }
-
     /// <summary>
     /// Will be called by the Poller Worker
     /// </summary>
     /// <param name="monitors"></param>
     public async Task<List<MonitorListResult>> SendUpdatedMonitorsAsync(List<MonitorListResult> monitors){
-        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
-        await Clients.Groups(organizationId.ToString()).SendUpdatedMonitorsAsync(monitors);
 
         return monitors;
     }
 }
 
-public interface INotificationHub
+public interface INotificationClient
 {
     /// <summary>
     /// Will be called by the Poller Worker
@@ -56,4 +46,36 @@ public interface INotificationHub
     /// <param name="monitors"></param>
     Task SendUpdatedMonitorsAsync(List<MonitorListResult> monitors);
     Task SendUpdatedMonitorAsync(MonitorListResult monitor);
+}
+
+
+public interface INotificationService
+{
+    Task NotifyAsync(MonitorUpdate update, CancellationToken ct);
+    Task NotifyAsync(List<MonitorUpdate> update, CancellationToken ct);
+}
+
+public class MonitorUpdate: INotificationService
+{
+    private readonly IHubContext<PulseNotificationHub, INotificationClient> _hubContext;
+    private readonly CurrentUserService _userService;
+
+    public MonitorUpdate(IHubContext<PulseNotificationHub, INotificationClient> hubContext, CurrentUserService userService)
+    {
+        _hubContext = hubContext;
+        _userService = userService;
+    }
+
+    public async Task NotifyAsync(MonitorUpdate update, CancellationToken ct)
+    {
+        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
+        await _hubContext.Clients.Groups(organizationId.ToString()).SendUpdatedMonitorAsync(update);
+    }
+
+    public async Task NotifyAsync(List<MonitorUpdate> update, CancellationToken ct)
+    {
+        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
+        await _hubContext.Clients.Groups(organizationId.ToString()).SendUpdatedMonitorsAsync(update);
+
+    }
 }
