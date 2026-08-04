@@ -34,5 +34,5 @@ public interface IMonitorQueries : IQueries
     /// <returns>A collection of monitors ready for polling.</returns>
     Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
 
-    Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct);
+    Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, Guid organizationId, CancellationToken ct);
 }

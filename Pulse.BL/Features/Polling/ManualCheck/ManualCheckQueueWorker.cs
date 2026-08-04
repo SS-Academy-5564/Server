@@ -30,11 +30,11 @@ public sealed class ManualCheckQueueWorker : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            Guid monitorId;
+            ManualCheckJob job;
 
             try
             {
-                monitorId = await _queue.DequeueAsync(stoppingToken);
+                job = await _queue.DequeueAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -45,10 +45,22 @@ public sealed class ManualCheckQueueWorker : BackgroundService
             {
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
-                Result<UpdateMonitorAfterPollInput> monitor = await pollingService.ProcessMonitorAsync(monitorId, stoppingToken);
+                Result<UpdateMonitorAfterPollInput> monitor = await pollingService.ProcessMonitorAsync(
+                    job.MonitorId,
+                    job.OrganizationId,
+                    stoppingToken);
 
-                INotificationService notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-                await notificationService.NotifyAsync(monitor.Value, stoppingToken);
+                if (monitor.IsSuccess)
+                {
+                    INotificationService notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                    await notificationService.NotifyAsync(job.OrganizationId, monitor.Value, stoppingToken);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Manual check did not complete successfully. MonitorId: {MonitorId}",
+                        job.MonitorId);
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -56,7 +68,7 @@ public sealed class ManualCheckQueueWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Manual check failed. MonitorId: {MonitorId}", monitorId);
+                _logger.LogError(ex, "Manual check failed. MonitorId: {MonitorId}", job.MonitorId);
             }
         }
     }

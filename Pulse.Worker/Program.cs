@@ -39,7 +39,7 @@ builder.ConfigureServices((context, services) =>
     services.AddScoped<IPollingService, PollingService>();
     services.AddScoped<IHttpMonitorClient, HttpMonitorClient>();
     services.AddScoped<IJsonPathReader, JsonPathReader>();
-    services.AddTransient<INotificationService,HttpNotificationService>();
+    services.AddTransient<INotificationService, HttpNotificationService>();
 
     services.AddDataAccess();
     services.AddPolling();

@@ -8,5 +8,5 @@ public interface IPollingService
 {
     Task<Result<List<UpdateMonitorAfterPollInput>>> ProcessDueMonitorsAsync(CancellationToken stoppingToken);
     Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct);
-    Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default);
+    Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(Guid monitorId, Guid organizationId, CancellationToken ct);
 }

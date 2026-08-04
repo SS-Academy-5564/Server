@@ -60,9 +60,12 @@ public class PollingService : IPollingService
         return Result.Ok(monitorsResults);
     }
 
-    public async Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
+    public async Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(Guid monitorId, Guid organizationId, CancellationToken ct)
     {
-        MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(monitorId, ct);
+        MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(
+            monitorId,
+            organizationId,
+            ct);
 
         if (monitor is null)
         {

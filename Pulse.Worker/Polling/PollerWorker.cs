@@ -33,7 +33,7 @@ public sealed class PollerWorker : BackgroundService
             {
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
-                var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                INotificationService notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
                 Result<List<UpdateMonitorAfterPollInput>> result = await pollingService.ProcessDueMonitorsAsync(stoppingToken);
 
