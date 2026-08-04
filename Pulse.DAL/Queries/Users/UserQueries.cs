@@ -26,7 +26,7 @@ public class UserQueries : IUserQueries
     }
 
     /// <inheritdoc/>
-    public async Task<UserAuthRecord?> GetByEmailForAuthAsync(string email, CancellationToken ct)
+    public async Task<UserAuthRecord?> GetByEmailForAuthAsync(string email, string identifier, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
 
@@ -39,10 +39,10 @@ public class UserQueries : IUserQueries
                 "JOIN Members m ON m.UserId = u.Id " +
                 "JOIN Roles r ON r.Id = m.RoleId " +
                 "JOIN Organizations o ON o.Id = m.OrganizationId " +
-                "LEFT JOIN UserLoginAttempts ula ON ula.UserId = u.Id " +
+                "LEFT JOIN UserLoginAttempts ula ON ula.UserId = u.Id AND ula.Identifier = @Identifier " +
                 "WHERE u.Email = @Email " +
                 "ORDER BY m.JoinedAt DESC",
-                new { Email = email },
+                new { Email = email, Identifier = identifier },
                 cancellationToken: ct));
     }
 

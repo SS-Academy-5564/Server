@@ -53,7 +53,7 @@ public class RegistrationHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_DuplicateEmail_ReturnsConflictErrorAndMemberIsNotCreated()
+    public async Task HandleAsync_DuplicateEmail_ReturnsSuccessResultAndDoesNotCreateMember()
     {
         _userQueries
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -67,8 +67,7 @@ public class RegistrationHandlerTests
 
         Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
-        result.IsFailed.Should().BeTrue();
-        result.Errors.Should().ContainSingle(e => e is ConflictError);
+        result.IsSuccess.Should().BeTrue();
         _memberCommands.Verify(m => m.CreateMemberAsync(It.IsAny<CreateMemberInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

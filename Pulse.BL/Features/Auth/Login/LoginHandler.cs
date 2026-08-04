@@ -59,7 +59,7 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
     /// </returns>
     public async Task<Result<LoginResult>> HandleAsync(LoginCommand command, CancellationToken ct)
     {
-        UserAuthRecord? user = await _userQueries.GetByEmailForAuthAsync(command.Email, ct);
+        UserAuthRecord? user = await _userQueries.GetByEmailForAuthAsync(command.Email, command.Identifier, ct);
 
         if (user is null)
         {
@@ -78,14 +78,14 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
 
         if (!passwordValid)
         {
-            await _loginLockoutService.AddFailedAttemptAsync(user.Id, command.Email, ct);
+            await _loginLockoutService.AddFailedAttemptAsync(user.Id, command.Identifier, ct);
             LogFailure("invalid password", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
         if (user.FailedAttempts > 0)
         {
-            await _loginLockoutService.ResetAttemptsAsync(user.Id, command.Email, ct);
+            await _loginLockoutService.ResetAttemptsAsync(user.Id, command.Identifier, ct);
         }
 
         GeneratedJwtToken generatedToken =

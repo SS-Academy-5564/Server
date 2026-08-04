@@ -69,9 +69,9 @@ public class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result>
             ), ct);
             await uow.CommitAsync(ct);
         }
-        catch (DuplicateKeyException ex)
+        catch (DuplicateKeyException)
         {
-            return Result.Fail(new ConflictError($"A user with this {ex.FieldName} already exists."));
+            return Result.Ok();
         }
 
         return Result.Ok();

@@ -1,3 +1,4 @@
+using System.Net;
 using FluentAssertions;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
@@ -132,6 +133,8 @@ public class LoginControllerTests
             .Setup(x => x.HandleAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(loginResult));
 
+        _sut.ControllerContext.HttpContext.Connection.RemoteIpAddress = IPAddress.Parse("127.0.0.1");
+
         // Act
         await _sut.LoginAsync(request, CancellationToken.None);
 
@@ -140,7 +143,8 @@ public class LoginControllerTests
             x => x.HandleAsync(
                 It.Is<LoginCommand>(cmd =>
                     cmd.Email == request.Email &&
-                    cmd.Password == request.Password),
+                    cmd.Password == request.Password &&
+                    cmd.Identifier == "127.0.0.1"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }

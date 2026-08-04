@@ -73,10 +73,10 @@ public class LoginHandlerTests
             0,
             false);
 
-        LoginCommand command = new(email, password);
+        LoginCommand command = new(email, password, "127.0.0.1");
 
         _userQueriesMock
-            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
 
         _passwordHasherMock
@@ -120,7 +120,7 @@ public class LoginHandlerTests
             false);
 
         _userQueriesMock
-            .Setup(x => x.GetByEmailForAuthAsync(userRecord.Email, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByEmailForAuthAsync(userRecord.Email, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
         _passwordHasherMock
             .Setup(x => x.VerifyHashedPassword(userRecord.PasswordHash, "Password123"))
@@ -134,13 +134,13 @@ public class LoginHandlerTests
 
         // Act
         Result<LoginResult> result = await _sut.HandleAsync(
-            new LoginCommand(userRecord.Email, "Password123"),
+            new LoginCommand(userRecord.Email, "Password123", "127.0.0.1"),
             CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         _loginLockoutServiceMock.Verify(
-            x => x.ResetAttemptsAsync(userId, It.IsAny<string>(), CancellationToken.None),
+            x => x.ResetAttemptsAsync(userId, "127.0.0.1", CancellationToken.None),
             Times.Once);
     }
 
@@ -150,10 +150,10 @@ public class LoginHandlerTests
         // Arrange
         string email = "notfound@example.com";
         string password = "Password123";
-        LoginCommand command = new(email, password);
+        LoginCommand command = new(email, password, "127.0.0.1");
 
         _userQueriesMock
-            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserAuthRecord?)null);
 
         // Act
@@ -186,10 +186,10 @@ public class LoginHandlerTests
             0,
             false);
 
-        LoginCommand command = new(email, password);
+        LoginCommand command = new(email, password, "127.0.0.1");
 
         _userQueriesMock
-            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
 
         _passwordHasherMock
@@ -205,6 +205,9 @@ public class LoginHandlerTests
 
         UnauthorizedError error = result.Errors.First().Should().BeOfType<UnauthorizedError>().Subject;
         error.Message.Should().Be("Invalid email or password.");
+        _loginLockoutServiceMock.Verify(
+            x => x.AddFailedAttemptAsync(userRecord.Id, command.Identifier, CancellationToken.None),
+            Times.Once);
     }
 
     [Fact]
@@ -224,12 +227,12 @@ public class LoginHandlerTests
             true);
 
         _userQueriesMock
-            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
 
         // Act
         Result<LoginResult> result = await _sut.HandleAsync(
-            new LoginCommand(email, "Password123"),
+            new LoginCommand(email, "Password123", "127.0.0.1"),
             CancellationToken.None);
 
         // Assert
