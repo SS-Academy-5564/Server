@@ -53,7 +53,7 @@ public class PollingService : IPollingService
         {
             ct.ThrowIfCancellationRequested();
 
-            var monitorsResult = await ProcessMonitorAsync(monitor, ct);
+            Result<UpdateMonitorAfterPollInput> monitorsResult = await ProcessMonitorAsync(monitor, ct);
             monitorsResults.Add(monitorsResult.Value);
         }
 

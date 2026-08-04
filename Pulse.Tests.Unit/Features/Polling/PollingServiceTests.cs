@@ -139,7 +139,7 @@ public class PollingServiceTests
             .ReturnsAsync((MonitorPollingRecord?)null);
 
         // Act
-        Result result = await _service.ProcessMonitorAsync(monitorId, CancellationToken.None);
+        Result<UpdateMonitorAfterPollInput> result = await _service.ProcessMonitorAsync(monitorId, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -175,7 +175,7 @@ public class PollingServiceTests
             .Returns(true);
 
         // Act
-        Result result = await _service.ProcessMonitorAsync(monitorId, CancellationToken.None);
+        Result<UpdateMonitorAfterPollInput> result = await _service.ProcessMonitorAsync(monitorId, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

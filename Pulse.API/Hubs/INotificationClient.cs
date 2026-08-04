@@ -1,4 +1,3 @@
-using Pulse.BL.Features.Monitors;
 using Pulse.DAL.Commands.Monitors;
 
 namespace Pulse.API.Hubs;

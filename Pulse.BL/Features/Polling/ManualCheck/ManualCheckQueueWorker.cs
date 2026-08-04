@@ -1,9 +1,10 @@
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Notifications;
-using Pulse.BL.Features.Monitors;
 using Pulse.BL.Features.Polling.ManualCheck.Queue;
+using Pulse.DAL.Commands.Monitors;
 
 namespace Pulse.BL.Features.Polling.ManualCheck;
 
@@ -44,10 +45,10 @@ public sealed class ManualCheckQueueWorker : BackgroundService
             {
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
-                var monitor = await pollingService.ProcessMonitorAsync(monitorId, stoppingToken);
+                Result<UpdateMonitorAfterPollInput> monitor = await pollingService.ProcessMonitorAsync(monitorId, stoppingToken);
 
-                var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-                await notificationService.NotifyAsync(monitor.Value,stoppingToken);
+                INotificationService notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                await notificationService.NotifyAsync(monitor.Value, stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
