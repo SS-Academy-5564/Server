@@ -6,7 +6,7 @@ namespace Pulse.BL.Features.Polling;
 
 public interface IPollingService
 {
-    Task<Result<List<MonitorUpdate>>> ProcessDueMonitorsAsync(CancellationToken stoppingToken);
-    Task<Result<MonitorUpdate>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct);
-    Task<Result<MonitorUpdate>> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default);
+    Task<Result> ProcessDueMonitorsAsync(CancellationToken stoppingToken);
+    Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct);
+    Task<Result> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default);
 }

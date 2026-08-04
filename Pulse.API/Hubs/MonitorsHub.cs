@@ -51,8 +51,8 @@ public interface INotificationClient
 
 public interface INotificationService
 {
-    Task NotifyAsync(MonitorUpdate update, CancellationToken ct);
-    Task NotifyAsync(List<MonitorUpdate> update, CancellationToken ct);
+    Task NotifyAsync(MonitorListResult update, CancellationToken ct);
+    Task NotifyAsync(List<MonitorListResult> update, CancellationToken ct);
 }
 
 public class MonitorUpdate: INotificationService
@@ -66,13 +66,13 @@ public class MonitorUpdate: INotificationService
         _userService = userService;
     }
 
-    public async Task NotifyAsync(MonitorUpdate update, CancellationToken ct)
+    public async Task NotifyAsync(MonitorListResult update, CancellationToken ct)
     {
         Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
         await _hubContext.Clients.Groups(organizationId.ToString()).SendUpdatedMonitorAsync(update);
     }
 
-    public async Task NotifyAsync(List<MonitorUpdate> update, CancellationToken ct)
+    public async Task NotifyAsync(List<MonitorListResult> update, CancellationToken ct)
     {
         Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
         await _hubContext.Clients.Groups(organizationId.ToString()).SendUpdatedMonitorsAsync(update);

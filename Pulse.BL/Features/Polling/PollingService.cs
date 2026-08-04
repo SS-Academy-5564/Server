@@ -45,22 +45,20 @@ public class PollingService : IPollingService
         _monitorPollResultCommands = monitorPollResultCommands;
     }
 
-    public async Task<Result<List<MonitorUpdate>>>  ProcessDueMonitorsAsync(CancellationToken ct = default)
+    public async Task<Result>  ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
         IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
-        List<MonitorUpdate> mul = new();
         foreach (MonitorPollingRecord monitor in monitors)
         {
             ct.ThrowIfCancellationRequested();
 
-            var mu = await ProcessMonitorAsync(monitor, ct);
-            mul.Add(mu.Value);
+            await ProcessMonitorAsync(monitor, ct);
         }
 
-        return Result.Ok(mul);
+        return Result.Ok();
     }
 
-    public async Task<Result<MonitorUpdate>> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
+    public async Task<Result> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
     {
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(monitorId, ct);
 
@@ -69,20 +67,18 @@ public class PollingService : IPollingService
             return Result.Fail(new NotFoundError($"Monitor '{monitorId}' was not found."));
         }
 
-        return await ProcessMonitorAsync(monitor, ct);
+         await ProcessMonitorAsync(monitor, ct);
     }
 
-    public async Task<Result<MonitorUpdate>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
+    public async Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
     {
-        MonitorUpdate mu = new();
-
         try
         {
             CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
             var monitorAfterPollInput = UpdateMonitorAfterPollInput(monitor, monitorPollResults);
             await SavePollResultAsync(monitorAfterPollInput, monitorPollResults, ct);
 
-            return Result.Ok(monitorAfterPollInput);
+            return Result.Ok();
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
