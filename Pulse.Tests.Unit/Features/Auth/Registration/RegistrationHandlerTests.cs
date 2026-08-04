@@ -40,7 +40,7 @@ public class RegistrationHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_EmailAlreadyExists_ReturnsFailResult()
+    public async Task HandleAsync_EmailAlreadyExists_ReturnsSuccessResultWithoutCreatingUser()
     {
         _userQueries
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -48,7 +48,7 @@ public class RegistrationHandlerTests
 
         Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
-        result.IsFailed.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
         _userCommands.Verify(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

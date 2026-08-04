@@ -87,7 +87,8 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
         DateTimeOffset now = _timeProvider.GetUtcNow();
         DateTimeOffset expiresAt = now.AddMinutes(_options.CodeTtlMinutes);
 
-        // Send the email first
+        await _codeCommands.ReplaceAsync(new PasswordResetCodeInput(userId.Value, codeHash, expiresAt, now), ct);
+
         Result emailResult = await _emailService.SendEmailAsync(new SendEmailDto(
             To: [command.Email],
             Subject: PasswordResetEmailBuilder.BuildSubject(language),
@@ -102,9 +103,6 @@ public class SendPasswordResetCodeHandler : IAsyncHandler<SendPasswordResetCodeC
 
             return Result.Ok(new SendCodeResult(_options.ResendCooldownSeconds));
         }
-
-        // Transactionally replace any existing codes for this user with a fresh one ONLY after successful email
-        await _codeCommands.ReplaceAsync(new PasswordResetCodeInput(userId.Value, codeHash, expiresAt, now), ct);
 
         _logger.LogInformation(
             "Password reset code issued. Identifier: {Identifier}",

@@ -99,7 +99,7 @@ public class LoginHandlerTests
         result.Value.ExpiresAt.Should().Be(expiresAt);
         result.Value.RefreshToken.Should().Be("raw_refresh_token");
         _loginLockoutServiceMock.Verify(
-            x => x.ResetAttemptsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            x => x.ResetAttemptsAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -140,7 +140,7 @@ public class LoginHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         _loginLockoutServiceMock.Verify(
-            x => x.ResetAttemptsAsync(userId, CancellationToken.None),
+            x => x.ResetAttemptsAsync(userId, It.IsAny<string>(), CancellationToken.None),
             Times.Once);
     }
 

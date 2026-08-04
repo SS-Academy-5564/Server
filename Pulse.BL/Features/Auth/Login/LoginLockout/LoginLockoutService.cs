@@ -18,18 +18,19 @@ public class LoginLockoutService : ILoginLockoutService
     }
 
     /// <inheritdoc/>
-    public Task AddFailedAttemptAsync(Guid userId, CancellationToken ct)
+    public Task AddFailedAttemptAsync(Guid userId, string identifier, CancellationToken ct)
     {
         return _userLoginLockoutCommands.AddFailedAttemptAsync(
             userId,
+            identifier,
             _options.MaxFailedAttempts,
             _options.LockoutDurationMinutes,
             ct);
     }
 
     /// <inheritdoc/>
-    public async Task ResetAttemptsAsync(Guid userId, CancellationToken ct)
+    public async Task ResetAttemptsAsync(Guid userId, string identifier, CancellationToken ct)
     {
-        await _userLoginLockoutCommands.ResetAttemptsAsync(userId, ct);
+        await _userLoginLockoutCommands.ResetAttemptsAsync(userId, identifier, ct);
     }
 }

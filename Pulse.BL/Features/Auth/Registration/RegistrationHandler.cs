@@ -46,7 +46,7 @@ public class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result>
 
         if (userExists)
         {
-            return Result.Fail(new ConflictError("A user with this Email already exists."));
+            return Result.Ok();
         }
 
         string passwordHash = _passwordHasher.HashPassword(command.Password);

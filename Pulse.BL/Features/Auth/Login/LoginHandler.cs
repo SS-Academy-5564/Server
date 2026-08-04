@@ -78,14 +78,14 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
 
         if (!passwordValid)
         {
-            await _loginLockoutService.AddFailedAttemptAsync(user.Id, ct);
+            await _loginLockoutService.AddFailedAttemptAsync(user.Id, command.Email, ct);
             LogFailure("invalid password", command.Email);
             return Result.Fail(new UnauthorizedError("Invalid email or password."));
         }
 
         if (user.FailedAttempts > 0)
         {
-            await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
+            await _loginLockoutService.ResetAttemptsAsync(user.Id, command.Email, ct);
         }
 
         GeneratedJwtToken generatedToken =
