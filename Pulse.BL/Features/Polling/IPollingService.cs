@@ -1,11 +1,12 @@
 using FluentResults;
+using Pulse.DAL.Commands.Monitors;
 using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.BL.Features.Polling;
 
 public interface IPollingService
 {
-    Task<Result> ProcessDueMonitorsAsync(CancellationToken stoppingToken);
-    Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct);
-    Task<Result> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default);
+    Task<Result<List<UpdateMonitorAfterPollInput>>> ProcessDueMonitorsAsync(CancellationToken stoppingToken);
+    Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct);
+    Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default);
 }

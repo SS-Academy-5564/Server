@@ -34,7 +34,6 @@ public sealed class PulseNotificationHub : Hub<INotificationClient>
     /// <param name="monitors"></param>
     public async Task<List<MonitorListResult>> SendUpdatedMonitorsAsync(List<MonitorListResult> monitors)
     {
-
         return monitors;
     }
 }

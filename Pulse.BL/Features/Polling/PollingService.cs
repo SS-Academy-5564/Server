@@ -44,20 +44,23 @@ public class PollingService : IPollingService
         _monitorPollResultCommands = monitorPollResultCommands;
     }
 
-    public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
+    public async Task<Result<List<UpdateMonitorAfterPollInput>>> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
         IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+        List<UpdateMonitorAfterPollInput> monitorsResults = new();
+
         foreach (MonitorPollingRecord monitor in monitors)
         {
             ct.ThrowIfCancellationRequested();
 
-            await ProcessMonitorAsync(monitor, ct);
+            var monitorsResult = await ProcessMonitorAsync(monitor, ct);
+            monitorsResults.Add(monitorsResult.Value);
         }
 
-        return Result.Ok();
+        return Result.Ok(monitorsResults);
     }
 
-    public async Task<Result> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
+    public async Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
     {
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(monitorId, ct);
 
@@ -69,7 +72,7 @@ public class PollingService : IPollingService
         return await ProcessMonitorAsync(monitor, ct);
     }
 
-    public async Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
+    public async Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
     {
         try
         {
@@ -77,7 +80,7 @@ public class PollingService : IPollingService
             UpdateMonitorAfterPollInput monitorAfterPollInput = UpdateMonitorAfterPollInput(monitor, monitorPollResults);
             await SavePollResultAsync(monitorAfterPollInput, monitorPollResults, ct);
 
-            return Result.Ok();
+            return Result.Ok(monitorAfterPollInput);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
