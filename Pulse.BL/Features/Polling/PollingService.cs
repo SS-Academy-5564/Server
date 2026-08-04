@@ -5,7 +5,6 @@ using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.Options;
-using Pulse.BL.Features.Polling.UpdateNotifier;
 using Pulse.DAL.Commands.MonitorPollResults;
 using Pulse.DAL.Commands.Monitors;
 using Pulse.DAL.Common.Constants;
@@ -67,7 +66,7 @@ public class PollingService : IPollingService
             return Result.Fail(new NotFoundError($"Monitor '{monitorId}' was not found."));
         }
 
-         await ProcessMonitorAsync(monitor, ct);
+        return await ProcessMonitorAsync(monitor, ct);
     }
 
     public async Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)

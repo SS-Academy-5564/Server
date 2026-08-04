@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Options;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Options;
-using Pulse.BL.Features.Polling.UpdateNotifier;
 
 namespace Pulse.Worker.Polling;
 
@@ -33,10 +32,6 @@ public sealed class PollerWorker : BackgroundService
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
 
                 var result = await pollingService.ProcessDueMonitorsAsync(stoppingToken);
-                var updatedMonitors = result.Value;
-
-                IMonitorUpdateNotifier notifier = scope.ServiceProvider.GetRequiredService<IMonitorUpdateNotifier>();
-                await notifier.NotifyAsync(updatedMonitors,stoppingToken);
             }
             catch (OperationCanceledException) when (
                 stoppingToken.IsCancellationRequested)
