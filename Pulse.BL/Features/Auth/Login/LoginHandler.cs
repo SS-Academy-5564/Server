@@ -88,6 +88,12 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
             await _loginLockoutService.ResetAttemptsAsync(user.Id, ct);
         }
 
+        if (user.EmailVerifiedAt is null)
+        {
+            LogFailure("email not verified", command.Email);
+            return Result.Fail(new EmailNotVerifiedError());
+        }
+
         GeneratedJwtToken generatedToken =
             _jwtTokenGenerator.GenerateToken(user.Id, user.RoleName, user.OrganizationId, user.OrganizationName);
 

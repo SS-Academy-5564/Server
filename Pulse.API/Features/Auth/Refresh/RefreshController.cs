@@ -54,6 +54,7 @@ public class RefreshController : PulseControllerBase
     [HttpPost("refresh")]
     [Consumes("application/json")]
     [EnableRateLimiting(RateLimitPolicies.Refresh)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<ApiResponse<LoginResponse>>> RefreshAsync(CancellationToken ct)
     {
         string? refreshToken = Request.Cookies[CookieConstants.RefreshTokenCookieName];

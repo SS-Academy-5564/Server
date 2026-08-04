@@ -34,7 +34,8 @@ public class UserQueries : IUserQueries
             new CommandDefinition(
                 "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, r.Name AS RoleName, o.Name AS OrganizationName, " +
                 "COALESCE(ula.FailedAttempts, 0) AS FailedAttempts, " +
-                "CAST(CASE WHEN ula.LockedUntil > SYSUTCDATETIME() THEN 1 ELSE 0 END AS BIT) AS IsLocked " +
+                "CAST(CASE WHEN ula.LockedUntil > SYSUTCDATETIME() THEN 1 ELSE 0 END AS BIT) AS IsLocked, " +
+                "u.EmailVerifiedAt " +
                 "FROM Users u " +
                 "JOIN Members m ON m.UserId = u.Id " +
                 "JOIN Roles r ON r.Id = m.RoleId " +
@@ -55,7 +56,8 @@ public class UserQueries : IUserQueries
             new CommandDefinition(
                 "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, r.Name AS RoleName, o.Name AS OrganizationName, " +
                 "COALESCE(ula.FailedAttempts, 0) AS FailedAttempts, " +
-                "CAST(CASE WHEN ula.LockedUntil > SYSUTCDATETIME() THEN 1 ELSE 0 END AS BIT) AS IsLocked " +
+                "CAST(CASE WHEN ula.LockedUntil > SYSUTCDATETIME() THEN 1 ELSE 0 END AS BIT) AS IsLocked, " +
+                "u.EmailVerifiedAt " +
                 "FROM Users u " +
                 "JOIN Members m ON m.UserId = u.Id " +
                 "JOIN Roles r ON r.Id = m.RoleId " +
