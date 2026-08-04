@@ -33,6 +33,7 @@ public sealed class EmailVerificationController : PulseControllerBase
     /// <returns>200 OK for a valid token, 400 for invalid or expired tokens, or 409 when already used.</returns>
     [HttpPost("verify")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> VerifyAsync([Validate] VerifyEmailRequest request, CancellationToken ct)
     {

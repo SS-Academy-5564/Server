@@ -204,6 +204,10 @@ public class RegistrationHandlerTests
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     {
+        /// <summary>
+        /// Gets the current UTC time.
+        /// </summary>
+        /// <returns>The fixed UTC time.</returns>
         public override DateTimeOffset GetUtcNow() => now;
     }
 }

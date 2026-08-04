@@ -13,9 +13,9 @@ internal static class EmailVerificationEmailBuilder
     private static readonly Template HtmlTemplate = LoadTemplate(HtmlResourceName);
     private static readonly Template PlainTextTemplate = LoadTemplate(PlainTextResourceName);
 
-    public static string BuildSubject() => "Verify your Pulse email address";
+    internal static string BuildSubject() => "Verify your Pulse email address";
 
-    public static string BuildHtmlBody(string verificationUrl, int tokenLifetimeHours)
+    internal static string BuildHtmlBody(string verificationUrl, int tokenLifetimeHours)
         => HtmlTemplate.Render(new
         {
             verification_url = WebUtility.HtmlEncode(verificationUrl),
@@ -23,7 +23,7 @@ internal static class EmailVerificationEmailBuilder
             hour_label = tokenLifetimeHours == 1 ? "hour" : "hours"
         });
 
-    public static string BuildPlainTextBody(string verificationUrl, int tokenLifetimeHours)
+    internal static string BuildPlainTextBody(string verificationUrl, int tokenLifetimeHours)
         => PlainTextTemplate.Render(new
         {
             verification_url = verificationUrl,
@@ -31,7 +31,7 @@ internal static class EmailVerificationEmailBuilder
             hour_label = tokenLifetimeHours == 1 ? "hour" : "hours"
         });
 
-    public static string BuildVerificationUrl(string verificationPageUrl, string token)
+    internal static string BuildVerificationUrl(string verificationPageUrl, string token)
     {
         UriBuilder builder = new(verificationPageUrl);
         string existingQuery = builder.Query.TrimStart('?');
