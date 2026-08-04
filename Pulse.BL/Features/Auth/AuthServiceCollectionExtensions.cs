@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Common.Security.Tokens;
+using Pulse.BL.Features.Auth.EmailVerification;
 using Pulse.BL.Features.Auth.Login.LoginLockout;
 using Pulse.BL.Features.Auth.PasswordReset;
 
@@ -23,6 +24,7 @@ public static class AuthServiceCollectionExtensions
     {
         services.AddTransient<IPasswordHasher, PasswordHasher>();
         services.AddTransient<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddTransient<IEmailVerificationTokenService, EmailVerificationTokenService>();
         services.AddScoped<ILoginLockoutService, LoginLockoutService>();
 
         services.AddSingleton<IValidateOptions<LoginLockoutOptions>, LoginLockoutOptionsValidator>();
@@ -40,6 +42,12 @@ public static class AuthServiceCollectionExtensions
         services
             .AddOptions<PasswordResetOptions>()
             .Bind(configuration.GetRequiredSection(PasswordResetOptions.SectionName))
+            .ValidateOnStart();
+
+        services.AddSingleton<IValidateOptions<EmailVerificationOptions>, EmailVerificationOptionsValidator>();
+        services
+            .AddOptions<EmailVerificationOptions>()
+            .Bind(configuration.GetRequiredSection(EmailVerificationOptions.SectionName))
             .ValidateOnStart();
 
         return services;

@@ -7,6 +7,33 @@ internal static class ResultMapper
 {
     internal static (int StatusCode, object Body) Map(ResultBase result)
     {
+        if (result.HasError<EmailNotVerifiedError>())
+        {
+            EmailNotVerifiedError error = result.Errors.OfType<EmailNotVerifiedError>().First();
+            return BuildErrorResponse(403, error.Code, error.Message);
+        }
+
+        if (result.HasError<AlreadyUsedEmailVerificationTokenError>())
+        {
+            AlreadyUsedEmailVerificationTokenError error = result.Errors
+                .OfType<AlreadyUsedEmailVerificationTokenError>().First();
+            return BuildErrorResponse(409, error.Code, error.Message);
+        }
+
+        if (result.HasError<InvalidEmailVerificationTokenError>())
+        {
+            InvalidEmailVerificationTokenError error = result.Errors
+                .OfType<InvalidEmailVerificationTokenError>().First();
+            return BuildErrorResponse(400, error.Code, error.Message);
+        }
+
+        if (result.HasError<ExpiredEmailVerificationTokenError>())
+        {
+            ExpiredEmailVerificationTokenError error = result.Errors
+                .OfType<ExpiredEmailVerificationTokenError>().First();
+            return BuildErrorResponse(400, error.Code, error.Message);
+        }
+
         if (result.HasError<ForbiddenError>())
         {
             ForbiddenError error = result.Errors.OfType<ForbiddenError>().First();
