@@ -1,5 +1,4 @@
 using FluentResults;
-using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.DAL.Commands.Members;
