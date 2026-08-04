@@ -139,16 +139,15 @@ public static class ServiceCollectionExtensions
 
                     rateLimiterOptions.AddPolicy(RateLimitPolicies.Registration, context =>
                     {
-                        RateLimitRuleOptions registrationRateLimit = rateLimitRules.Get(RateLimitSections.Registration);
+                        RateLimitRuleOptions registrationRateLimit =
+                            rateLimitRules.Get(RateLimitSections.Registration);
 
-                        return RateLimitPartition.GetTokenBucketLimiter(
+                        return RateLimitPartition.GetFixedWindowLimiter(
                             partitionKey: GetClientIdentifier(context),
-                            factory: _ => new TokenBucketRateLimiterOptions
+                            factory: _ => new FixedWindowRateLimiterOptions
                             {
-                                TokenLimit = registrationRateLimit.MaxAttempts,
-                                TokensPerPeriod = 1,
-                                ReplenishmentPeriod = TimeSpan.FromSeconds(
-                                    registrationRateLimit.PeriodMinutes * 60.0 / registrationRateLimit.MaxAttempts),
+                                PermitLimit = registrationRateLimit.MaxAttempts,
+                                Window = TimeSpan.FromMinutes(registrationRateLimit.PeriodMinutes),
                                 QueueLimit = 0,
                                 AutoReplenishment = true
                             });
@@ -169,21 +168,31 @@ public static class ServiceCollectionExtensions
                     rateLimiterOptions.OnRejected = async (onRejectedContext, cancellationToken) =>
                     {
                         HttpContext httpContext = onRejectedContext.HttpContext;
+
                         httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                         httpContext.Response.ContentType = "application/json";
 
-                        string retryMessage = onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter)
-                            ? $"Please try again in {retryAfter.TotalSeconds:F0} seconds."
-                            : "Please wait before trying again.";
+                        string retryMessage;
 
-                        // Use a monitor-specific message for manual-monitor triggers, but
-                        // provide a generic rate-limit text for other endpoints to avoid
-                        // confusing users with unrelated wording.
-                        string prefix = httpContext.Request.Path.StartsWithSegments("/api/monitors", StringComparison.OrdinalIgnoreCase)
-                            ? "Manual check was already triggered recently."
-                            : "Too many requests.";
+                        if (onRejectedContext.Lease.TryGetMetadata(
+                                MetadataName.RetryAfter,
+                                out TimeSpan retryAfter))
+                        {
+                            httpContext.Response.Headers.RetryAfter =
+                                ((int)retryAfter.TotalSeconds).ToString();
 
-                        string message = $"{prefix} {retryMessage}";
+                            retryMessage = $"Please try again in {retryAfter.TotalSeconds:N0} seconds.";
+                        }
+                        else
+                        {
+                            retryMessage = "Please try again later.";
+                        }
+
+                        string message = httpContext.Request.Path.StartsWithSegments(
+                                "/api/monitors",
+                                StringComparison.OrdinalIgnoreCase)
+                            ? $"Manual check was already triggered recently. {retryMessage}"
+                            : $"Too many requests. {retryMessage}";
 
                         await httpContext.Response.WriteAsJsonAsync(new ApiResponse
                         {
