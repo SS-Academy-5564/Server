@@ -44,7 +44,7 @@ public class PollingService : IPollingService
         _monitorPollResultCommands = monitorPollResultCommands;
     }
 
-    public async Task<Result>  ProcessDueMonitorsAsync(CancellationToken ct = default)
+    public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
         IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
         foreach (MonitorPollingRecord monitor in monitors)
@@ -74,7 +74,7 @@ public class PollingService : IPollingService
         try
         {
             CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
-            var monitorAfterPollInput = UpdateMonitorAfterPollInput(monitor, monitorPollResults);
+            UpdateMonitorAfterPollInput monitorAfterPollInput = UpdateMonitorAfterPollInput(monitor, monitorPollResults);
             await SavePollResultAsync(monitorAfterPollInput, monitorPollResults, ct);
 
             return Result.Ok();

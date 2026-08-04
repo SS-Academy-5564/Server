@@ -202,7 +202,7 @@ public static class ServiceCollectionExtensions
 
         public IServiceCollection AddPulseSignalR()
         {
-            services.AddTransient<INotificationService,MonitorUpdate>();
+            services.AddTransient<INotificationService, MonitorUpdate>();
             services.AddSignalR();
 
             return services;

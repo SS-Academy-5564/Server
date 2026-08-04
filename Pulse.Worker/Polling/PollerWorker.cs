@@ -1,3 +1,4 @@
+using FluentResults;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Options;
@@ -31,7 +32,7 @@ public sealed class PollerWorker : BackgroundService
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
 
-                var result = await pollingService.ProcessDueMonitorsAsync(stoppingToken);
+                Result result = await pollingService.ProcessDueMonitorsAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (
                 stoppingToken.IsCancellationRequested)

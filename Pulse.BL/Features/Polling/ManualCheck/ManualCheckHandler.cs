@@ -23,6 +23,12 @@ public sealed class ManualCheckHandler : IAsyncHandler<ManualCheckCommand, Resul
         _logger = logger;
     }
 
+    /// <summary>
+    /// Tries adding the monitor into the queue
+    /// </summary>
+    /// <param name="command"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public async Task<Result> HandleAsync(ManualCheckCommand command, CancellationToken ct = default)
     {
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(command.MonitorId, ct);
@@ -40,6 +46,7 @@ public sealed class ManualCheckHandler : IAsyncHandler<ManualCheckCommand, Resul
         }
 
         _logger.LogInformation("Manual check enqueued. MonitorId: {MonitorId}", command.MonitorId);
+
         return Result.Ok();
     }
 }
