@@ -176,6 +176,15 @@ public static class ServiceCollectionExtensions
                             ? $"Please try again in {retryAfter.TotalSeconds:F0} seconds."
                             : "Please wait before trying again.";
 
+                        // Use a monitor-specific message for manual-monitor triggers, but
+                        // provide a generic rate-limit text for other endpoints to avoid
+                        // confusing users with unrelated wording.
+                        string prefix = httpContext.Request.Path.StartsWithSegments("/api/monitors", StringComparison.OrdinalIgnoreCase)
+                            ? "Manual check was already triggered recently."
+                            : "Too many requests.";
+
+                        string message = $"{prefix} {retryMessage}";
+
                         await httpContext.Response.WriteAsJsonAsync(new ApiResponse
                         {
                             Success = false,
@@ -184,7 +193,7 @@ public static class ServiceCollectionExtensions
                                 new ApiError
                                 {
                                     Code = RateLimitErrorCodes.RateLimited,
-                                    Message = $"Manual check was already triggered recently. {retryMessage}"
+                                    Message = message
                                 }
                             ]
                         }, cancellationToken);

@@ -36,7 +36,7 @@ public class LoginLockoutServiceTests
         // Assert
         _commands.Verify(x => x.AddFailedAttemptAsync(
             userId,
-            It.IsAny<string>(),
+            "127.0.0.1",
             5,
             15,
             CancellationToken.None), Times.Once);

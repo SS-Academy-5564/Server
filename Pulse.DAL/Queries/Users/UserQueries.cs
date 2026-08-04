@@ -50,17 +50,17 @@ public class UserQueries : IUserQueries
     public async Task<UserAuthRecord?> GetByIdForAuthAsync(Guid id, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
-
+        // Do not join per-identifier UserLoginAttempts here — refresh flows do not
+        // have a client identifier and must not be gated by identifier-scoped
+        // lockout state. Return zero/false for attempt/lock fields instead.
         return await connection.QuerySingleOrDefaultAsync<UserAuthRecord>(
             new CommandDefinition(
                 "SELECT TOP(1) u.Id, u.Email, u.PasswordHash, m.OrganizationId, r.Name AS RoleName, o.Name AS OrganizationName, " +
-                "COALESCE(ula.FailedAttempts, 0) AS FailedAttempts, " +
-                "CAST(CASE WHEN ula.LockedUntil > SYSUTCDATETIME() THEN 1 ELSE 0 END AS BIT) AS IsLocked " +
+                "0 AS FailedAttempts, CAST(0 AS BIT) AS IsLocked " +
                 "FROM Users u " +
                 "JOIN Members m ON m.UserId = u.Id " +
                 "JOIN Roles r ON r.Id = m.RoleId " +
                 "JOIN Organizations o ON o.Id = m.OrganizationId " +
-                "LEFT JOIN UserLoginAttempts ula ON ula.UserId = u.Id " +
                 "WHERE u.Id = @Id " +
                 "ORDER BY m.JoinedAt DESC",
                 new { Id = id },
