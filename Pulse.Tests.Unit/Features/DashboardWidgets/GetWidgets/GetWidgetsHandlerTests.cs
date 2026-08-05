@@ -36,7 +36,7 @@ public class GetWidgetsHandlerTests
     }
 
     private static GetWidgetsQuery ValidQuery()
-        => new(Guid.Parse("929ACDAA-A91E-4C60-95F7-E770D2BEDC77"));
+        => new(Guid.Parse("00000000-0000-0000-0000-000000000001"));
 
     [Fact]
     public async Task HandleAsync_ReturnsWidgets()
@@ -69,7 +69,7 @@ public class GetWidgetsHandlerTests
         result.Value.Should().HaveCount(1);
         result.Value[0].Type.Should().Be("LineChart");
         result.Value[0].Metric.Should().Be("ResponseTime");
-        result.Value[0].TimeRange.Should().Be("Last24Hours");
+        result.Value[0].TimeRange.Should().Be("24h");
         result.Value[0].Settings.Should().Be("{}");
     }
 
@@ -86,7 +86,7 @@ public class GetWidgetsHandlerTests
         await _sut.HandleAsync(ValidQuery(), CancellationToken.None);
 
         _queriesMock.Verify(x => x.GetByTabIdAsync(
-            Guid.Parse("929ACDAA-A91E-4C60-95F7-E770D2BEDC77"),
+            Guid.Parse("00000000-0000-0000-0000-000000000001"),
             Guid.Parse("B1000000-0000-0000-0000-000000000001"),
             It.IsAny<CancellationToken>()),
             Times.Once);

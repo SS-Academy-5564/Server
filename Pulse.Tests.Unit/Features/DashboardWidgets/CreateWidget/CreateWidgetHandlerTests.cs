@@ -74,10 +74,10 @@ public class CreateWidgetHandlerTests
 
         _commandsMock.Verify(x => x.CreateAsync(
             It.Is<CreateWidgetInput>(i =>
-                i.DashboardTabId == Guid.Parse("929ACDAA-A91E-4C60-95F7-E770D2BEDC77") &&
+                i.DashboardTabId == Guid.Parse("00000000-0000-0000-0000-000000000001") &&
                 i.Type == "LineChart" &&
                 i.Metric == "ResponseTime" &&
-                i.TimeRange == "Last24Hours" &&
+                i.TimeRange == "24h" &&
                 i.Settings == "{}" &&
                 i.OrganizationId == Guid.Parse("B1000000-0000-0000-0000-000000000001")),
             It.IsAny<CancellationToken>()),
