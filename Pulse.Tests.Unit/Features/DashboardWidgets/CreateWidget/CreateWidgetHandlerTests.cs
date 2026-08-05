@@ -41,12 +41,15 @@ public class CreateWidgetHandlerTests
     }
 
     private static CreateWidgetCommand ValidCommand()
-        => new(
-            Guid.Parse("929ACDAA-A91E-4C60-95F7-E770D2BEDC77"),
-            "LineChart",
-            "ResponseTime",
-            "Last24Hours",
-            "{}");
+    => new(
+        Guid.Parse("00000000-0000-0000-0000-000000000001"),
+        "LineChart",
+        "Response Time",
+        "Last 24 Hours",
+        "ResponseTime",
+        "24h",
+        "{}"
+    );
 
     [Fact]
     public async Task HandleAsync_ValidCommand_ReturnsCreatedWidget()

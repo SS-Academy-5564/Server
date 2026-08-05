@@ -29,9 +29,12 @@ public class CreateWidgetController : PulseControllerBase
         CreateWidgetCommand command = new(
             request.DashboardTabId,
             request.Type,
+            request.Title,
+            request.Subtitle,
             request.Metric,
             request.TimeRange,
-            request.Settings);
+            request.Settings
+        );
 
         Result<CreateWidgetResult> result = await _handler.HandleAsync(command, ct);
 

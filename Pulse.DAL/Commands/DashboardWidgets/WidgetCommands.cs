@@ -30,6 +30,8 @@ public class WidgetCommands : IWidgetCommands
                 DashboardTabId,
                 OrganizationId,
                 Type,
+                Title,
+                Subtitle,
                 Metric,
                 TimeRange,
                 Settings
@@ -41,6 +43,8 @@ public class WidgetCommands : IWidgetCommands
                 @DashboardTabId,
                 @OrganizationId,
                 @Type,
+                @Title,
+                @Subtitle,
                 @Metric,
                 @TimeRange,
                 @Settings
@@ -56,6 +60,8 @@ public class WidgetCommands : IWidgetCommands
                     input.DashboardTabId,
                     input.OrganizationId,
                     input.Type,
+                    input.Title,
+                    input.Subtitle,
                     input.Metric,
                     input.TimeRange,
                     input.Settings

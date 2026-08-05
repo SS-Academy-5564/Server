@@ -42,6 +42,8 @@ public class CreateWidgetHandler : IAsyncHandler<CreateWidgetCommand, Result<Cre
             new CreateWidgetInput(
                 command.DashboardTabId,
                 command.Type,
+                command.Title,
+                command.Subtitle,
                 command.Metric,
                 command.TimeRange,
                 command.Settings,

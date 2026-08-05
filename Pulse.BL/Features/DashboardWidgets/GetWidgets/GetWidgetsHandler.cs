@@ -49,9 +49,12 @@ public class GetWidgetsHandler
                 x.Id,
                 x.DashboardTabId,
                 x.Type,
+                x.Title,
+                x.Subtitle,
                 x.Metric,
                 x.TimeRange,
-                x.Settings
+                x.Settings,
+                x.Value
         )).ToList());
     }
 }

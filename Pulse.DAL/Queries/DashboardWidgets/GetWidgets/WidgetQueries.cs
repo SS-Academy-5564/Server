@@ -26,9 +26,12 @@ public class WidgetQueries : IWidgetQueries
             Id,
             DashboardTabId,
             Type,
+            Title,
+            Subtitle,
             Metric,
             TimeRange,
-            Settings
+            Settings,
+            CAST(NULL AS DECIMAL(18,2)) AS Value
         FROM dbo.DashboardWidgets
         WHERE DashboardTabId = @DashboardTabId
           AND OrganizationId = @OrganizationId;

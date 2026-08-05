@@ -6,6 +6,10 @@ CREATE TABLE DashboardWidgets
     OrganizationId UNIQUEIDENTIFIER NOT NULL,
 
     Type NVARCHAR(50) NOT NULL,
+
+    Title NVARCHAR(100) NULL,
+    Subtitle NVARCHAR(100) NULL,
+
     Metric NVARCHAR(100) NOT NULL,
     TimeRange NVARCHAR(50) NOT NULL,
 

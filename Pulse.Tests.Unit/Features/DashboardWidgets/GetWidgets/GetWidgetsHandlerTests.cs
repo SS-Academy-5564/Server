@@ -45,11 +45,14 @@ public class GetWidgetsHandlerTests
         [
             new(
                 Guid.NewGuid(),
-                Guid.Parse("929ACDAA-A91E-4C60-95F7-E770D2BEDC77"),
+                Guid.Parse("00000000-0000-0000-0000-000000000001"),
                 "LineChart",
                 "ResponseTime",
                 "Last24Hours",
-                "{}")
+                "ResponseTime",
+                "24h",
+                "{}",
+                123)
         ];
 
         _queriesMock
