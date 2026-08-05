@@ -9,7 +9,7 @@ public interface IManualCheckQueue
     /// Attempts to enqueue a monitor check without blocking the caller.
     /// </summary>
     /// <returns><see langword="false"/> when the queue is full.</returns>
-    bool TryEnqueue(ManualCheckJob job);
+    bool TryEnqueue(ManualCheckCommand command);
 
-    ValueTask<ManualCheckJob> DequeueAsync(CancellationToken ct);
+    ValueTask<ManualCheckCommand> DequeueAsync(CancellationToken ct);
 }

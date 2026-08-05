@@ -5,18 +5,18 @@ namespace Pulse.BL.Features.Polling.ManualCheck.Queue;
 
 public sealed class ManualCheckQueue : IManualCheckQueue
 {
-    private readonly Channel<ManualCheckJob> _channel;
+    private readonly Channel<ManualCheckCommand> _channel;
 
     public ManualCheckQueue(IOptions<ManualCheckQueueOptions> options)
     {
-        _channel = Channel.CreateBounded<ManualCheckJob>(new BoundedChannelOptions(options.Value.Capacity)
+        _channel = Channel.CreateBounded<ManualCheckCommand>(new BoundedChannelOptions(options.Value.Capacity)
         {
             FullMode = BoundedChannelFullMode.Wait,
             SingleReader = true,
         });
     }
 
-    public bool TryEnqueue(ManualCheckJob job) => _channel.Writer.TryWrite(job);
+    public bool TryEnqueue(ManualCheckCommand command) => _channel.Writer.TryWrite(command);
 
-    public ValueTask<ManualCheckJob> DequeueAsync(CancellationToken ct) => _channel.Reader.ReadAsync(ct);
+    public ValueTask<ManualCheckCommand> DequeueAsync(CancellationToken ct) => _channel.Reader.ReadAsync(ct);
 }

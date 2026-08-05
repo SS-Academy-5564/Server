@@ -21,25 +21,6 @@ public class ManualCheckHandlerTests
         => new(_monitorQueries.Object, _queue.Object, _currentUserService.Object, _logger);
 
     [Fact]
-    public async Task HandleAsync_WhenOrganizationIsMissing_ReturnsUnauthorizedAndDoesNotEnqueue()
-    {
-        // Arrange
-        ManualCheckHandler handler = CreateHandler();
-        _currentUserService.SetupGet(service => service.OrganizationId).Returns((Guid?)null);
-
-        // Act
-        Result result = await handler.HandleAsync(
-            new ManualCheckCommand(Guid.NewGuid()),
-            CancellationToken.None);
-
-        // Assert
-        result.IsFailed.Should().BeTrue();
-        result.Errors.Should().ContainSingle().Which.Should().BeOfType<UnauthorizedError>();
-        _monitorQueries.VerifyNoOtherCalls();
-        _queue.VerifyNoOtherCalls();
-    }
-
-    [Fact]
     public async Task HandleAsync_WhenMonitorDoesNotExist_ReturnsNotFoundAndDoesNotEnqueue()
     {
         // Arrange
@@ -53,14 +34,16 @@ public class ManualCheckHandlerTests
             .ReturnsAsync((MonitorPollingRecord?)null);
 
         // Act
-        Result result = await handler.HandleAsync(new ManualCheckCommand(monitorId), CancellationToken.None);
+        Result result = await handler.HandleAsync(
+            new ManualCheckCommand(monitorId, organizationId),
+            CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Errors.Should().ContainSingle();
         result.Errors[0].Should().BeOfType<NotFoundError>();
 
-        _queue.Verify(q => q.TryEnqueue(It.IsAny<ManualCheckJob>()), Times.Never);
+        _queue.Verify(q => q.TryEnqueue(It.IsAny<ManualCheckCommand>()), Times.Never);
     }
 
     [Fact]
@@ -85,15 +68,17 @@ public class ManualCheckHandlerTests
             .ReturnsAsync(monitor);
 
         _queue
-            .Setup(q => q.TryEnqueue(new ManualCheckJob(monitor.Id, organizationId)))
+            .Setup(q => q.TryEnqueue(new ManualCheckCommand(monitor.Id, organizationId)))
             .Returns(true);
 
         // Act
-        Result result = await handler.HandleAsync(new ManualCheckCommand(monitor.Id), CancellationToken.None);
+        Result result = await handler.HandleAsync(
+            new ManualCheckCommand(monitor.Id, organizationId),
+            CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        _queue.Verify(q => q.TryEnqueue(new ManualCheckJob(monitor.Id, organizationId)), Times.Once);
+        _queue.Verify(q => q.TryEnqueue(new ManualCheckCommand(monitor.Id, organizationId)), Times.Once);
     }
 
     [Fact]
@@ -118,11 +103,13 @@ public class ManualCheckHandlerTests
             .ReturnsAsync(monitor);
 
         _queue
-            .Setup(q => q.TryEnqueue(new ManualCheckJob(monitor.Id, organizationId)))
+            .Setup(q => q.TryEnqueue(new ManualCheckCommand(monitor.Id, organizationId)))
             .Returns(false);
 
         // Act
-        Result result = await handler.HandleAsync(new ManualCheckCommand(monitor.Id), CancellationToken.None);
+        Result result = await handler.HandleAsync(
+            new ManualCheckCommand(monitor.Id, organizationId),
+            CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

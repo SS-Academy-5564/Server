@@ -35,14 +35,6 @@ public sealed class ManualCheckHandler : IAsyncHandler<ManualCheckCommand, Resul
     /// <returns></returns>
     public async Task<Result> HandleAsync(ManualCheckCommand command, CancellationToken ct = default)
     {
-        Result<Guid> organizationIdResult = _currentUserService.RequireOrganizationId();
-
-        if (organizationIdResult.IsFailed)
-        {
-            return organizationIdResult.ToResult();
-        }
-
-        Guid organizationId = organizationIdResult.Value;
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(
             command.MonitorId,
             ct);
@@ -52,9 +44,7 @@ public sealed class ManualCheckHandler : IAsyncHandler<ManualCheckCommand, Resul
             return Result.Fail(new NotFoundError($"Monitor '{command.MonitorId}' was not found."));
         }
 
-        ManualCheckJob job = new(command.MonitorId, organizationId);
-
-        if (!_queue.TryEnqueue(job))
+        if (!_queue.TryEnqueue(command))
         {
             _logger.LogWarning("Manual check queue is full. MonitorId: {MonitorId}", command.MonitorId);
             return Result.Fail(new TooManyRequestsError(
