@@ -178,10 +178,10 @@ public static class ServiceCollectionExtensions
                                 MetadataName.RetryAfter,
                                 out TimeSpan retryAfter))
                         {
-                            httpContext.Response.Headers.RetryAfter =
-                                ((int)retryAfter.TotalSeconds).ToString();
+                            int retryAfterSeconds = (int)Math.Ceiling(retryAfter.TotalSeconds);
+                            httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
 
-                            retryMessage = $"Please try again in {retryAfter.TotalSeconds:N0} seconds.";
+                            retryMessage = $"Please try again in {retryAfterSeconds} seconds.";
                         }
                         else
                         {
