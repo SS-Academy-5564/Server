@@ -22,17 +22,15 @@ public class GetMonitorByIdController : PulseControllerBase
     /// <summary>
     /// Returns the full detail of a single monitor identified by <paramref name="id"/>.
     /// </summary>
-    /// <param name="id">The unique identifier of the monitor to retrieve.</param>
+    /// <param name="query">Record whith Guid Id property which gets value from Route.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>
     /// <c>200 OK</c> with the <see cref="MonitorResult"/> on success;
     /// <c>404 Not Found</c> if no monitor with the given <paramref name="id"/> exists.
     /// </returns>
     [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetMonitorByIdAsync([FromRoute] Guid id, CancellationToken ct = default)
+    public async Task<IActionResult> GetMonitorByIdAsync([FromRoute] GetMonitorByIdQuery query, CancellationToken ct = default)
     {
-        GetMonitorByIdQuery query = new(id);
-
         Result<MonitorResult> result = await _handler.HandleAsync(query, ct);
 
         return ToActionResult(result);

@@ -43,12 +43,13 @@ public class GetMonitorByIdControllerTests
     public async Task GetMonitorById_WhenSuccess_Returns200WithMonitorResult()
     {
         MonitorResult monitor = SampleResult();
+        var query = new GetMonitorByIdQuery(MonitorId);
 
         _handlerMock
             .Setup(h => h.HandleAsync(It.IsAny<GetMonitorByIdQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(monitor));
 
-        IActionResult result = await _sut.GetMonitorByIdAsync(MonitorId, CancellationToken.None);
+        IActionResult result = await _sut.GetMonitorByIdAsync(query, CancellationToken.None);
 
         OkObjectResult ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(200);
@@ -61,11 +62,13 @@ public class GetMonitorByIdControllerTests
     [Fact]
     public async Task GetMonitorById_PassesRouteIdToHandler()
     {
+        var query = new GetMonitorByIdQuery(MonitorId);
+
         _handlerMock
             .Setup(h => h.HandleAsync(It.IsAny<GetMonitorByIdQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(SampleResult()));
 
-        await _sut.GetMonitorByIdAsync(MonitorId, CancellationToken.None);
+        await _sut.GetMonitorByIdAsync(query, CancellationToken.None);
 
         _handlerMock.Verify(h => h.HandleAsync(
             It.Is<GetMonitorByIdQuery>(q => q.Id == MonitorId),
@@ -75,11 +78,13 @@ public class GetMonitorByIdControllerTests
     [Fact]
     public async Task GetMonitorById_WhenNotFound_Returns404()
     {
+        var query = new GetMonitorByIdQuery(MonitorId);
+
         _handlerMock
             .Setup(h => h.HandleAsync(It.IsAny<GetMonitorByIdQuery>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail(new NotFoundError("Monitor with this Id does not exist.")));
 
-        IActionResult result = await _sut.GetMonitorByIdAsync(MonitorId, CancellationToken.None);
+        IActionResult result = await _sut.GetMonitorByIdAsync(query, CancellationToken.None);
 
         ObjectResult objectResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(404);
