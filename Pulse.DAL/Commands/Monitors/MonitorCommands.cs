@@ -46,7 +46,7 @@ public class MonitorCommands : IMonitorCommands
     }
 
     ///<inheritdoc/>
-    public async Task<Guid> UpdateAsync(UpdateMonitorInput input, CancellationToken ct)
+    public async Task<(Guid, Guid)> UpdateAsync(UpdateMonitorInput input, CancellationToken ct)
     {
         IDbSession session = _sessionAccessor.Session
             ?? throw new InvalidOperationException("No active unit of work.");
@@ -65,11 +65,13 @@ public class MonitorCommands : IMonitorCommands
                 CurrentValue = NULL,
                 NextExecutionAt = SYSUTCDATETIME(),
                 LastModifiedAt = SYSUTCDATETIME()
-            OUTPUT INSERTED.Id
+            OUTPUT
+                INSERTED.Id,
+                INSERTED.OrganizationId
             WHERE Id = @Id;
             """;
 
-        return await session.Connection.ExecuteScalarAsync<Guid>(
+        return await session.Connection.QuerySingleAsync<(Guid Id, Guid OrganizationId)>(
             new CommandDefinition(
                 sql,
                 input,

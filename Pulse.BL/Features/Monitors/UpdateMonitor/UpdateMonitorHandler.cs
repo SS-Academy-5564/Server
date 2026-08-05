@@ -40,7 +40,7 @@ public class UpdateMonitorHandler : IAsyncHandler<UpdateMonitorCommand, Result<M
 
         await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct: ct);
 
-        Guid monitorId = await _monitorCommands.UpdateAsync(
+        (Guid id, Guid organizationId) commandResult = await _monitorCommands.UpdateAsync(
             new UpdateMonitorInput(
                 command.Id,
                 command.Name,
@@ -55,13 +55,14 @@ public class UpdateMonitorHandler : IAsyncHandler<UpdateMonitorCommand, Result<M
         await uow.CommitAsync(ct);
 
         MonitorListResult result = new(
-            monitorId,
+            commandResult.id,
             command.Name,
             command.Url,
             CurrentValue: null,
             LastCheckedAt: null,
             command.Status,
-            command.PollingIntervalSeconds);
+            command.PollingIntervalSeconds,
+            commandResult.organizationId);
 
         return Result.Ok(result);
     }

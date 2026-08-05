@@ -31,6 +31,7 @@ public class GetMonitorByIdQueryHandler : IAsyncHandler<GetMonitorByIdQuery, Res
 
         MonitorResult result = new(
             existingMonitor.Id,
+            existingMonitor.OrganizationId,
             existingMonitor.Name,
             existingMonitor.Url,
             existingMonitor.HttpMethod,

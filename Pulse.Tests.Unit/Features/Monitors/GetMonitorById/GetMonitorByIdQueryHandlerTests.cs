@@ -13,6 +13,7 @@ public class GetMonitorByIdQueryHandlerTests
     private readonly GetMonitorByIdQueryHandler _sut;
 
     private static readonly Guid MonitorId = Guid.NewGuid();
+    private static readonly Guid OrganizationId = Guid.NewGuid();
 
     public GetMonitorByIdQueryHandlerTests()
     {
@@ -22,6 +23,7 @@ public class GetMonitorByIdQueryHandlerTests
     private static MonitorRecord ExistingRecord(Guid? id = null)
         => new(
             id ?? MonitorId,
+            OrganizationId,
             "Billing API",
             "https://api.example.com/billing",
             "GET",
@@ -47,6 +49,7 @@ public class GetMonitorByIdQueryHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Id.Should().Be(record.Id);
+        result.Value.OrganizationId.Should().Be(record.OrganizationId);
         result.Value.Name.Should().Be(record.Name);
         result.Value.Url.Should().Be(record.Url);
         result.Value.HttpMethod.Should().Be(record.HttpMethod);

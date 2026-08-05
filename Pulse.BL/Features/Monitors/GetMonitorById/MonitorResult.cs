@@ -2,6 +2,7 @@ namespace Pulse.BL.Features.Monitors.GetMonitorById;
 
 public sealed record MonitorResult(
     Guid Id,
+    Guid OrganizationId,
     string Name,
     string Url,
     string HttpMethod,

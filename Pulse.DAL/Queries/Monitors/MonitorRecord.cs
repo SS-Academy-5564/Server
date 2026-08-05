@@ -2,6 +2,7 @@ namespace Pulse.DAL.Queries.Monitors;
 
 public sealed record MonitorRecord(
     Guid Id,
+    Guid OrganizationId,
     string Name,
     string Url,
     string HttpMethod,

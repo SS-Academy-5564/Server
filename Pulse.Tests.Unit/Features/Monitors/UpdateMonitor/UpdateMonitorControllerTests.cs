@@ -30,7 +30,7 @@ public class UpdateMonitorControllerTests
     public async Task UpdateMonitor_WhenSuccess_Returns200WithUpdatedMonitor()
     {
         MonitorListResult updated = new(
-            MonitorId, "EUR/USD Rate", "https://api.example.com/data", null, null, MonitorStatus.Enabled, 300);
+            MonitorId, "EUR/USD Rate", "https://api.example.com/data", null, null, MonitorStatus.Enabled, 300, Guid.NewGuid());
 
         _handlerMock
             .Setup(h => h.HandleAsync(It.IsAny<UpdateMonitorCommand>(), It.IsAny<CancellationToken>()))
@@ -51,7 +51,7 @@ public class UpdateMonitorControllerTests
         _handlerMock
             .Setup(h => h.HandleAsync(It.IsAny<UpdateMonitorCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok(new MonitorListResult(
-                MonitorId, "EUR/USD Rate", "https://api.example.com/data", null, null, MonitorStatus.Enabled, 300)));
+                MonitorId, "EUR/USD Rate", "https://api.example.com/data", null, null, MonitorStatus.Enabled, 300, Guid.NewGuid())));
 
         await _sut.UpdateMonitorAsync(MonitorId, ValidRequest(), CancellationToken.None);
 

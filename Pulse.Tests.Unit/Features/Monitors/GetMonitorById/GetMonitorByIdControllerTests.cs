@@ -26,6 +26,7 @@ public class GetMonitorByIdControllerTests
     private static MonitorResult SampleResult()
         => new(
             MonitorId,
+            Guid.NewGuid(),
             "Billing API",
             "https://api.example.com/billing",
             "GET",

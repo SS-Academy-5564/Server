@@ -22,7 +22,7 @@ public interface IMonitorCommands : ICommands
     /// <param name="input">The monitor configuration to be updated.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The identifier of the updated monitor.</returns>
-    Task<Guid> UpdateAsync(UpdateMonitorInput input, CancellationToken ct);
+    Task<(Guid, Guid)> UpdateAsync(UpdateMonitorInput input, CancellationToken ct);
 
     /// <summary>
     /// Updates a monitor after a polling attempt within the specified database session.

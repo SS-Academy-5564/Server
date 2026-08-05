@@ -21,6 +21,7 @@ public class UpdateMonitorHandlerTests
     private readonly UpdateMonitorHandler _sut;
 
     private static readonly Guid MonitorId = Guid.NewGuid();
+    private static readonly Guid OrganizationId = Guid.NewGuid();
 
     public UpdateMonitorHandlerTests()
     {
@@ -30,7 +31,7 @@ public class UpdateMonitorHandlerTests
 
         _commandsMock
             .Setup(x => x.UpdateAsync(It.IsAny<UpdateMonitorInput>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(MonitorId);
+            .ReturnsAsync((MonitorId, OrganizationId));
 
         _sut = new UpdateMonitorHandler(_uowFactoryMock.Object, _commandsMock.Object, _queriesMock.Object);
     }
@@ -41,6 +42,7 @@ public class UpdateMonitorHandlerTests
     private static MonitorRecord ExistingRecord(Guid? id = null)
         => new(
             id ?? MonitorId,
+            OrganizationId,
             "Old Name",
             "https://old.example.com",
             "GET",
@@ -78,6 +80,7 @@ public class UpdateMonitorHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         result.Value.Id.Should().Be(MonitorId);
+        result.Value.OrganizationId.Should().Be(OrganizationId);
         result.Value.Name.Should().Be("EUR/USD Rate");
         result.Value.Url.Should().Be("https://api.example.com/data");
         result.Value.Status.Should().Be(BL.Features.Monitors.MonitorStatus.Enabled);

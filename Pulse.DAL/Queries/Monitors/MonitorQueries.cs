@@ -113,6 +113,7 @@ public class MonitorQueries : IMonitorQueries
         const string sql = """
             SELECT
                 m.Id,
+                m.OrganizationId,
                 m.Name,
                 m.Url,
                 h.Name AS HttpMethod,
