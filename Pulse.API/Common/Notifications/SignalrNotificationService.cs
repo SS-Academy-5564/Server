@@ -14,8 +14,17 @@ public class SignalrNotificationService : INotificationService
         _hubContext = hubContext;
     }
 
-    public async Task NotifyAsync(Guid organizationId, MonitorPollResult monitor, CancellationToken ct)
+    public async Task NotifyAsync(MonitorPollResult monitor, CancellationToken ct)
     {
-        await _hubContext.Clients.Group(organizationId.ToString()).SendUpdatedMonitorAsync(monitor);
+        await _hubContext.Clients.Group(monitor.OrganizationId.ToString()).SendUpdatedMonitorAsync(monitor);
+    }
+
+    public async Task NotifyAsync(List<MonitorPollResult> monitors, CancellationToken ct)
+    {
+        var orgMonitorsGroups = monitors.GroupBy(monitor => monitor.OrganizationId);
+        foreach (var group in orgMonitorsGroups)
+        {
+            await _hubContext.Clients.Group(group.Key.ToString()).SendUpdatedMonitorsAsync(group.ToList());
+        }
     }
 }

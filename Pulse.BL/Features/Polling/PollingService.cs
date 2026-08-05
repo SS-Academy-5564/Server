@@ -161,7 +161,7 @@ public class PollingService : IPollingService
             ? nameof(MonitorStatus.Enabled)
             : nameof(MonitorStatus.Error);
 
-        return new MonitorPollResult(monitor.Id, completedAt, nextExecutionAt, status)
+        return new MonitorPollResult(monitor.Id, completedAt, nextExecutionAt, status, monitor.OrganizationId)
         {
             CurrentValue = resultInput.Value
         };

@@ -5,4 +5,5 @@ namespace Pulse.API.Hubs;
 public interface INotificationClient
 {
     Task SendUpdatedMonitorAsync(MonitorPollResult monitor);
+    Task SendUpdatedMonitorsAsync(List<MonitorPollResult> monitors);
 }

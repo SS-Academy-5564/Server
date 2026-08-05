@@ -33,7 +33,8 @@ public class PollingServiceTests
         "data.status",
         60,
         30,
-        "Enabled");
+        "Enabled",
+        Guid.NewGuid());
     private readonly PollingService _service;
     private CreateMonitorPollResultsInput? _createdMonitorPollResults;
     private UpdateMonitorAfterPollInput? _updatedMonitor;

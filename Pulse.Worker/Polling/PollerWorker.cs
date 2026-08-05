@@ -1,4 +1,6 @@
+using FluentResults;
 using Microsoft.Extensions.Options;
+using Pulse.BL.Common.Notifications;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Options;
 
@@ -31,7 +33,12 @@ public sealed class PollerWorker : BackgroundService
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
 
-                await pollingService.ProcessDueMonitorsAsync(stoppingToken);
+                Result<List<MonitorPollResult>> monitors = await pollingService.ProcessDueMonitorsAsync(stoppingToken);
+                if (monitors.IsSuccess)
+                {
+                    var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                    await notificationService.NotifyAsync(monitors.Value, stoppingToken);
+                }
             }
             catch (OperationCanceledException) when (
                 stoppingToken.IsCancellationRequested)

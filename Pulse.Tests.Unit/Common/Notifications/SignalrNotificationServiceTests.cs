@@ -17,7 +17,8 @@ public sealed class SignalrNotificationServiceTests
             Guid.NewGuid(),
             DateTime.UtcNow,
             DateTime.UtcNow.AddMinutes(1),
-            "Enabled")
+            "Enabled",
+            organizationId)
         {
             CurrentValue = "healthy"
         };
@@ -34,7 +35,7 @@ public sealed class SignalrNotificationServiceTests
         SignalrNotificationService service = new(hubContext.Object);
 
         // Act
-        await service.NotifyAsync(organizationId, update, CancellationToken.None);
+        await service.NotifyAsync(update, CancellationToken.None);
 
         // Assert
         client.Verify(c => c.SendUpdatedMonitorAsync(update), Times.Once);

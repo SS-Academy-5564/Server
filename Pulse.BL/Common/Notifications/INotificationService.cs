@@ -4,5 +4,6 @@ namespace Pulse.BL.Common.Notifications;
 
 public interface INotificationService
 {
-    Task NotifyAsync(Guid organizationId, MonitorPollResult update, CancellationToken ct);
+    Task NotifyAsync(MonitorPollResult update, CancellationToken ct);
+    Task NotifyAsync(List<MonitorPollResult> update, CancellationToken ct);
 }
