@@ -28,11 +28,12 @@ public sealed class ManualCheckHandler : IAsyncHandler<ManualCheckCommand, Resul
     }
 
     /// <summary>
-    /// Tries adding the monitor into the queue
+    /// Attempts to add a manual monitor check to the queue.
     /// </summary>
-    /// <param name="command"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
+    /// <param name="command">The manual check command containing the monitor and organization identifiers.</param>
+    /// <param name="ct">The cancellation token for the operation.</param>
+    /// <returns>A result indicating whether the monitor check was queued.</returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled while retrieving the monitor.</exception>
     public async Task<Result> HandleAsync(ManualCheckCommand command, CancellationToken ct = default)
     {
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(

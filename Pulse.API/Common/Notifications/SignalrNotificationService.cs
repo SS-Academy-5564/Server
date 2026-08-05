@@ -14,8 +14,15 @@ public class SignalrNotificationService : INotificationService
         _hubContext = hubContext;
     }
 
+    /// <summary>
+    /// Sends an updated monitor notification to the specified organization group.
+    /// </summary>
+    /// <param name="organizationId">The identifier of the organization whose clients receive the notification.</param>
+    /// <param name="monitor">The updated monitor data to send.</param>
+    /// <param name="ct">The cancellation token for the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous notification operation.</returns>
     public async Task NotifyAsync(Guid organizationId, MonitorPollResult monitor, CancellationToken ct)
     {
-        await _hubContext.Clients.Group(organizationId.ToString()).SendUpdatedMonitorAsync(monitor);
+        await _hubContext.Clients.Group(organizationId.ToString()).SendUpdatedMonitorAsync(monitor, ct);
     }
 }

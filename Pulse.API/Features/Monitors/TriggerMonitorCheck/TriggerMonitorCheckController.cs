@@ -24,6 +24,13 @@ public sealed class TriggerMonitorCheckController : PulseControllerBase
         _userService = userService;
     }
 
+    /// <summary>
+    /// Queues an immediate check for the specified monitor.
+    /// </summary>
+    /// <param name="id">The identifier of the monitor to check.</param>
+    /// <param name="ct">The cancellation token for the request.</param>
+    /// <returns>An HTTP response indicating whether the monitor check was queued.</returns>
+    /// <exception cref="OperationCanceledException">The request is canceled.</exception>
     [HttpPost("{id:guid}/run-now")]
     [EnableRateLimiting(RateLimitPolicies.ManualMonitorTrigger)]
     public async Task<IActionResult> RunNowAsync(Guid id, CancellationToken ct)

@@ -9,7 +9,7 @@ namespace Pulse.Tests.Unit.Common.Notifications;
 public sealed class SignalrNotificationServiceTests
 {
     [Fact]
-    public async Task NotifyAsync_SendsUpdateToSpecifiedOrganizationGroup()
+    public async Task NotifyAsync_ValidOrganizationId_SendsUpdateToSpecifiedOrganizationGroup()
     {
         // Arrange
         Guid organizationId = Guid.NewGuid();
@@ -32,11 +32,12 @@ public sealed class SignalrNotificationServiceTests
         hubContext.SetupGet(h => h.Clients).Returns(clients.Object);
 
         SignalrNotificationService service = new(hubContext.Object);
+        using var cts = new CancellationTokenSource();
 
         // Act
-        await service.NotifyAsync(organizationId, update, CancellationToken.None);
+        await service.NotifyAsync(organizationId, update, cts.Token);
 
         // Assert
-        client.Verify(c => c.SendUpdatedMonitorAsync(update), Times.Once);
+        client.Verify(c => c.SendUpdatedMonitorAsync(update, cts.Token), Times.Once);
     }
 }

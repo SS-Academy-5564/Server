@@ -16,7 +16,9 @@ public sealed class ManualCheckQueue : IManualCheckQueue
         });
     }
 
+    /// <inheritdoc/>
     public bool TryEnqueue(ManualCheckCommand command) => _channel.Writer.TryWrite(command);
 
+    /// <inheritdoc/>
     public ValueTask<ManualCheckCommand> DequeueAsync(CancellationToken ct) => _channel.Reader.ReadAsync(ct);
 }

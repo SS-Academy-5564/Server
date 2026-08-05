@@ -14,6 +14,11 @@ public sealed class PulseNotificationHub : Hub<INotificationClient>
     {
         _userService = userService;
     }
+
+    /// <summary>
+    /// Adds the connected client to its organization notification group.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous connection operation.</returns>
     public override async Task OnConnectedAsync()
     {
         Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
@@ -21,6 +26,11 @@ public sealed class PulseNotificationHub : Hub<INotificationClient>
         await base.OnConnectedAsync();
     }
 
+    /// <summary>
+    /// Removes the disconnected client from its organization notification group.
+    /// </summary>
+    /// <param name="exception">The exception that caused the disconnect, or <see langword="null"/> for a graceful disconnect.</param>
+    /// <returns>A task that represents the asynchronous disconnection operation.</returns>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;

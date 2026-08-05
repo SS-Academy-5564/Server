@@ -216,6 +216,10 @@ public static class ServiceCollectionExtensions
             return services;
         }
 
+        /// <summary>
+        /// Registers the SignalR services and notification service used by Pulse.
+        /// </summary>
+        /// <returns>The service collection so that additional registrations can be chained.</returns>
         public IServiceCollection AddPulseSignalR()
         {
             services.AddTransient<INotificationService, SignalrNotificationService>();
