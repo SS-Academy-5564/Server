@@ -1,8 +1,8 @@
-using Pulse.DAL.Commands.Monitors;
+using Pulse.BL.Features.Polling;
 
 namespace Pulse.BL.Common.Notifications;
 
 public interface INotificationService
 {
-    Task NotifyAsync(Guid organizationId, UpdateMonitorAfterPollInput update, CancellationToken ct);
+    Task NotifyAsync(Guid organizationId, MonitorPollResult update, CancellationToken ct);
 }

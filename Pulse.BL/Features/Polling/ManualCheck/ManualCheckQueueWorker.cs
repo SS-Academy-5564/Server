@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Features.Polling.ManualCheck.Queue;
-using Pulse.DAL.Commands.Monitors;
 
 namespace Pulse.BL.Features.Polling.ManualCheck;
 
@@ -45,7 +44,7 @@ public sealed class ManualCheckQueueWorker : BackgroundService
             {
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
-                Result<UpdateMonitorAfterPollInput> monitor = await pollingService.ProcessMonitorAsync(
+                Result<MonitorPollResult> monitor = await pollingService.ProcessMonitorAsync(
                     job.MonitorId,
                     job.OrganizationId,
                     stoppingToken);

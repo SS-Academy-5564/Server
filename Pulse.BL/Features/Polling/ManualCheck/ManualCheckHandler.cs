@@ -45,7 +45,6 @@ public sealed class ManualCheckHandler : IAsyncHandler<ManualCheckCommand, Resul
         Guid organizationId = organizationIdResult.Value;
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(
             command.MonitorId,
-            organizationId,
             ct);
 
         if (monitor is null)

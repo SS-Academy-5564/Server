@@ -136,11 +136,11 @@ public class PollingServiceTests
         Guid monitorId = Guid.NewGuid();
         Guid organizationId = Guid.NewGuid();
         _monitorQueries
-            .Setup(q => q.GetByIdForPollingAsync(monitorId, organizationId, It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((MonitorPollingRecord?)null);
 
         // Act
-        Result<UpdateMonitorAfterPollInput> result = await _service.ProcessMonitorAsync(
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(
             monitorId,
             organizationId,
             CancellationToken.None);
@@ -168,7 +168,7 @@ public class PollingServiceTests
         };
 
         _monitorQueries
-            .Setup(q => q.GetByIdForPollingAsync(monitorId, organizationId, It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(monitor);
 
         _httpMonitorClient
@@ -180,7 +180,7 @@ public class PollingServiceTests
             .Returns(true);
 
         // Act
-        Result<UpdateMonitorAfterPollInput> result = await _service.ProcessMonitorAsync(
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(
             monitorId,
             organizationId,
             CancellationToken.None);
@@ -188,7 +188,7 @@ public class PollingServiceTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         _monitorQueries.Verify(
-            q => q.GetByIdForPollingAsync(monitorId, organizationId, It.IsAny<CancellationToken>()),
+            q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

@@ -106,10 +106,7 @@ public class MonitorQueries : IMonitorQueries
     }
 
     /// <inheritdoc/>
-    public async Task<MonitorPollingRecord?> GetByIdForPollingAsync(
-        Guid id,
-        Guid organizationId,
-        CancellationToken ct)
+    public async Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
 
@@ -120,9 +117,8 @@ public class MonitorQueries : IMonitorQueries
                 "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
                 "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
                 "WHERE m.Id = @Id " +
-                "   AND m.OrganizationId = @OrganizationId " +
                 "   AND s.Name IN ('Enabled', 'Error');",
-                new { Id = id, OrganizationId = organizationId },
+                new { Id = id },
                 cancellationToken: ct));
     }
 }

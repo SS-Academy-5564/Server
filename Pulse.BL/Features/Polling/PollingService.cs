@@ -44,27 +44,26 @@ public class PollingService : IPollingService
         _monitorPollResultCommands = monitorPollResultCommands;
     }
 
-    public async Task<Result<List<UpdateMonitorAfterPollInput>>> ProcessDueMonitorsAsync(CancellationToken ct = default)
+    public async Task<Result<List<MonitorPollResult>>> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
         IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
-        List<UpdateMonitorAfterPollInput> monitorsResults = new();
+        List<MonitorPollResult> monitorsResults = new();
 
         foreach (MonitorPollingRecord monitor in monitors)
         {
             ct.ThrowIfCancellationRequested();
 
-            Result<UpdateMonitorAfterPollInput> monitorsResult = await ProcessMonitorAsync(monitor, ct);
+            Result<MonitorPollResult> monitorsResult = await ProcessMonitorAsync(monitor, ct);
             monitorsResults.Add(monitorsResult.Value);
         }
 
         return Result.Ok(monitorsResults);
     }
 
-    public async Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(Guid monitorId, Guid organizationId, CancellationToken ct)
+    public async Task<Result<MonitorPollResult>> ProcessMonitorAsync(Guid monitorId, Guid organizationId, CancellationToken ct)
     {
         MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(
             monitorId,
-            organizationId,
             ct);
 
         if (monitor is null)
@@ -75,15 +74,15 @@ public class PollingService : IPollingService
         return await ProcessMonitorAsync(monitor, ct);
     }
 
-    public async Task<Result<UpdateMonitorAfterPollInput>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
+    public async Task<Result<MonitorPollResult>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
     {
         try
         {
             CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
-            UpdateMonitorAfterPollInput monitorAfterPollInput = UpdateMonitorAfterPollInput(monitor, monitorPollResults);
-            await SavePollResultAsync(monitorAfterPollInput, monitorPollResults, ct);
+            MonitorPollResult monitorResult = CreateMonitorPollResult(monitor, monitorPollResults);
+            await SavePollResultAsync(monitorResult, monitorPollResults, ct);
 
-            return Result.Ok(monitorAfterPollInput);
+            return Result.Ok(monitorResult);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -132,18 +131,27 @@ public class PollingService : IPollingService
             RequestStatus: requestStatus);
     }
 
-    private async Task SavePollResultAsync(UpdateMonitorAfterPollInput monitorInput, CreateMonitorPollResultsInput resultInput, CancellationToken ct)
+    private async Task SavePollResultAsync(
+        MonitorPollResult monitorResult,
+        CreateMonitorPollResultsInput resultInput,
+        CancellationToken ct)
     {
         await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
         IDbSession session = (IDbSession)uof;
+        UpdateMonitorAfterPollInput updateInput = new(
+            monitorResult.MonitorId,
+            monitorResult.CurrentValue,
+            monitorResult.LastCheckedAt,
+            monitorResult.NextExecutionAt,
+            monitorResult.Status);
 
         await _monitorPollResultCommands.CreateAsync(resultInput, session, ct);
-        await _monitorCommands.UpdateAfterPollAsync(monitorInput, session, ct);
+        await _monitorCommands.UpdateAfterPollAsync(updateInput, session, ct);
 
         await uof.CommitAsync(ct);
     }
 
-    private UpdateMonitorAfterPollInput UpdateMonitorAfterPollInput(MonitorPollingRecord monitor,
+    private MonitorPollResult CreateMonitorPollResult(MonitorPollingRecord monitor,
         CreateMonitorPollResultsInput resultInput)
     {
         DateTime completedAt = DateTime.UtcNow;
@@ -153,8 +161,9 @@ public class PollingService : IPollingService
             ? nameof(MonitorStatus.Enabled)
             : nameof(MonitorStatus.Error);
 
-        UpdateMonitorAfterPollInput monitorInput = new(monitor.Id, resultInput.Value, completedAt, nextExecutionAt, status);
-
-        return monitorInput;
+        return new MonitorPollResult(monitor.Id, completedAt, nextExecutionAt, status)
+        {
+            CurrentValue = resultInput.Value
+        };
     }
 }

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using Moq;
 using Pulse.API.Common.Notifications;
 using Pulse.API.Hubs;
-using Pulse.DAL.Commands.Monitors;
+using Pulse.BL.Features.Polling;
 
 namespace Pulse.Tests.Unit.Common.Notifications;
 
@@ -13,12 +13,14 @@ public sealed class SignalrNotificationServiceTests
     {
         // Arrange
         Guid organizationId = Guid.NewGuid();
-        UpdateMonitorAfterPollInput update = new(
+        MonitorPollResult update = new(
             Guid.NewGuid(),
-            "healthy",
             DateTime.UtcNow,
             DateTime.UtcNow.AddMinutes(1),
-            "Enabled");
+            "Enabled")
+        {
+            CurrentValue = "healthy"
+        };
 
         Mock<INotificationClient> client = new();
         Mock<IHubClients<INotificationClient>> clients = new();

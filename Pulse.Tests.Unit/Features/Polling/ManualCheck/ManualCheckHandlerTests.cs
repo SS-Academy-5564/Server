@@ -49,7 +49,7 @@ public class ManualCheckHandlerTests
         _currentUserService.SetupGet(service => service.OrganizationId).Returns(organizationId);
 
         _monitorQueries
-            .Setup(q => q.GetByIdForPollingAsync(monitorId, organizationId, It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((MonitorPollingRecord?)null);
 
         // Act
@@ -81,7 +81,7 @@ public class ManualCheckHandlerTests
             "Enabled");
 
         _monitorQueries
-            .Setup(q => q.GetByIdForPollingAsync(monitor.Id, organizationId, It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetByIdForPollingAsync(monitor.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(monitor);
 
         _queue
@@ -114,7 +114,7 @@ public class ManualCheckHandlerTests
             "Enabled");
 
         _monitorQueries
-            .Setup(q => q.GetByIdForPollingAsync(monitor.Id, organizationId, It.IsAny<CancellationToken>()))
+            .Setup(q => q.GetByIdForPollingAsync(monitor.Id, It.IsAny<CancellationToken>()))
             .ReturnsAsync(monitor);
 
         _queue

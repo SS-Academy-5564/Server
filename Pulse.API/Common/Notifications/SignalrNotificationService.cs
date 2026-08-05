@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Pulse.API.Hubs;
 using Pulse.BL.Common.Notifications;
-using Pulse.DAL.Commands.Monitors;
+using Pulse.BL.Features.Polling;
 
 namespace Pulse.API.Common.Notifications;
 
@@ -14,7 +14,7 @@ public class SignalrNotificationService : INotificationService
         _hubContext = hubContext;
     }
 
-    public async Task NotifyAsync(Guid organizationId, UpdateMonitorAfterPollInput monitor, CancellationToken ct)
+    public async Task NotifyAsync(Guid organizationId, MonitorPollResult monitor, CancellationToken ct)
     {
         await _hubContext.Clients.Group(organizationId.ToString()).SendUpdatedMonitorAsync(monitor);
     }
