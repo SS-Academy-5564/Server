@@ -18,7 +18,7 @@ public sealed class TriggerMonitorCheckController : PulseControllerBase
     private readonly IAsyncHandler<ManualCheckCommand, Result> _handler;
     private readonly ICurrentUserService _userService;
 
-    public TriggerMonitorCheckController(IAsyncHandler<ManualCheckCommand, Result> handler,ICurrentUserService userService)
+    public TriggerMonitorCheckController(IAsyncHandler<ManualCheckCommand, Result> handler, ICurrentUserService userService)
     {
         _handler = handler;
         _userService = userService;
@@ -28,13 +28,13 @@ public sealed class TriggerMonitorCheckController : PulseControllerBase
     [EnableRateLimiting(RateLimitPolicies.ManualMonitorTrigger)]
     public async Task<IActionResult> RunNowAsync(Guid id, CancellationToken ct)
     {
-        var organizationId = _userService.RequireOrganizationId();
+        Result<Guid> organizationId = _userService.RequireOrganizationId();
         if (organizationId.IsFailed)
         {
             return ToActionResult(organizationId);
         }
 
-        Result result = await _handler.HandleAsync(new ManualCheckCommand(id,organizationId.Value), ct);
+        Result result = await _handler.HandleAsync(new ManualCheckCommand(id, organizationId.Value), ct);
 
         return ToActionResult(result);
     }
