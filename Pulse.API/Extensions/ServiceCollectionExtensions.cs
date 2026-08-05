@@ -76,7 +76,7 @@ public static class ServiceCollectionExtensions
                 .Bind(configuration.GetRequiredSection(RateLimitSections.Refresh))
                 .ValidateOnStart();
 
-            services.AddOptions<RateLimitRuleOptions>(RateLimitSections.Registration)
+            services.AddOptions<SlidingWindowRateLimitRuleOptions>(RateLimitSections.Registration)
                 .Bind(configuration.GetRequiredSection(RateLimitSections.Registration))
                 .ValidateOnStart();
 
@@ -139,15 +139,16 @@ public static class ServiceCollectionExtensions
 
                     rateLimiterOptions.AddPolicy(RateLimitPolicies.Registration, context =>
                     {
-                        RateLimitRuleOptions registrationRateLimit =
-                            rateLimitRules.Get(RateLimitSections.Registration);
+                        SlidingWindowRateLimitRuleOptions registrationRateLimit =
+                            slidingWindowRules.Get(RateLimitSections.Registration);
 
-                        return RateLimitPartition.GetFixedWindowLimiter(
+                        return RateLimitPartition.GetSlidingWindowLimiter(
                             partitionKey: GetClientIdentifier(context),
-                            factory: _ => new FixedWindowRateLimiterOptions
+                            factory: _ => new SlidingWindowRateLimiterOptions
                             {
                                 PermitLimit = registrationRateLimit.MaxAttempts,
                                 Window = TimeSpan.FromMinutes(registrationRateLimit.PeriodMinutes),
+                                SegmentsPerWindow = registrationRateLimit.Segments,
                                 QueueLimit = 0,
                                 AutoReplenishment = true
                             });
