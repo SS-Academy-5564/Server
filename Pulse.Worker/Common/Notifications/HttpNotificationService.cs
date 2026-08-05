@@ -3,7 +3,7 @@ using Pulse.BL.Features.Polling;
 
 namespace Pulse.Worker.Common.Notifications;
 
-public class HttpNotificationService : INotificationService
+public class HttpNotificationService : IBatchMonitorNotificationService
 {
 
     private readonly IHttpClientFactory _httpClientFactory;
@@ -13,12 +13,10 @@ public class HttpNotificationService : INotificationService
         _httpClientFactory = httpClientFactory;
     }
 
-    public async Task NotifyAsync(MonitorPollResult update, CancellationToken ct)
+    public Task NotifyAsync(IReadOnlyCollection<MonitorPollResult> update, CancellationToken ct)
     {
-    }
+        using HttpClient client = _httpClientFactory.CreateClient();
 
-    public Task NotifyAsync(List<MonitorPollResult> update, CancellationToken ct)
-    {
-        using var httpClient = _httpClientFactory.CreateClient();
+        return Task.CompletedTask;
     }
 }

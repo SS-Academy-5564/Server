@@ -36,7 +36,7 @@ public sealed class PollerWorker : BackgroundService
                 Result<List<MonitorPollResult>> monitors = await pollingService.ProcessDueMonitorsAsync(stoppingToken);
                 if (monitors.IsSuccess)
                 {
-                    var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                    IBatchMonitorNotificationService notificationService = scope.ServiceProvider.GetRequiredService<IBatchMonitorNotificationService>();
                     await notificationService.NotifyAsync(monitors.Value, stoppingToken);
                 }
             }

@@ -218,7 +218,8 @@ public static class ServiceCollectionExtensions
 
         public IServiceCollection AddPulseSignalR()
         {
-            services.AddTransient<INotificationService, SignalrNotificationService>();
+            services.AddScoped<IMonitorNotificationService, SignalrNotificationService>();
+            services.AddScoped<IBatchMonitorNotificationService, SignalrNotificationService>();
             services.AddSignalR();
 
             return services;

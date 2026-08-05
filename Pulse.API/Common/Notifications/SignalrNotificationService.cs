@@ -5,7 +5,7 @@ using Pulse.BL.Features.Polling;
 
 namespace Pulse.API.Common.Notifications;
 
-public class SignalrNotificationService : INotificationService
+public class SignalrNotificationService : IMonitorNotificationService, IBatchMonitorNotificationService
 {
     private readonly IHubContext<PulseNotificationHub, INotificationClient> _hubContext;
 
@@ -19,10 +19,10 @@ public class SignalrNotificationService : INotificationService
         await _hubContext.Clients.Group(monitor.OrganizationId.ToString()).SendUpdatedMonitorAsync(monitor);
     }
 
-    public async Task NotifyAsync(List<MonitorPollResult> monitors, CancellationToken ct)
+    public async Task NotifyAsync(IReadOnlyCollection<MonitorPollResult> monitors, CancellationToken ct)
     {
-        var orgMonitorsGroups = monitors.GroupBy(monitor => monitor.OrganizationId);
-        foreach (var group in orgMonitorsGroups)
+        IEnumerable<IGrouping<Guid, MonitorPollResult>> orgMonitorsGroups = monitors.GroupBy(monitor => monitor.OrganizationId);
+        foreach (IGrouping<Guid, MonitorPollResult> group in orgMonitorsGroups)
         {
             await _hubContext.Clients.Group(group.Key.ToString()).SendUpdatedMonitorsAsync(group.ToList());
         }
