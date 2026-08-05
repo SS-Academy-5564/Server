@@ -49,6 +49,21 @@ public static class ServiceCollectionExtensions
                         ValidateLifetime = true,
                         ClockSkew = TimeSpan.Zero,
                     };
+                    bearerOptions.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            string? accessToken = context.Request.Query["access_token"];
+
+                            if (!string.IsNullOrWhiteSpace(accessToken) &&
+                                context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
+                    };
                 });
 
             return services;

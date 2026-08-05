@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Pulse.API.Common.Security;
+using Pulse.BL.Common.Security;
 using Pulse.BL.Features.Monitors;
 using Pulse.DAL.Common.Constants;
 
@@ -9,8 +9,9 @@ namespace Pulse.API.Hubs;
 [Authorize]
 public sealed class PulseNotificationHub : Hub<INotificationClient>
 {
-    private readonly CurrentUserService _userService;
-    public PulseNotificationHub(CurrentUserService userService)
+    private readonly ICurrentUserService _userService;
+
+    public PulseNotificationHub(ICurrentUserService userService)
     {
         _userService = userService;
     }

@@ -12,6 +12,13 @@ public class HttpNotificationService : INotificationService
     }
 
     //send to the api layer
-    public Task NotifyAsync(Guid organizationId, UpdateMonitorAfterPollInput update, CancellationToken ct) => throw new NotImplementedException();
-    public Task NotifyAsync(List<UpdateMonitorAfterPollInput> update, CancellationToken ct) => throw new NotImplementedException();
+    // TODO
+    public Task NotifyAsync(Guid organizationId, UpdateMonitorAfterPollInput update, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
+    public Task NotifyAsync(Guid organizationId,List<UpdateMonitorAfterPollInput> update, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+    }
 }

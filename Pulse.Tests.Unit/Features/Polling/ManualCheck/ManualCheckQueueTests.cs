@@ -14,9 +14,10 @@ public class ManualCheckQueueTests
     {
         // Arrange
         ManualCheckQueue queue = CreateQueue(capacity: 1);
+        ManualCheckJob job = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
-        bool result = queue.TryEnqueue(Guid.NewGuid());
+        bool result = queue.TryEnqueue(job);
 
         // Assert
         result.Should().BeTrue();
@@ -27,27 +28,27 @@ public class ManualCheckQueueTests
     {
         // Arrange
         ManualCheckQueue queue = CreateQueue(capacity: 1);
-        queue.TryEnqueue(Guid.NewGuid());
+        queue.TryEnqueue(new ManualCheckJob(Guid.NewGuid(), Guid.NewGuid()));
 
         // Act
-        bool result = queue.TryEnqueue(Guid.NewGuid());
+        bool result = queue.TryEnqueue(new ManualCheckJob(Guid.NewGuid(), Guid.NewGuid()));
 
         // Assert
         result.Should().BeFalse();
     }
 
     [Fact]
-    public async Task DequeueAsync_ReturnsPreviouslyEnqueuedMonitorId()
+    public async Task DequeueAsync_ReturnsPreviouslyEnqueuedJob()
     {
         // Arrange
         ManualCheckQueue queue = CreateQueue(capacity: 10);
-        Guid monitorId = Guid.NewGuid();
-        queue.TryEnqueue(monitorId);
+        ManualCheckJob job = new(Guid.NewGuid(), Guid.NewGuid());
+        queue.TryEnqueue(job);
 
         // Act
-        Guid dequeued = await queue.DequeueAsync(CancellationToken.None);
+        ManualCheckJob dequeued = await queue.DequeueAsync(CancellationToken.None);
 
         // Assert
-        dequeued.Should().Be(monitorId);
+        dequeued.Should().Be(job);
     }
 }
