@@ -17,6 +17,7 @@ public class MonitorQueries : IMonitorQueries
 
     /// <inheritdoc/>
     public async Task<PagedRecords<MonitorListRecord>> GetAllAsync(
+        Guid organizationId,
         MonitorStatus? status,
         int pageNumber,
         int pageSize,
@@ -29,13 +30,16 @@ public class MonitorQueries : IMonitorQueries
         var filters = new List<string>();
         var parameters = new DynamicParameters();
 
+        parameters.Add("OrganizationId", organizationId);
         parameters.Add("Offset", offset);
         parameters.Add("PageSize", pageSize);
 
+        filters.Add("m.OrganizationId = @OrganizationId");
+
         if (status.HasValue)
         {
-            filters.Add("s.Name = @Status ");
-            parameters.Add("@Status", status.ToString());
+            filters.Add("s.Name = @Status");
+            parameters.Add("Status", status.ToString());
         }
 
         if (!string.IsNullOrWhiteSpace(searchString))
@@ -57,7 +61,8 @@ public class MonitorQueries : IMonitorQueries
                 m.CurrentValue,
                 m.LastCheckedAt,
                 s.Name AS Status,
-                m.PollingIntervalSeconds AS Interval
+                m.PollingIntervalSeconds AS Interval,
+                m.OrganizationId
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
             {{whereClause}}
@@ -81,6 +86,7 @@ public class MonitorQueries : IMonitorQueries
         return new PagedRecords<MonitorListRecord>(records, totalCount);
     }
 
+    /// <inheritdoc/>
     public async Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
@@ -92,8 +98,8 @@ public class MonitorQueries : IMonitorQueries
                 "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
                 "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
                 "WHERE m.NextExecutionAt <= SYSUTCDATETIME() " +
-                "   AND s.Name = 'Enabled' " +
-                "Order By m.NextExecutionAt ASC;",
+                "AND s.Name = 'Enabled' " +
+                "ORDER BY m.NextExecutionAt ASC;",
                 new { Max = max },
                 cancellationToken: ct)
         );

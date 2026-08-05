@@ -1,6 +1,7 @@
 using FluentResults;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Pagination;
+using Pulse.BL.Common.Security;
 using Pulse.DAL.Common.Pagination;
 using Pulse.DAL.Queries.Monitors;
 
@@ -9,10 +10,14 @@ namespace Pulse.BL.Features.Monitors;
 public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<PagedResult<MonitorListResult>>>
 {
     private readonly IMonitorQueries _monitorQueries;
+    private readonly ICurrentUserService _currentUserService;
 
-    public GetMonitorsQueryHandler(IMonitorQueries monitorQueries)
+    public GetMonitorsQueryHandler(
+        IMonitorQueries monitorQueries,
+        ICurrentUserService currentUserService)
     {
         _monitorQueries = monitorQueries;
+        _currentUserService = currentUserService;
     }
 
     /// <summary>
@@ -29,6 +34,13 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
         GetMonitorsQuery query,
         CancellationToken ct = default)
     {
+        Result<Guid> organizationIdResult = _currentUserService.RequireOrganizationId();
+
+        if (organizationIdResult.IsFailed)
+        {
+            return organizationIdResult.ToResult();
+        }
+
         DAL.Queries.Monitors.MonitorStatus? dalStatus = query.Status is null
             ? null
             : (DAL.Queries.Monitors.MonitorStatus)query.Status.Value;
@@ -36,10 +48,24 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
         int pageNumber = query.PageNumber ?? PaginationDefaults.PageNumber;
         int pageSize = query.PageSize ?? PaginationDefaults.PageSize;
 
-        PagedRecords<MonitorListRecord> records = await _monitorQueries.GetAllAsync(dalStatus, pageNumber, pageSize, query.SearchString, ct);
+        PagedRecords<MonitorListRecord> records = await _monitorQueries.GetAllAsync(
+            organizationIdResult.Value,
+            dalStatus,
+            pageNumber,
+            pageSize,
+            query.SearchString,
+            ct);
 
         IReadOnlyList<MonitorListResult> results = records.Items
-            .Select(r => new MonitorListResult(r.Id, r.Name, r.Url, r.CurrentValue, r.LastCheckedAt, (MonitorStatus)r.Status, r.Interval))
+            .Select(r => new MonitorListResult(
+                r.Id,
+                r.Name,
+                r.Url,
+                r.CurrentValue,
+                r.LastCheckedAt,
+                (MonitorStatus)r.Status,
+                r.Interval,
+                r.OrganizationId))
             .ToList()
             .AsReadOnly();
 

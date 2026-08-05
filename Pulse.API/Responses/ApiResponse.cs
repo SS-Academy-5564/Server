@@ -14,7 +14,11 @@ public sealed class ApiResponse<T> : ApiResponse
 
 public sealed class ApiPagination
 {
-    public int Page { get; init; }
+    /// <summary>
+    /// Gets the current page number.
+    /// </summary>
+    /// <value>The 1-based page number.</value>
+    public int PageNumber { get; init; }
     public int PageSize { get; init; }
     public int TotalCount { get; init; }
     public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling((double)TotalCount / PageSize);

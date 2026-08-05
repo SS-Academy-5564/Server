@@ -22,7 +22,8 @@ public sealed class CreateMonitorController : PulseControllerBase
     /// Initializes a new instance of the <see cref="CreateMonitorController"/> class.
     /// </summary>
     /// <param name="handler">The handler for creating monitors.</param>
-    public CreateMonitorController(IAsyncHandler<CreateMonitorCommand, Result<MonitorListResult>> handler)
+    public CreateMonitorController(
+        IAsyncHandler<CreateMonitorCommand, Result<MonitorListResult>> handler)
     {
         _handler = handler;
     }
