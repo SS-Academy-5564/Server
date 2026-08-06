@@ -51,6 +51,7 @@ public class LoginController : Controllers.PulseControllerBase
     /// <returns>200 OK with login result (e.g., JWT token) on success, or an error response on failure.</returns>
     [HttpPost("login")]
     [EnableRateLimiting(RateLimitPolicies.Login)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> LoginAsync([Validate] LoginRequest request, CancellationToken ct)
     {
         LoginCommand command = new(request.Email, request.Password);

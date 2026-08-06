@@ -98,6 +98,25 @@ public class LoginControllerTests
     }
 
     [Fact]
+    public async Task Login_WhenEmailIsNotVerified_Returns403WithoutRefreshCookieAsync()
+    {
+        LoginRequest request = new("unverified@example.com", "ValidPassword123");
+        _handlerMock
+            .Setup(x => x.HandleAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail(new ForbiddenError(
+                "Please verify your email address to continue.",
+                AppError.Codes.EmailNotVerified)));
+
+        IActionResult result = await _sut.LoginAsync(request, CancellationToken.None);
+
+        ObjectResult objectResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
+        objectResult.StatusCode.Should().Be(403);
+        ApiResponse response = objectResult.Value.Should().BeOfType<ApiResponse>().Subject;
+        response.Errors.Should().ContainSingle().Which.Code.Should().Be(AppError.Codes.EmailNotVerified);
+        _sut.Response.Headers.SetCookie.Should().BeEmpty();
+    }
+
+    [Fact]
     public async Task Login_WhenProduction_IssuesSecureCrossSiteRefreshCookieAsync()
     {
         // Arrange
