@@ -53,7 +53,19 @@ public class MonitorQueries : IMonitorQueries
             : string.Empty;
 
         string sql =
-            $$"""
+            $$$"""
+            DECLARE @TotalCount AS INT = (
+                SELECT COUNT(*)
+                FROM dbo.Monitors AS m
+                JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
+                {{{whereClause}}}
+            );
+
+            IF @TotalCount > 0 AND @Offset >= @TotalCount
+            BEGIN
+                SET @Offset = ((@TotalCount - 1) / @PageSize) * @PageSize;
+            END;
+
             SELECT
                 m.Id,
                 m.Name,
@@ -65,14 +77,11 @@ public class MonitorQueries : IMonitorQueries
                 m.OrganizationId
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            {{whereClause}}
+            {{{whereClause}}}
             ORDER BY m.Id
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
-            SELECT COUNT(*)
-            FROM dbo.Monitors AS m
-            JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            {{whereClause}};
+            SELECT @TotalCount AS TotalCount;
             """;
 
         using SqlMapper.GridReader result = await connection.QueryMultipleAsync(new(
@@ -82,8 +91,17 @@ public class MonitorQueries : IMonitorQueries
 
         IReadOnlyList<MonitorListRecord> records = (await result.ReadAsync<MonitorListRecord>()).ToList().AsReadOnly();
         int totalCount = await result.ReadSingleAsync<int>();
+        int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-        return new PagedRecords<MonitorListRecord>(records, totalCount);
+        int effectivePageNumber = totalPages > 0
+            ? Math.Min(pageNumber, totalPages)
+            : 1;
+
+        return new PagedRecords<MonitorListRecord>(
+            records,
+            effectivePageNumber,
+            pageSize,
+            totalCount);
     }
 
     /// <inheritdoc/>

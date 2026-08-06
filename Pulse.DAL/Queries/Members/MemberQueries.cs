@@ -46,6 +46,17 @@ public class MemberQueries : IMemberQueries
         int offset = checked((pageNumber - 1) * pageSize);
 
         const string sql = """
+            DECLARE @TotalCount AS INT = (
+                SELECT COUNT(*)
+                FROM Members m
+                WHERE m.OrganizationId = @OrganizationId;
+                );
+
+            IF @TotalCount > 0 AND @Offset >= @TotalCount
+            BEGIN
+                SET @Offset = ((@TotalCount - 1) / @PageSize) * @PageSize;
+            END;
+
             SELECT u.Id AS UserId,
                    u.Email,
                    u.FirstName,
@@ -59,9 +70,7 @@ public class MemberQueries : IMemberQueries
             ORDER BY m.JoinedAt ASC, m.Id ASC
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
-            SELECT COUNT(*)
-            FROM Members m
-            WHERE m.OrganizationId = @OrganizationId;
+            SELECT @TotalCount AS TotalCount;
             """;
 
         CommandDefinition command = new(
@@ -76,8 +85,16 @@ public class MemberQueries : IMemberQueries
 
         using SqlMapper.GridReader result = await connection.QueryMultipleAsync(command);
         IReadOnlyList<MemberRecord> records = (await result.ReadAsync<MemberRecord>()).ToList().AsReadOnly();
-        int totalCount = await result.ReadSingleAsync<int>();
 
-        return new PagedRecords<MemberRecord>(records, totalCount);
+        int totalCount = await result.ReadSingleAsync<int>();
+        int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+        int effectivePageNumber = totalPages > 0
+            ? Math.Min(pageNumber, totalPages)
+            : 1;
+        return new PagedRecords<MemberRecord>(
+            records,
+            effectivePageNumber,
+            pageSize,
+            totalCount);
     }
 }
