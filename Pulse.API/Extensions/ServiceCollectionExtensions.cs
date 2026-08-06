@@ -76,6 +76,10 @@ public static class ServiceCollectionExtensions
                 .Bind(configuration.GetRequiredSection(RateLimitSections.Refresh))
                 .ValidateOnStart();
 
+            services.AddOptions<SlidingWindowRateLimitRuleOptions>(RateLimitSections.Registration)
+                .Bind(configuration.GetRequiredSection(RateLimitSections.Registration))
+                .ValidateOnStart();
+
             services.AddRateLimiter();
             services.AddOptions<RateLimiterOptions>()
                 .Configure<
@@ -133,6 +137,22 @@ public static class ServiceCollectionExtensions
                             });
                     });
 
+                    rateLimiterOptions.AddPolicy(RateLimitPolicies.Registration, context =>
+                    {
+                        SlidingWindowRateLimitRuleOptions registrationRateLimit =
+                            slidingWindowRules.Get(RateLimitSections.Registration);
+
+                        return RateLimitPartition.GetFixedWindowLimiter(
+                            partitionKey: GetClientIdentifier(context),
+                            factory: _ => new FixedWindowRateLimiterOptions
+                            {
+                                PermitLimit = registrationRateLimit.MaxAttempts,
+                                Window = TimeSpan.FromMinutes(registrationRateLimit.PeriodMinutes),
+                                QueueLimit = 0,
+                                AutoReplenishment = true
+                            });
+                    });
+
                     rateLimiterOptions.AddPolicy(RateLimitPolicies.ManualMonitorTrigger, httpContext =>
                     {
                         string monitorId = httpContext.Request.RouteValues["id"]?.ToString() ?? "unknown";
@@ -148,12 +168,31 @@ public static class ServiceCollectionExtensions
                     rateLimiterOptions.OnRejected = async (onRejectedContext, cancellationToken) =>
                     {
                         HttpContext httpContext = onRejectedContext.HttpContext;
+
                         httpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
                         httpContext.Response.ContentType = "application/json";
 
-                        string retryMessage = onRejectedContext.Lease.TryGetMetadata(MetadataName.RetryAfter, out TimeSpan retryAfter)
-                            ? $"Please try again in {retryAfter.TotalSeconds:F0} seconds."
-                            : "Please wait before trying again.";
+                        string retryMessage;
+
+                        if (onRejectedContext.Lease.TryGetMetadata(
+                                MetadataName.RetryAfter,
+                                out TimeSpan retryAfter))
+                        {
+                            int retryAfterSeconds = (int)Math.Ceiling(retryAfter.TotalSeconds);
+                            httpContext.Response.Headers.RetryAfter = retryAfterSeconds.ToString();
+
+                            retryMessage = $"Please try again in {retryAfterSeconds} seconds.";
+                        }
+                        else
+                        {
+                            retryMessage = "Please try again later.";
+                        }
+
+                        string message = httpContext.Request.Path.StartsWithSegments(
+                                "/api/monitors",
+                                StringComparison.OrdinalIgnoreCase)
+                            ? $"Manual check was already triggered recently. {retryMessage}"
+                            : $"Too many requests. {retryMessage}";
 
                         await httpContext.Response.WriteAsJsonAsync(new ApiResponse
                         {
@@ -163,7 +202,7 @@ public static class ServiceCollectionExtensions
                                 new ApiError
                                 {
                                     Code = RateLimitErrorCodes.RateLimited,
-                                    Message = $"Manual check was already triggered recently. {retryMessage}"
+                                    Message = message
                                 }
                             ]
                         }, cancellationToken);

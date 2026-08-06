@@ -53,7 +53,8 @@ public class LoginController : Controllers.PulseControllerBase
     [EnableRateLimiting(RateLimitPolicies.Login)]
     public async Task<IActionResult> LoginAsync([Validate] LoginRequest request, CancellationToken ct)
     {
-        LoginCommand command = new(request.Email, request.Password);
+        string identifier = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "anonymous";
+        LoginCommand command = new(request.Email, request.Password, identifier);
         Result<LoginResult> result = await _handler.HandleAsync(command, ct);
 
         if (result.IsSuccess)

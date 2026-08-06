@@ -19,9 +19,10 @@ public interface IUserQueries : IQueries
     /// Retrieves authentication information for a user by email address.
     /// </summary>
     /// <param name="email">The email address of the user.</param>
+    /// <param name="identifier">The client identifier used to scope login lockout state.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The authentication record for the user when found; otherwise <c>null</c>.</returns>
-    Task<UserAuthRecord?> GetByEmailForAuthAsync(string email, CancellationToken ct);
+    Task<UserAuthRecord?> GetByEmailForAuthAsync(string email, string identifier, CancellationToken ct);
 
     /// <summary>
     /// Retrieves authentication information for a user by their unique identifier.
