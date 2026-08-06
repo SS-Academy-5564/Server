@@ -108,6 +108,8 @@ public class RegistrationHandlerTests
         RegistrationCommand command = ValidCommand();
         var userId = Guid.NewGuid();
         const string hashedPassword = "hashed_password";
+        const string expectedVerificationUrl =
+            "https://pulse.example.com/verify-email?token=secure-verification-token";
 
         _userQueries
             .Setup(q => q.EmailExistsAsync(command.Email, It.IsAny<CancellationToken>()))
@@ -153,10 +155,50 @@ public class RegistrationHandlerTests
                 email.HtmlBody != null &&
                 email.HtmlBody.Contains("Verify email address") &&
                 email.HtmlBody.Contains("24 hours") &&
-                email.HtmlBody.Contains(RawVerificationToken) &&
+                email.HtmlBody.Contains(expectedVerificationUrl) &&
                 email.PlainTextBody != null &&
                 email.PlainTextBody.Contains("24 hours") &&
-                email.PlainTextBody.Contains(RawVerificationToken)),
+                email.PlainTextBody.Contains(expectedVerificationUrl)),
+            It.IsAny<CancellationToken>()), Times.Once);
+
+        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_UkrainianLanguage_SendsUkrainianVerificationEmailWithValidLinkAndExpiration()
+    {
+        RegistrationCommand command = ValidCommand("uk");
+        var userId = Guid.NewGuid();
+        const string expectedVerificationUrl =
+            "https://pulse.example.com/verify-email?token=secure-verification-token";
+
+        _userQueries
+            .Setup(q => q.EmailExistsAsync(command.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        _passwordHasher
+            .Setup(h => h.HashPassword(command.Password))
+            .Returns("hashed_password");
+        _userCommands
+            .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userId);
+
+        Result result = await _handler.HandleAsync(command, CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        Uri.TryCreate(expectedVerificationUrl, UriKind.Absolute, out Uri? verificationUri).Should().BeTrue();
+        verificationUri!.Scheme.Should().Be(Uri.UriSchemeHttps);
+
+        _emailService.Verify(s => s.SendEmailAsync(
+            It.Is<SendEmailDto>(email =>
+                email.To.Single() == command.Email &&
+                email.Subject == "Підтвердьте адресу електронної пошти Pulse" &&
+                email.HtmlBody != null &&
+                email.HtmlBody.Contains("Підтвердити електронну адресу") &&
+                email.HtmlBody.Contains("24 години") &&
+                email.HtmlBody.Contains(expectedVerificationUrl) &&
+                email.PlainTextBody != null &&
+                email.PlainTextBody.Contains("24 години") &&
+                email.PlainTextBody.Contains(expectedVerificationUrl)),
             It.IsAny<CancellationToken>()), Times.Once);
 
         _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -194,12 +236,13 @@ public class RegistrationHandlerTests
             Times.Once);
     }
 
-    private static RegistrationCommand ValidCommand() => new
+    private static RegistrationCommand ValidCommand(string language = "en") => new
     (
         "john.doe@example.com",
         "John",
         "Doe",
-        "SecurePass1"
+        "SecurePass1",
+        language
     );
 
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider

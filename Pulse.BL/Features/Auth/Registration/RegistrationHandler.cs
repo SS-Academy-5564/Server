@@ -126,13 +126,15 @@ public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Res
             Result emailResult = await _emailService.SendEmailAsync(
                 new SendEmailDto(
                     To: [command.Email],
-                    Subject: EmailVerificationEmailBuilder.BuildSubject(),
+                    Subject: EmailVerificationEmailBuilder.BuildSubject(command.Language),
                     HtmlBody: EmailVerificationEmailBuilder.BuildHtmlBody(
                         verificationUrl,
-                        _verificationOptions.TokenLifetimeHours),
+                        _verificationOptions.TokenLifetimeHours,
+                        command.Language),
                     PlainTextBody: EmailVerificationEmailBuilder.BuildPlainTextBody(
                         verificationUrl,
-                        _verificationOptions.TokenLifetimeHours),
+                        _verificationOptions.TokenLifetimeHours,
+                        command.Language),
                     ReplyTo: null),
                 ct);
 
