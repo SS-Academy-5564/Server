@@ -142,13 +142,12 @@ public static class ServiceCollectionExtensions
                         SlidingWindowRateLimitRuleOptions registrationRateLimit =
                             slidingWindowRules.Get(RateLimitSections.Registration);
 
-                        return RateLimitPartition.GetSlidingWindowLimiter(
+                        return RateLimitPartition.GetFixedWindowLimiter(
                             partitionKey: GetClientIdentifier(context),
-                            factory: _ => new SlidingWindowRateLimiterOptions
+                            factory: _ => new FixedWindowRateLimiterOptions
                             {
                                 PermitLimit = registrationRateLimit.MaxAttempts,
                                 Window = TimeSpan.FromMinutes(registrationRateLimit.PeriodMinutes),
-                                SegmentsPerWindow = registrationRateLimit.Segments,
                                 QueueLimit = 0,
                                 AutoReplenishment = true
                             });
