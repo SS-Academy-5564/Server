@@ -69,12 +69,6 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
             .ToList()
             .AsReadOnly();
 
-        int totalPages = (int)Math.Ceiling(records.TotalCount / (double)pageSize);
-
-        int effectivePageNumber = totalPages > 0
-            ? Math.Min(pageNumber, totalPages)
-            : 1;
-
-        return Result.Ok(new PagedResult<MonitorListResult>(results, effectivePageNumber, pageSize, records.TotalCount));
+        return Result.Ok(new PagedResult<MonitorListResult>(results, pageNumber,pageSize, records.TotalCount));
     }
 }

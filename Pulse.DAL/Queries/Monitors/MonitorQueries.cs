@@ -53,12 +53,12 @@ public class MonitorQueries : IMonitorQueries
             : string.Empty;
 
         string sql =
-            $$$"""
+            $"""
             DECLARE @TotalCount AS INT = (
                 SELECT COUNT(*)
                 FROM dbo.Monitors AS m
                 JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-                {{{whereClause}}}
+                {whereClause}
             );
 
             IF @TotalCount > 0 AND @Offset >= @TotalCount
@@ -77,7 +77,7 @@ public class MonitorQueries : IMonitorQueries
                 m.OrganizationId
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            {{{whereClause}}}
+            {whereClause}
             ORDER BY m.Id
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
