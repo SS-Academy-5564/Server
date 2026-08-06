@@ -33,6 +33,12 @@ public interface IEmailVerificationTokenCommands : ICommands
     /// <param name="input">The presented and replacement token data.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The resend preparation outcome and recipient email when a replacement was stored.</returns>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when the operation is canceled.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when there is no active unit of work.
+    /// </exception>
     Task<EmailVerificationTokenResendPreparation> PrepareResendAsync(
         PrepareEmailVerificationTokenResendInput input,
         CancellationToken ct);

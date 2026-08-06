@@ -108,7 +108,7 @@ public sealed class ResendEmailVerificationHandler
                 "Replacement email verification delivery failed. Identifier: {Identifier}",
                 PiiHasher.HashForLogging(preparation.Email!));
 
-            return Result.Fail(new InternalError("Failed to send the verification email."));
+            return Result.Fail<ResendEmailVerificationResult>(new InternalError("Failed to send the verification email."));
         }
 
         await uow.CommitAsync(ct);
