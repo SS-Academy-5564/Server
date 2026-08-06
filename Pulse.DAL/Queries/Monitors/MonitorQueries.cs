@@ -91,17 +91,8 @@ public class MonitorQueries : IMonitorQueries
 
         IReadOnlyList<MonitorListRecord> records = (await result.ReadAsync<MonitorListRecord>()).ToList().AsReadOnly();
         int totalCount = await result.ReadSingleAsync<int>();
-        int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
 
-        int effectivePageNumber = totalPages > 0
-            ? Math.Min(pageNumber, totalPages)
-            : 1;
-
-        return new PagedRecords<MonitorListRecord>(
-            records,
-            effectivePageNumber,
-            pageSize,
-            totalCount);
+        return new PagedRecords<MonitorListRecord>(records, totalCount);
     }
 
     /// <inheritdoc/>

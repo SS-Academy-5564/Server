@@ -85,16 +85,8 @@ public class MemberQueries : IMemberQueries
 
         using SqlMapper.GridReader result = await connection.QueryMultipleAsync(command);
         IReadOnlyList<MemberRecord> records = (await result.ReadAsync<MemberRecord>()).ToList().AsReadOnly();
-
         int totalCount = await result.ReadSingleAsync<int>();
-        int totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
-        int effectivePageNumber = totalPages > 0
-            ? Math.Min(pageNumber, totalPages)
-            : 1;
-        return new PagedRecords<MemberRecord>(
-            records,
-            effectivePageNumber,
-            pageSize,
-            totalCount);
+
+        return new PagedRecords<MemberRecord>(records, totalCount);
     }
 }
