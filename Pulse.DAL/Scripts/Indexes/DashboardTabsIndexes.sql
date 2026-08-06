@@ -1,2 +1,0 @@
-CREATE INDEX IX_DashboardTabs_OrganizationId
-ON DashboardTabs(OrganizationId);

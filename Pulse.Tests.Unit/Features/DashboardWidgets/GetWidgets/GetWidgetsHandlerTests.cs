@@ -39,7 +39,7 @@ public class GetWidgetsHandlerTests
         => new(Guid.Parse("00000000-0000-0000-0000-000000000001"));
 
     [Fact]
-    public async Task HandleAsync_ReturnsWidgets()
+    public async Task HandleAsync_ValidQuery_ReturnsWidgets()
     {
         List<WidgetQueryResult> widgets =
         [
@@ -74,7 +74,7 @@ public class GetWidgetsHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_CallsQueries()
+    public async Task HandleAsync_ValidQuery_CallsGetByTabIdAsync()
     {
         _queriesMock
             .Setup(x => x.GetByTabIdAsync(

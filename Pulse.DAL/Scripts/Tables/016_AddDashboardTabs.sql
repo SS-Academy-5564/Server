@@ -8,3 +8,6 @@ CREATE TABLE DashboardTabs
         FOREIGN KEY (OrganizationId)
         REFERENCES Organizations(Id)
 );
+
+CREATE INDEX IX_DashboardTabs_OrganizationId
+ON DashboardTabs(OrganizationId);
