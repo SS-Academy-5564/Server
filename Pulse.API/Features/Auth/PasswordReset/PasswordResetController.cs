@@ -2,6 +2,7 @@ using FluentResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Pulse.API.Attributes;
+using Pulse.API.Common.Localization;
 using Pulse.API.Constants;
 using Pulse.API.Controllers;
 using Pulse.BL.Common.Handlers;
