@@ -16,6 +16,11 @@ public sealed class EmailVerificationOptions
     public int TokenLifetimeHours { get; set; }
 
     /// <summary>
+    /// Gets or sets the minimum number of seconds between replacement verification emails.
+    /// </summary>
+    public int ResendCooldownSeconds { get; set; }
+
+    /// <summary>
     /// Gets or sets the absolute client URL that receives the verification token.
     /// </summary>
     public string VerificationPageUrl { get; set; } = string.Empty;

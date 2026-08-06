@@ -26,4 +26,14 @@ public interface IEmailVerificationTokenCommands : ICommands
         string tokenHash,
         DateTimeOffset consumedAt,
         CancellationToken ct);
+
+    /// <summary>
+    /// Atomically validates an expired token, enforces the resend cooldown, and stores its replacement.
+    /// </summary>
+    /// <param name="input">The presented and replacement token data.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>The resend preparation outcome and recipient email when a replacement was stored.</returns>
+    Task<EmailVerificationTokenResendPreparation> PrepareResendAsync(
+        PrepareEmailVerificationTokenResendInput input,
+        CancellationToken ct);
 }

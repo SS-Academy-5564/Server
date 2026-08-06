@@ -64,6 +64,7 @@ public class RegistrationHandlerTests
             Options.Create(new EmailVerificationOptions
             {
                 TokenLifetimeHours = 24,
+                ResendCooldownSeconds = 60,
                 VerificationPageUrl = "https://pulse.example.com/verify-email"
             }),
             _logger.Object);
