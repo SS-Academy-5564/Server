@@ -273,7 +273,9 @@ public class LoginHandlerTests
             CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
-        result.Errors.Should().ContainSingle().Which.Should().BeOfType<EmailNotVerifiedError>();
+        ForbiddenError error = result.Errors.Should().ContainSingle()
+            .Which.Should().BeOfType<ForbiddenError>().Subject;
+        error.Code.Should().Be(AppError.Codes.EmailNotVerified);
         _jwtTokenGeneratorMock.Verify(
             x => x.GenerateToken(
                 It.IsAny<Guid>(),

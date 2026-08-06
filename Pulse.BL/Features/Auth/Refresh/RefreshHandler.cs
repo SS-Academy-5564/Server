@@ -103,7 +103,9 @@ public class RefreshHandler : IAsyncHandler<RefreshCommand, Result<LoginResult>>
                 "Refresh failed: Email is not verified. UserId: {UserId}",
                 user.Id);
             await _refreshTokenCommands.RevokeAllForUserAsync(user.Id, "EmailNotVerified", ct);
-            return Result.Fail(new EmailNotVerifiedError());
+            return Result.Fail(new ForbiddenError(
+                "Please verify your email address to continue.",
+                AppError.Codes.EmailNotVerified));
         }
 
         Result<(RefreshTokenRecord NewRecord, string NewRawRefreshToken)> rotateResult =

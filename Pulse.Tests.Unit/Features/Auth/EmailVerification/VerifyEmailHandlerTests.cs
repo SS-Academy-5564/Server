@@ -43,12 +43,22 @@ public class VerifyEmailHandlerTests
     }
 
     [Theory]
-    [InlineData(EmailVerificationTokenConsumeResult.Invalid, typeof(InvalidEmailVerificationTokenError))]
-    [InlineData(EmailVerificationTokenConsumeResult.Expired, typeof(ExpiredEmailVerificationTokenError))]
-    [InlineData(EmailVerificationTokenConsumeResult.AlreadyUsed, typeof(AlreadyUsedEmailVerificationTokenError))]
+    [InlineData(
+        EmailVerificationTokenConsumeResult.Invalid,
+        typeof(ValidationError),
+        AppError.Codes.EmailVerificationTokenInvalid)]
+    [InlineData(
+        EmailVerificationTokenConsumeResult.Expired,
+        typeof(ValidationError),
+        AppError.Codes.EmailVerificationTokenExpired)]
+    [InlineData(
+        EmailVerificationTokenConsumeResult.AlreadyUsed,
+        typeof(ConflictError),
+        AppError.Codes.EmailVerificationTokenAlreadyUsed)]
     public async Task HandleAsync_NonConsumableToken_ReturnsDistinctError(
         EmailVerificationTokenConsumeResult consumeResult,
-        Type expectedErrorType)
+        Type expectedErrorType,
+        string expectedCode)
     {
         const string token = "raw-token";
         const string tokenHash = "TOKEN_HASH";
@@ -60,6 +70,8 @@ public class VerifyEmailHandlerTests
         Result result = await _handler.HandleAsync(new VerifyEmailCommand(token), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
-        result.Errors.Should().ContainSingle(error => error.GetType() == expectedErrorType);
+        IError error = result.Errors.Should().ContainSingle().Subject;
+        error.GetType().Should().Be(expectedErrorType);
+        error.Should().BeAssignableTo<AppError>().Subject.Code.Should().Be(expectedCode);
     }
 }

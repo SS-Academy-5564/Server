@@ -30,8 +30,11 @@ public abstract class AppError : Error
 public sealed class NotFoundError(string message) : AppError(message, Codes.NotFound);
 public sealed class ValidationError : AppError
 {
-    public ValidationError(string message, IReadOnlyDictionary<string, string[]>? fieldErrors = null)
-        : base(message, Codes.Validation)
+    public ValidationError(
+        string message,
+        IReadOnlyDictionary<string, string[]>? fieldErrors = null,
+        string code = Codes.Validation)
+        : base(message, code)
     {
         FieldErrors = fieldErrors ?? new Dictionary<string, string[]>();
     }
@@ -39,63 +42,7 @@ public sealed class ValidationError : AppError
     public IReadOnlyDictionary<string, string[]> FieldErrors { get; }
 }
 public sealed class UnauthorizedError(string message) : AppError(message, Codes.Unauthorized);
-public sealed class ForbiddenError(string message) : AppError(message, Codes.Forbidden);
-public sealed class ConflictError(string message) : AppError(message, Codes.Conflict);
+public sealed class ForbiddenError(string message, string code = AppError.Codes.Forbidden) : AppError(message, code);
+public sealed class ConflictError(string message, string code = AppError.Codes.Conflict) : AppError(message, code);
 public sealed class InternalError(string message) : AppError(message, Codes.Internal);
 public sealed class TooManyRequestsError(string message) : AppError(message, Codes.TooManyRequests);
-
-/// <summary>
-/// Represents an email verification token that does not exist.
-/// </summary>
-public sealed class InvalidEmailVerificationTokenError : AppError
-{
-    /// <summary>
-    /// Initializes a new instance of the <see cref="InvalidEmailVerificationTokenError"/> class.
-    /// </summary>
-    public InvalidEmailVerificationTokenError()
-        : base("The email verification token is invalid.", Codes.EmailVerificationTokenInvalid)
-    {
-    }
-}
-
-/// <summary>
-/// Represents an email verification token whose lifetime has elapsed.
-/// </summary>
-public sealed class ExpiredEmailVerificationTokenError : AppError
-{
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ExpiredEmailVerificationTokenError"/> class.
-    /// </summary>
-    public ExpiredEmailVerificationTokenError()
-        : base("The email verification token has expired.", Codes.EmailVerificationTokenExpired)
-    {
-    }
-}
-
-/// <summary>
-/// Represents an email verification token that has already been consumed.
-/// </summary>
-public sealed class AlreadyUsedEmailVerificationTokenError : AppError
-{
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AlreadyUsedEmailVerificationTokenError"/> class.
-    /// </summary>
-    public AlreadyUsedEmailVerificationTokenError()
-        : base("The email verification token has already been used.", Codes.EmailVerificationTokenAlreadyUsed)
-    {
-    }
-}
-
-/// <summary>
-/// Represents an account that cannot authenticate until its email address is verified.
-/// </summary>
-public sealed class EmailNotVerifiedError : AppError
-{
-    /// <summary>
-    /// Initializes a new instance of the <see cref="EmailNotVerifiedError"/> class.
-    /// </summary>
-    public EmailNotVerifiedError()
-        : base("Please verify your email address to continue.", Codes.EmailNotVerified)
-    {
-    }
-}

@@ -103,7 +103,9 @@ public class LoginControllerTests
         LoginRequest request = new("unverified@example.com", "ValidPassword123");
         _handlerMock
             .Setup(x => x.HandleAsync(It.IsAny<LoginCommand>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Fail(new EmailNotVerifiedError()));
+            .ReturnsAsync(Result.Fail(new ForbiddenError(
+                "Please verify your email address to continue.",
+                AppError.Codes.EmailNotVerified)));
 
         IActionResult result = await _sut.LoginAsync(request, CancellationToken.None);
 

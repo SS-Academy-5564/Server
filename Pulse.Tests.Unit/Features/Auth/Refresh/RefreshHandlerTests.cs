@@ -154,7 +154,9 @@ public class RefreshHandlerTests
             CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
-        result.Errors.Should().ContainSingle().Which.Should().BeOfType<EmailNotVerifiedError>();
+        ForbiddenError error = result.Errors.Should().ContainSingle()
+            .Which.Should().BeOfType<ForbiddenError>().Subject;
+        error.Code.Should().Be(AppError.Codes.EmailNotVerified);
         _refreshTokenCommandsMock.Verify(
             x => x.RevokeAllForUserAsync(userId, "EmailNotVerified", CancellationToken.None),
             Times.Once);

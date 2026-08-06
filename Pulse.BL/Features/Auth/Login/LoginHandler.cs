@@ -91,7 +91,9 @@ public class LoginHandler : IAsyncHandler<LoginCommand, Result<LoginResult>>
         if (user.EmailVerifiedAt is null)
         {
             LogFailure("email not verified", command.Email);
-            return Result.Fail(new EmailNotVerifiedError());
+            return Result.Fail(new ForbiddenError(
+                "Please verify your email address to continue.",
+                AppError.Codes.EmailNotVerified));
         }
 
         GeneratedJwtToken generatedToken =

@@ -58,8 +58,26 @@ public class EmailVerificationControllerTests
 
     public static TheoryData<IError, int, string> TokenFailureCases => new()
     {
-        { new InvalidEmailVerificationTokenError(), 400, AppError.Codes.EmailVerificationTokenInvalid },
-        { new ExpiredEmailVerificationTokenError(), 400, AppError.Codes.EmailVerificationTokenExpired },
-        { new AlreadyUsedEmailVerificationTokenError(), 409, AppError.Codes.EmailVerificationTokenAlreadyUsed }
+        {
+            new ValidationError(
+                "The email verification token is invalid.",
+                code: AppError.Codes.EmailVerificationTokenInvalid),
+            400,
+            AppError.Codes.EmailVerificationTokenInvalid
+        },
+        {
+            new ValidationError(
+                "The email verification token has expired.",
+                code: AppError.Codes.EmailVerificationTokenExpired),
+            400,
+            AppError.Codes.EmailVerificationTokenExpired
+        },
+        {
+            new ConflictError(
+                "The email verification token has already been used.",
+                AppError.Codes.EmailVerificationTokenAlreadyUsed),
+            409,
+            AppError.Codes.EmailVerificationTokenAlreadyUsed
+        }
     };
 }

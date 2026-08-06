@@ -49,11 +49,17 @@ public sealed class VerifyEmailHandler : IAsyncHandler<VerifyEmailCommand, Resul
         {
             EmailVerificationTokenConsumeResult.Succeeded => Result.Ok(),
             EmailVerificationTokenConsumeResult.Invalid =>
-                Result.Fail(new InvalidEmailVerificationTokenError()),
+                Result.Fail(new ValidationError(
+                    "The email verification token is invalid.",
+                    code: AppError.Codes.EmailVerificationTokenInvalid)),
             EmailVerificationTokenConsumeResult.Expired =>
-                Result.Fail(new ExpiredEmailVerificationTokenError()),
+                Result.Fail(new ValidationError(
+                    "The email verification token has expired.",
+                    code: AppError.Codes.EmailVerificationTokenExpired)),
             EmailVerificationTokenConsumeResult.AlreadyUsed =>
-                Result.Fail(new AlreadyUsedEmailVerificationTokenError()),
+                Result.Fail(new ConflictError(
+                    "The email verification token has already been used.",
+                    AppError.Codes.EmailVerificationTokenAlreadyUsed)),
             _ => throw new InvalidOperationException(
                 $"Unsupported email verification token status '{consumeResult}'.")
         };
