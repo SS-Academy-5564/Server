@@ -69,6 +69,6 @@ public class GetMonitorsQueryHandler : IAsyncHandler<GetMonitorsQuery, Result<Pa
             .ToList()
             .AsReadOnly();
 
-        return Result.Ok(new PagedResult<MonitorListResult>(results, pageNumber,pageSize, records.TotalCount));
+        return Result.Ok(new PagedResult<MonitorListResult>(results, pageNumber, pageSize, records.TotalCount));
     }
 }
