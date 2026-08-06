@@ -16,6 +16,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Features\Auth\PasswordReset\**\*.html" />
     <EmbeddedResource Include="Features\Auth\PasswordReset\**\*.txt" />
+    <EmbeddedResource Include="Features\Auth\EmailVerification\**\*.html" />
+    <EmbeddedResource Include="Features\Auth\EmailVerification\**\*.txt" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -1,0 +1,10 @@
+Pulse - Verify Your Email Address
+
+Confirm your email address to finish setting up your Pulse account.
+
+Verify your email address:
+{{ verification_url }}
+
+This link expires in {{ token_lifetime_hours }} {{ hour_label }}.
+
+If you did not create a Pulse account, you can safely ignore this email.
