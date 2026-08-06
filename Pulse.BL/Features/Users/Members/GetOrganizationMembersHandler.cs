@@ -66,6 +66,11 @@ public sealed class GetOrganizationMembersHandler
             .ToList()
             .AsReadOnly();
 
-        return Result.Ok(new PagedResult<OrganizationMemberResult>(members, pageNumber, pageSize, memberRecords.TotalCount));
+        return Result.Ok(
+            new PagedResult<OrganizationMemberResult>(
+                members,
+                pageNumber,
+                pageSize,
+                memberRecords.TotalCount));
     }
 }

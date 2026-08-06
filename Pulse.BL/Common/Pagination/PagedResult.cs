@@ -25,7 +25,5 @@ public sealed record PagedResult<T>
 
     public int TotalCount { get; }
 
-    public int TotalPages => PageSize > 0
-        ? (int)Math.Ceiling(TotalCount / (double)PageSize)
-        : 0;
+    public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling((double)TotalCount / PageSize);
 }
