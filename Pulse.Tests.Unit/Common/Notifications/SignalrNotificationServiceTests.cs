@@ -36,7 +36,7 @@ public sealed class SignalrNotificationServiceTests
         using var cts = new CancellationTokenSource();
 
         // Act
-        await service.NotifyAsync(update, CancellationToken.None);
+        await service.NotifyAsync(update, cts.Token);
 
         // Assert
         client.Verify(c => c.SendUpdatedMonitorAsync(update, cts.Token), Times.Once);
