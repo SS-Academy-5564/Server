@@ -25,6 +25,7 @@ builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
 builder.Services.AddCurrentUserService();
+builder.Services.AddInternalNotificationAuthorization(builder.Configuration);
 builder.Services.AddPulseSignalR();
 
 string[] allowedOrigins = builder.Configuration

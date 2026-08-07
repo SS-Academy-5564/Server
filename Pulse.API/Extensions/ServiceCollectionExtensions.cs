@@ -76,6 +76,22 @@ public static class ServiceCollectionExtensions
             return services;
         }
 
+        /// <summary>
+        /// Registers API-key authorization for internal notification endpoints.
+        /// </summary>
+        /// <param name="configuration">The application configuration containing internal notification settings.</param>
+        /// <returns>The service collection so that additional registrations can be chained.</returns>
+        public IServiceCollection AddInternalNotificationAuthorization(IConfiguration configuration)
+        {
+            services.AddSingleton<IValidateOptions<InternalNotificationOptions>, InternalNotificationOptionsValidator>();
+            services.AddOptions<InternalNotificationOptions>()
+                .Bind(configuration.GetRequiredSection(InternalNotificationOptions.SectionName))
+                .ValidateOnStart();
+            services.AddScoped<InternalNotificationApiKeyFilter>();
+
+            return services;
+        }
+
         public IServiceCollection AddPulseRateLimiting(IConfiguration configuration)
         {
             services.AddSingleton<IValidateOptions<RateLimitRuleOptions>, RateLimitRuleOptionsValidator>();
@@ -223,6 +239,7 @@ public static class ServiceCollectionExtensions
         public IServiceCollection AddPulseSignalR()
         {
             services.AddTransient<IMonitorNotificationService, SignalrNotificationService>();
+            services.AddTransient<IBatchMonitorNotificationService, SignalrNotificationService>();
             services.AddSignalR();
 
             return services;
