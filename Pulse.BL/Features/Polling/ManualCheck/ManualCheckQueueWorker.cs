@@ -1,6 +1,8 @@
+using FluentResults;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Pulse.BL.Common.Notifications;
 using Pulse.BL.Features.Polling.ManualCheck.Queue;
 
 namespace Pulse.BL.Features.Polling.ManualCheck;
@@ -27,11 +29,11 @@ public sealed class ManualCheckQueueWorker : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            Guid monitorId;
+            ManualCheckCommand command;
 
             try
             {
-                monitorId = await _queue.DequeueAsync(stoppingToken);
+                command = await _queue.DequeueAsync(stoppingToken);
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -42,7 +44,22 @@ public sealed class ManualCheckQueueWorker : BackgroundService
             {
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
-                await pollingService.ProcessMonitorAsync(monitorId, stoppingToken);
+                Result<MonitorPollResult> monitor = await pollingService.ProcessMonitorAsync(
+                    command.MonitorId,
+                    command.OrganizationId,
+                    stoppingToken);
+
+                if (monitor.IsSuccess)
+                {
+                    INotificationService notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+                    await notificationService.NotifyAsync(command.OrganizationId, monitor.Value, stoppingToken);
+                }
+                else
+                {
+                    _logger.LogWarning(
+                        "Manual check did not complete successfully. MonitorId: {MonitorId}",
+                        command.MonitorId);
+                }
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
             {
@@ -50,7 +67,7 @@ public sealed class ManualCheckQueueWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Manual check failed. MonitorId: {MonitorId}", monitorId);
+                _logger.LogError(ex, "Manual check failed. MonitorId: {MonitorId}", command.MonitorId);
             }
         }
     }

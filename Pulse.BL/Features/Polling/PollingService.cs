@@ -44,24 +44,46 @@ public class PollingService : IPollingService
         _monitorPollResultCommands = monitorPollResultCommands;
     }
 
-    public async Task<Result> ProcessDueMonitorsAsync(CancellationToken ct = default)
+    /// <summary>
+    /// Processes the enabled monitors that are due for polling.
+    /// </summary>
+    /// <param name="ct">The cancellation token used to stop batch processing.</param>
+    /// <returns>A result containing the successfully completed monitor polling data.</returns>
+    /// <exception cref="OperationCanceledException">Batch processing is canceled.</exception>
+    public async Task<Result<List<MonitorPollResult>>> ProcessDueMonitorsAsync(CancellationToken ct = default)
     {
-        IEnumerable<MonitorPollingRecord> monitors =
-            await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+        IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
+        List<MonitorPollResult> monitorsResults = new();
 
         foreach (MonitorPollingRecord monitor in monitors)
         {
             ct.ThrowIfCancellationRequested();
 
-            await ProcessMonitorAsync(monitor, ct);
+            Result<MonitorPollResult> monitorsResult = await ProcessMonitorAsync(monitor, ct);
+            if (monitorsResult.IsFailed)
+            {
+                continue;
+            }
+
+            monitorsResults.Add(monitorsResult.Value);
         }
 
-        return Result.Ok();
+        return Result.Ok(monitorsResults);
     }
 
-    public async Task<Result> ProcessMonitorAsync(Guid monitorId, CancellationToken ct = default)
+    /// <summary>
+    /// Finds and processes a monitor belonging to the specified organization.
+    /// </summary>
+    /// <param name="monitorId">The identifier of the monitor to process.</param>
+    /// <param name="organizationId">The identifier of the monitor's organization.</param>
+    /// <param name="ct">The cancellation token for the polling operation.</param>
+    /// <returns>A result containing the completed monitor polling data, or an error if the monitor cannot be processed.</returns>
+    /// <exception cref="OperationCanceledException">The polling operation is canceled.</exception>
+    public async Task<Result<MonitorPollResult>> ProcessMonitorAsync(Guid monitorId, Guid organizationId, CancellationToken ct)
     {
-        MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(monitorId, ct);
+        MonitorPollingRecord? monitor = await _monitorQueries.GetByIdForPollingAsync(
+            monitorId,
+            ct);
 
         if (monitor is null)
         {
@@ -71,13 +93,22 @@ public class PollingService : IPollingService
         return await ProcessMonitorAsync(monitor, ct);
     }
 
-    public async Task<Result> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
+    /// <summary>
+    /// Processes the supplied monitor polling record.
+    /// </summary>
+    /// <param name="monitor">The monitor polling record to process.</param>
+    /// <param name="ct">The cancellation token for the polling operation.</param>
+    /// <returns>A result containing the completed monitor polling data, or an error if polling fails.</returns>
+    /// <exception cref="OperationCanceledException">The polling operation is canceled.</exception>
+    public async Task<Result<MonitorPollResult>> ProcessMonitorAsync(MonitorPollingRecord monitor, CancellationToken ct)
     {
         try
         {
             CreateMonitorPollResultsInput monitorPollResults = await GetPollResultAsync(monitor, ct);
-            await SavePollResultAsync(monitor, monitorPollResults, ct);
-            return Result.Ok();
+            MonitorPollResult monitorResult = CreateMonitorPollResult(monitor, monitorPollResults);
+            await SavePollResultAsync(monitorResult, monitorPollResults, ct);
+
+            return Result.Ok(monitorResult);
         }
         catch (OperationCanceledException) when (ct.IsCancellationRequested)
         {
@@ -126,7 +157,28 @@ public class PollingService : IPollingService
             RequestStatus: requestStatus);
     }
 
-    private async Task SavePollResultAsync(MonitorPollingRecord monitor, CreateMonitorPollResultsInput resultInput, CancellationToken ct)
+    private async Task SavePollResultAsync(
+        MonitorPollResult monitorResult,
+        CreateMonitorPollResultsInput resultInput,
+        CancellationToken ct)
+    {
+        await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
+        IDbSession session = (IDbSession)uof;
+        UpdateMonitorAfterPollInput updateInput = new(
+            monitorResult.MonitorId,
+            monitorResult.CurrentValue,
+            monitorResult.LastCheckedAt,
+            monitorResult.NextExecutionAt,
+            monitorResult.Status);
+
+        await _monitorPollResultCommands.CreateAsync(resultInput, session, ct);
+        await _monitorCommands.UpdateAfterPollAsync(updateInput, session, ct);
+
+        await uof.CommitAsync(ct);
+    }
+
+    private MonitorPollResult CreateMonitorPollResult(MonitorPollingRecord monitor,
+        CreateMonitorPollResultsInput resultInput)
     {
         DateTime completedAt = DateTime.UtcNow;
         DateTime nextExecutionAt = completedAt.AddSeconds(monitor.PollingIntervalSeconds);
@@ -135,14 +187,9 @@ public class PollingService : IPollingService
             ? nameof(MonitorStatus.Enabled)
             : nameof(MonitorStatus.Error);
 
-        UpdateMonitorAfterPollInput monitorInput = new(monitor.Id, resultInput.Value, completedAt, nextExecutionAt, status);
-
-        await using IUnitOfWork uof = await _unitOfWorkFactory.CreateAsync(ct: ct);
-        IDbSession session = (IDbSession)uof;
-
-        await _monitorPollResultCommands.CreateAsync(resultInput, session, ct);
-        await _monitorCommands.UpdateAfterPollAsync(monitorInput, session, ct);
-
-        await uof.CommitAsync(ct);
+        return new MonitorPollResult(monitor.Id, completedAt, nextExecutionAt, status)
+        {
+            CurrentValue = resultInput.Value
+        };
     }
 }

@@ -1,0 +1,22 @@
+DECLARE @RoleId UNIQUEIDENTIFIER = 'A1000000-0000-0000-0000-000000000001';
+DECLARE @FirstUserId UNIQUEIDENTIFIER = 'C1000000-0000-0000-0000-000000000001';
+DECLARE @SecondUserId UNIQUEIDENTIFIER = 'C1000000-0000-0000-0000-000000000002';
+DECLARE @OrgId UNIQUEIDENTIFIER = 'B1000000-0000-0000-0000-000000000002';
+
+IF NOT EXISTS (SELECT 1 FROM Organizations WHERE Name = 'Not default org')
+BEGIN
+    INSERT INTO Organizations (Id, Name, CreatedAt, UpdatedAt) VALUES
+        (@OrgId, 'Not default org', SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET());
+END;
+
+IF NOT EXISTS (SELECT 1 FROM Members WHERE UserId = @FirstUserId AND OrganizationId = @OrgId)
+BEGIN
+    INSERT INTO Members (UserId, OrganizationId, RoleId, JoinedAt, UpdatedAt) VALUES
+        (@FirstUserId, @OrgId, @RoleId, SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET());
+END;
+
+IF NOT EXISTS (SELECT 1 FROM Members WHERE UserId = @SecondUserId AND OrganizationId = @OrgId)
+BEGIN
+    INSERT INTO Members (UserId, OrganizationId, RoleId, JoinedAt, UpdatedAt) VALUES
+        (@SecondUserId, @OrgId, @RoleId, SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET());
+END;

@@ -5,11 +5,13 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using Pulse.API.Common.Notifications;
 using Pulse.API.Common.Security;
 using Pulse.API.Common.Security.RateLimiting;
 using Pulse.API.Constants;
 using Pulse.API.Documentation;
 using Pulse.API.Responses;
+using Pulse.BL.Common.Notifications;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
 
@@ -46,6 +48,21 @@ public static class ServiceCollectionExtensions
 
                         ValidateLifetime = true,
                         ClockSkew = TimeSpan.Zero,
+                    };
+                    bearerOptions.Events = new JwtBearerEvents
+                    {
+                        OnMessageReceived = context =>
+                        {
+                            string? accessToken = context.Request.Query["access_token"];
+
+                            if (!string.IsNullOrWhiteSpace(accessToken) &&
+                                context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
+                            {
+                                context.Token = accessToken;
+                            }
+
+                            return Task.CompletedTask;
+                        }
                     };
                 });
 
@@ -195,6 +212,18 @@ public static class ServiceCollectionExtensions
                 options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
                 options.AddOperationTransformer<BearerSecurityOperationTransformer>();
             });
+
+            return services;
+        }
+
+        /// <summary>
+        /// Registers the SignalR services and notification service used by Pulse.
+        /// </summary>
+        /// <returns>The service collection so that additional registrations can be chained.</returns>
+        public IServiceCollection AddPulseSignalR()
+        {
+            services.AddTransient<INotificationService, SignalrNotificationService>();
+            services.AddSignalR();
 
             return services;
         }

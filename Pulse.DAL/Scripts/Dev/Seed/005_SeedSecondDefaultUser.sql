@@ -1,0 +1,21 @@
+DECLARE @UserId UNIQUEIDENTIFIER = 'C1000000-0000-0000-0000-000000000002';
+DECLARE @OrgId UNIQUEIDENTIFIER = 'B1000000-0000-0000-0000-000000000001';
+DECLARE @RoleId UNIQUEIDENTIFIER = 'A1000000-0000-0000-0000-000000000001';
+
+IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = 'email2@mail.com')
+BEGIN
+    INSERT INTO Users (Id, Email, FirstName, LastName, PasswordHash, CreatedAt, UpdatedAt) VALUES
+        (@UserId, 'email2@mail.com', 'Jessica', 'Doe', 'AQAAAAEAACcQAAAAEEKsm5FCTw0+sBpu047y45JQvIyhZppD/J9RJVnNkPQK/T1og4xKgztJ1ixLu3RNMg==', SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET());
+END
+ELSE
+BEGIN
+    SELECT @UserId = Id
+    FROM Users
+    WHERE Email = 'email2@mail.com';
+END
+
+IF NOT EXISTS (SELECT 1 FROM Members WHERE UserId = @UserId AND OrganizationId = @OrgId)
+BEGIN
+    INSERT INTO Members (UserId, OrganizationId, RoleId, JoinedAt, UpdatedAt) VALUES
+        (@UserId, @OrgId, @RoleId, SYSDATETIMEOFFSET(), SYSDATETIMEOFFSET());
+END

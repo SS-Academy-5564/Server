@@ -134,12 +134,16 @@ public class PollingServiceTests
     {
         // Arrange
         Guid monitorId = Guid.NewGuid();
+        Guid organizationId = Guid.NewGuid();
         _monitorQueries
             .Setup(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((MonitorPollingRecord?)null);
 
         // Act
-        Result result = await _service.ProcessMonitorAsync(monitorId, CancellationToken.None);
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(
+            monitorId,
+            organizationId,
+            CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -152,6 +156,7 @@ public class PollingServiceTests
     {
         // Arrange
         Guid monitorId = Guid.NewGuid();
+        Guid organizationId = Guid.NewGuid();
         MonitorPollingRecord monitor = _monitor with { Id = monitorId };
         HttpMonitorResponse response = new(
             IsSuccess: true,
@@ -175,11 +180,16 @@ public class PollingServiceTests
             .Returns(true);
 
         // Act
-        Result result = await _service.ProcessMonitorAsync(monitorId, CancellationToken.None);
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(
+            monitorId,
+            organizationId,
+            CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        _monitorQueries.Verify(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()), Times.Once);
+        _monitorQueries.Verify(
+            q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Fact]
@@ -368,6 +378,26 @@ public class PollingServiceTests
             f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()),
             Times.Exactly(2));
         _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+    }
+
+    [Fact]
+    public async Task ProcessDueMonitorsAsync_WhenMonitorProcessingFails_SkipsFailedResultAsync()
+    {
+        // Arrange
+        SetupDueMonitors(_monitor);
+        _httpMonitorClient
+            .Setup(c => c.SendAsync(_monitor, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("Polling failed."));
+
+        // Act
+        Result<List<MonitorPollResult>> result = await _service.ProcessDueMonitorsAsync();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+        _unitOfWorkFactory.Verify(
+            f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]
