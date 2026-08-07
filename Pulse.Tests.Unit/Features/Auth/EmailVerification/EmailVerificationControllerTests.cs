@@ -12,18 +12,20 @@ namespace Pulse.Tests.Unit.Features.Auth.EmailVerification;
 
 public class EmailVerificationControllerTests
 {
-    private readonly Mock<IAsyncHandler<VerifyEmailCommand, Result>> _handler = new();
+    private readonly Mock<IAsyncHandler<VerifyEmailCommand, Result>> _verifyHandler = new();
+    private readonly Mock<IAsyncHandler<ResendEmailVerificationCommand, Result<ResendEmailVerificationResult>>>
+        _resendHandler = new();
 
     [Fact]
     public async Task VerifyAsync_ValidToken_ReturnsOk()
     {
         const string token = "valid-token";
-        _handler
+        _verifyHandler
             .Setup(h => h.HandleAsync(
                 It.Is<VerifyEmailCommand>(command => command.Token == token),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Ok());
-        EmailVerificationController controller = new(_handler.Object);
+        EmailVerificationController controller = CreateController();
 
         IActionResult result = await controller.VerifyAsync(
             new VerifyEmailRequest(token),
@@ -41,10 +43,10 @@ public class EmailVerificationControllerTests
         int expectedStatus,
         string expectedCode)
     {
-        _handler
+        _verifyHandler
             .Setup(h => h.HandleAsync(It.IsAny<VerifyEmailCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail(error));
-        EmailVerificationController controller = new(_handler.Object);
+        EmailVerificationController controller = CreateController();
 
         IActionResult result = await controller.VerifyAsync(
             new VerifyEmailRequest("token"),
@@ -54,6 +56,31 @@ public class EmailVerificationControllerTests
         objectResult.StatusCode.Should().Be(expectedStatus);
         ApiResponse response = objectResult.Value.Should().BeOfType<ApiResponse>().Subject;
         response.Errors.Should().ContainSingle().Which.Code.Should().Be(expectedCode);
+    }
+
+    [Fact]
+    public async Task ResendAsync_ExpiredToken_ReturnsCooldownGuidance()
+    {
+        const string token = "expired-token";
+        _resendHandler
+            .Setup(handler => handler.HandleAsync(
+                It.Is<ResendEmailVerificationCommand>(command =>
+                    command.Token == token &&
+                    command.Language == "uk"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(new ResendEmailVerificationResult(60)));
+        EmailVerificationController controller = CreateController();
+
+        IActionResult result = await controller.ResendAsync(
+            new ResendEmailVerificationRequest(token),
+            CancellationToken.None,
+            "uk-UA,uk;q=0.9,en;q=0.8");
+
+        OkObjectResult okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        ApiResponse<ResendEmailVerificationResult> response = okResult.Value
+            .Should().BeOfType<ApiResponse<ResendEmailVerificationResult>>().Subject;
+        response.Success.Should().BeTrue();
+        response.Data!.ResendCooldownSeconds.Should().Be(60);
     }
 
     public static TheoryData<IError, int, string> TokenFailureCases => new()
@@ -80,4 +107,7 @@ public class EmailVerificationControllerTests
             AppError.Codes.EmailVerificationTokenAlreadyUsed
         }
     };
+
+    private EmailVerificationController CreateController()
+        => new(_verifyHandler.Object, _resendHandler.Object);
 }

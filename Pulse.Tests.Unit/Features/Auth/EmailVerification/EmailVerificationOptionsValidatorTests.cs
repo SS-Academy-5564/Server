@@ -14,6 +14,7 @@ public class EmailVerificationOptionsValidatorTests
         EmailVerificationOptions options = new()
         {
             TokenLifetimeHours = 24,
+            ResendCooldownSeconds = 60,
             VerificationPageUrl = "https://pulse.example.com/verify-email"
         };
 
@@ -28,6 +29,7 @@ public class EmailVerificationOptionsValidatorTests
         EmailVerificationOptions options = new()
         {
             TokenLifetimeHours = 24,
+            ResendCooldownSeconds = 60,
             VerificationPageUrl = "http://localhost:4200/verify-email"
         };
 
@@ -44,6 +46,7 @@ public class EmailVerificationOptionsValidatorTests
         EmailVerificationOptions options = new()
         {
             TokenLifetimeHours = tokenLifetimeHours,
+            ResendCooldownSeconds = 60,
             VerificationPageUrl = "https://pulse.example.com/verify-email"
         };
 
@@ -61,6 +64,7 @@ public class EmailVerificationOptionsValidatorTests
         EmailVerificationOptions options = new()
         {
             TokenLifetimeHours = 24,
+            ResendCooldownSeconds = 60,
             VerificationPageUrl = url
         };
 
@@ -68,5 +72,23 @@ public class EmailVerificationOptionsValidatorTests
 
         result.Failed.Should().BeTrue();
         result.FailureMessage.Should().Contain("VerificationPageUrl");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(3601)]
+    public void Validate_InvalidResendCooldown_ReturnsFailure(int resendCooldownSeconds)
+    {
+        EmailVerificationOptions options = new()
+        {
+            TokenLifetimeHours = 24,
+            ResendCooldownSeconds = resendCooldownSeconds,
+            VerificationPageUrl = "https://pulse.example.com/verify-email"
+        };
+
+        ValidateOptionsResult result = _validator.Validate(null, options);
+
+        result.Failed.Should().BeTrue();
+        result.FailureMessage.Should().Contain("ResendCooldownSeconds");
     }
 }
