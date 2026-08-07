@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Notifications;
 
-namespace Pulse.API.Common.Notifications;
+namespace Pulse.API.Filters.InternalNotificatiom;
 
 public sealed class InternalNotificationApiKeyFilter : IAsyncAuthorizationFilter
 {

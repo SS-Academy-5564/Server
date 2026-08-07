@@ -1,4 +1,4 @@
-namespace Pulse.API.Common.Notifications;
+namespace Pulse.API.Filters.InternalNotificatiom;
 
 public sealed class InternalNotificationOptions
 {

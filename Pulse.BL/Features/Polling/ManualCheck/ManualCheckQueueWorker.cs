@@ -51,8 +51,8 @@ public sealed class ManualCheckQueueWorker : BackgroundService
 
                 if (monitor.IsSuccess)
                 {
-                    INotificationService notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-                    await notificationService.NotifyAsync(command.OrganizationId, monitor.Value, stoppingToken);
+                    IMonitorNotificationService notificationService = scope.ServiceProvider.GetRequiredService<IMonitorNotificationService>();
+                    await notificationService.NotifyAsync(monitor.Value, stoppingToken);
                 }
                 else
                 {

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Options;
-using Pulse.API.Common.Notifications;
+using Pulse.API.Filters.InternalNotificatiom;
 using Pulse.BL.Common.Notifications;
 
 namespace Pulse.Tests.Unit.Common.Notifications;

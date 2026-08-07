@@ -23,7 +23,7 @@ public class SignalrNotificationService : IMonitorNotificationService, IBatchMon
     /// <returns>A task that represents the asynchronous notification operation.</returns>
     public async Task NotifyAsync(MonitorPollResult monitor, CancellationToken ct)
     {
-        await _hubContext.Clients.Group(monitor.OrganizationId.ToString()).SendUpdatedMonitorAsync(monitor,ct);
+        await _hubContext.Clients.Group(monitor.OrganizationId.ToString()).SendUpdatedMonitorAsync(monitor, ct);
     }
 
     public async Task NotifyAsync(IReadOnlyCollection<MonitorPollResult> monitors, CancellationToken ct)
@@ -31,7 +31,7 @@ public class SignalrNotificationService : IMonitorNotificationService, IBatchMon
         IEnumerable<IGrouping<Guid, MonitorPollResult>> orgMonitorsGroups = monitors.GroupBy(monitor => monitor.OrganizationId);
         foreach (IGrouping<Guid, MonitorPollResult> group in orgMonitorsGroups)
         {
-            await _hubContext.Clients.Group(group.Key.ToString()).SendUpdatedMonitorsAsync(group.ToList(),ct);
+            await _hubContext.Clients.Group(group.Key.ToString()).SendUpdatedMonitorsAsync(group.ToList(), ct);
         }
     }
 }

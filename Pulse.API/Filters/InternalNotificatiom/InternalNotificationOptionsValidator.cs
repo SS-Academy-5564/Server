@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 
-namespace Pulse.API.Common.Notifications;
+namespace Pulse.API.Filters.InternalNotificatiom;
 
 public sealed class InternalNotificationOptionsValidator : IValidateOptions<InternalNotificationOptions>
 {

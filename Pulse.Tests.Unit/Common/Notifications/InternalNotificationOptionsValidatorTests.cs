@@ -1,6 +1,6 @@
 using FluentAssertions;
 using Microsoft.Extensions.Options;
-using Pulse.API.Common.Notifications;
+using Pulse.API.Filters.InternalNotificatiom;
 
 namespace Pulse.Tests.Unit.Common.Notifications;
 

@@ -10,6 +10,7 @@ using Pulse.API.Common.Security;
 using Pulse.API.Common.Security.RateLimiting;
 using Pulse.API.Constants;
 using Pulse.API.Documentation;
+using Pulse.API.Filters.InternalNotificatiom;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Common.Security;
