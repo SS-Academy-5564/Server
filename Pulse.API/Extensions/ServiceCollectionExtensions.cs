@@ -216,16 +216,13 @@ public static class ServiceCollectionExtensions
             return services;
         }
 
+        /// <summary>
+        /// Registers the SignalR services and notification service used by Pulse.
+        /// </summary>
+        /// <returns>The service collection so that additional registrations can be chained.</returns>
         public IServiceCollection AddPulseSignalR()
         {
-            services.AddSingleton<IValidateOptions<InternalNotificationOptions>, InternalNotificationOptionsValidator>();
-            services.AddOptions<InternalNotificationOptions>()
-                .BindConfiguration(InternalNotificationOptions.SectionName)
-                .ValidateOnStart();
-
-            services.AddScoped<InternalNotificationApiKeyFilter>();
-            services.AddScoped<IMonitorNotificationService, SignalrNotificationService>();
-            services.AddScoped<IBatchMonitorNotificationService, SignalrNotificationService>();
+            services.AddTransient<IMonitorNotificationService, SignalrNotificationService>();
             services.AddSignalR();
 
             return services;

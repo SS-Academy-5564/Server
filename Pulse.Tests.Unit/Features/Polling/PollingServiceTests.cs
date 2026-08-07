@@ -382,6 +382,26 @@ public class PollingServiceTests
     }
 
     [Fact]
+    public async Task ProcessDueMonitorsAsync_WhenMonitorProcessingFails_SkipsFailedResultAsync()
+    {
+        // Arrange
+        SetupDueMonitors(_monitor);
+        _httpMonitorClient
+            .Setup(c => c.SendAsync(_monitor, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new HttpRequestException("Polling failed."));
+
+        // Act
+        Result<List<MonitorPollResult>> result = await _service.ProcessDueMonitorsAsync();
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
+        _unitOfWorkFactory.Verify(
+            f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
     public async Task ProcessDueMonitorsAsync_WhenNoMonitorsAreDue_DoesNotProcessAnythingAsync()
     {
         // Arrange
