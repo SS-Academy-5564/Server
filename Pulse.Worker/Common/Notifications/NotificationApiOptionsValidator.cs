@@ -7,10 +7,10 @@ public sealed class NotificationApiOptionsValidator : IValidateOptions<Notificat
     public ValidateOptionsResult Validate(string? name, NotificationApiOptions options)
     {
         if (!Uri.TryCreate(options.ApiBaseUrl, UriKind.Absolute, out Uri? apiUri) ||
-            apiUri.Scheme is not "http" and not "https")
+            apiUri.Scheme is not "https")
         {
             return ValidateOptionsResult.Fail(
-                $"{NotificationApiOptions.SectionName}:ApiBaseUrl must be an absolute HTTP(S) URL.");
+                $"{NotificationApiOptions.SectionName}:ApiBaseUrl must be an absolute HTTPS URL.");
         }
 
         if (string.IsNullOrWhiteSpace(options.ApiKey))

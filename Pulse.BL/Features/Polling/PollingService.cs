@@ -67,8 +67,8 @@ public class PollingService : IPollingService
 
             monitorsResults.Add(monitorsResult.Value);
         }
-        return Result.Ok(monitorsResults);
 
+        return Result.Ok(monitorsResults);
     }
 
     /// <summary>
