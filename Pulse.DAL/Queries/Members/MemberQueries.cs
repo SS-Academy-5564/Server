@@ -49,8 +49,8 @@ public class MemberQueries : IMemberQueries
             DECLARE @TotalCount AS INT = (
                 SELECT COUNT(*)
                 FROM Members m
-                WHERE m.OrganizationId = @OrganizationId;
-                );
+                WHERE m.OrganizationId = @OrganizationId
+            );
 
             IF @TotalCount > 0 AND @Offset >= @TotalCount
             BEGIN
