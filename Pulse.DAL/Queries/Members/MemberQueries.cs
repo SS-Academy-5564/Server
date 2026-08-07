@@ -43,12 +43,14 @@ public class MemberQueries : IMemberQueries
         CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
-        int offset = checked((pageNumber - 1) * pageSize);
+        long offset = ((long)Math.Max(pageNumber, 1) - 1) * pageSize;
 
         const string sql = """
             DECLARE @TotalCount AS INT = (
                 SELECT COUNT(*)
                 FROM Members m
+                JOIN Users u ON u.Id = m.UserId
+                JOIN Roles r ON r.Id = m.RoleId
                 WHERE m.OrganizationId = @OrganizationId
             );
 
