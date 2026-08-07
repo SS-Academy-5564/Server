@@ -28,6 +28,11 @@ public class SignalrNotificationService : IMonitorNotificationService, IBatchMon
 
     public async Task NotifyAsync(IReadOnlyCollection<MonitorPollResult> monitors, CancellationToken ct)
     {
+        if (monitors.Count == 0)
+        {
+            return;
+        }
+
         IEnumerable<IGrouping<Guid, MonitorPollResult>> orgMonitorsGroups = monitors.GroupBy(monitor => monitor.OrganizationId);
         foreach (IGrouping<Guid, MonitorPollResult> group in orgMonitorsGroups)
         {

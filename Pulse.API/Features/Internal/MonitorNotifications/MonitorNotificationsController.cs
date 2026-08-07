@@ -1,16 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Pulse.API.Controllers;
 using Pulse.API.Filters.InternalNotificatiom;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Features.Polling;
 
 namespace Pulse.API.Features.Internal.MonitorNotifications;
 
-[ApiController]
+
 [AllowAnonymous]
 [Route(NotificationApiConstants.EndpointPath)]
 [ServiceFilter<InternalNotificationApiKeyFilter>]
-public sealed class MonitorNotificationsController : ControllerBase
+public sealed class MonitorNotificationsController : PulseControllerBase
 {
     private readonly IBatchMonitorNotificationService _notificationService;
 
