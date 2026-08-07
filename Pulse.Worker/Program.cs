@@ -39,7 +39,20 @@ builder.ConfigureServices((context, services) =>
     services.AddScoped<IPollingService, PollingService>();
     services.AddScoped<IHttpMonitorClient, HttpMonitorClient>();
     services.AddScoped<IJsonPathReader, JsonPathReader>();
-    services.AddScoped<IBatchMonitorNotificationService, HttpNotificationService>();
+
+    services.AddOptions<NotificationApiOptions>()
+        .Bind(context.Configuration.GetRequiredSection(NotificationApiOptions.SectionName))
+        .ValidateOnStart();
+    services.AddSingleton<IValidateOptions<NotificationApiOptions>, NotificationApiOptionsValidator>();
+    services.AddHttpClient<IBatchMonitorNotificationService, HttpNotificationService>((serviceProvider, client) =>
+    {
+        NotificationApiOptions options = serviceProvider
+            .GetRequiredService<IOptions<NotificationApiOptions>>()
+            .Value;
+
+        client.BaseAddress = new Uri(options.ApiBaseUrl);
+        client.DefaultRequestHeaders.Add(NotificationApiConstants.ApiKeyHeaderName, options.ApiKey);
+    });
 
     services.AddDataAccess();
     services.AddPolling();

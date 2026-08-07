@@ -1,22 +1,29 @@
+using System.Net.Http.Json;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Features.Polling;
 
 namespace Pulse.Worker.Common.Notifications;
 
-public class HttpNotificationService : IBatchMonitorNotificationService
+public sealed class HttpNotificationService : IBatchMonitorNotificationService
 {
+    private readonly HttpClient _httpClient;
 
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public HttpNotificationService(IHttpClientFactory httpClientFactory)
+    public HttpNotificationService(HttpClient httpClient)
     {
-        _httpClientFactory = httpClientFactory;
+        _httpClient = httpClient;
     }
 
-    public Task NotifyAsync(IReadOnlyCollection<MonitorPollResult> update, CancellationToken ct)
+    public async Task NotifyAsync(IReadOnlyCollection<MonitorPollResult> updates, CancellationToken ct)
     {
-        using HttpClient client = _httpClientFactory.CreateClient();
+        if (updates.Count == 0)
+        {
+            return;
+        }
 
-        return Task.CompletedTask;
+        using HttpResponseMessage response = await _httpClient.PostAsJsonAsync(
+            NotificationApiConstants.EndpointPath,
+            updates,
+            ct);
+        response.EnsureSuccessStatusCode();
     }
 }

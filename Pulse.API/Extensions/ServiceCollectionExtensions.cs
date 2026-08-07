@@ -218,6 +218,12 @@ public static class ServiceCollectionExtensions
 
         public IServiceCollection AddPulseSignalR()
         {
+            services.AddSingleton<IValidateOptions<InternalNotificationOptions>, InternalNotificationOptionsValidator>();
+            services.AddOptions<InternalNotificationOptions>()
+                .BindConfiguration(InternalNotificationOptions.SectionName)
+                .ValidateOnStart();
+
+            services.AddScoped<InternalNotificationApiKeyFilter>();
             services.AddScoped<IMonitorNotificationService, SignalrNotificationService>();
             services.AddScoped<IBatchMonitorNotificationService, SignalrNotificationService>();
             services.AddSignalR();
