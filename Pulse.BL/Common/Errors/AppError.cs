@@ -23,6 +23,7 @@ public abstract class AppError : Error
         public const string EmailVerificationTokenInvalid = "EMAIL_VERIFICATION_TOKEN_INVALID";
         public const string EmailVerificationTokenExpired = "EMAIL_VERIFICATION_TOKEN_EXPIRED";
         public const string EmailVerificationTokenAlreadyUsed = "EMAIL_VERIFICATION_TOKEN_ALREADY_USED";
+        public const string EmailVerificationTokenNotExpired = "EMAIL_VERIFICATION_TOKEN_NOT_EXPIRED";
         public const string EmailNotVerified = "EMAIL_NOT_VERIFIED";
     }
 }

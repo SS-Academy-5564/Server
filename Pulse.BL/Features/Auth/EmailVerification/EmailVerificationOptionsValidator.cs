@@ -25,6 +25,11 @@ public sealed class EmailVerificationOptionsValidator : IValidateOptions<EmailVe
             errors.Add("EmailVerification:TokenLifetimeHours must be between 1 and 24.");
         }
 
+        if (options.ResendCooldownSeconds is < 1 or > 3600)
+        {
+            errors.Add("EmailVerification:ResendCooldownSeconds must be between 1 and 3600.");
+        }
+
         if (!Uri.TryCreate(options.VerificationPageUrl, UriKind.Absolute, out Uri? verificationUri))
         {
             errors.Add("EmailVerification:VerificationPageUrl must be an absolute URL.");
