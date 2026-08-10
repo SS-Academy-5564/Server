@@ -7,7 +7,6 @@ using Pulse.BL.Features.Polling;
 
 namespace Pulse.API.Features.Internal.MonitorNotifications;
 
-
 [AllowAnonymous]
 [Route(NotificationApiConstants.EndpointPath)]
 [ServiceFilter<InternalNotificationApiKeyFilter>]
