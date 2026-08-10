@@ -16,6 +16,11 @@ public static class RateLimitPolicies
     public const string PasswordReset = "PasswordResetLimit";
 
     /// <summary>
+    /// The policy used to rate limit email verification resend requests by IP address.
+    /// </summary>
+    public const string EmailVerificationResend = "EmailVerificationResendLimit";
+
+    /// <summary>
     /// The policy used to rate limit manual monitor triggers.
     /// </summary>
     public const string ManualMonitorTrigger = "ManualMonitorTrigger";
