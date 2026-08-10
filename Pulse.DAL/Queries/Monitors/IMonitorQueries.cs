@@ -34,5 +34,16 @@ public interface IMonitorQueries : IQueries
     /// <returns>A collection of monitors ready for polling.</returns>
     Task<IEnumerable<MonitorPollingRecord>> GetDueEnabledAsync(int max, CancellationToken ct = default);
 
+    /// <summary>
+    /// Retrieves the monitor by its id.
+    /// </summary>
+    /// <param name="id">The monitor id to search by.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>
+    /// A <see cref="MonitorRecord"/> matching the given <paramref name="id"/>,
+    /// or <see langword="null"/> if no monitor with that identifier exists.
+    /// </returns>
+    Task<MonitorRecord?> GetByIdAsync(Guid id, CancellationToken ct);
+
     Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct);
 }

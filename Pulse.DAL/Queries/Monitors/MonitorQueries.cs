@@ -106,6 +106,36 @@ public class MonitorQueries : IMonitorQueries
     }
 
     /// <inheritdoc/>
+    public async Task<MonitorRecord?> GetByIdAsync(Guid id, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        const string sql = """
+            SELECT
+                m.Id,
+                m.OrganizationId,
+                m.Name,
+                m.Url,
+                h.Name AS HttpMethod,
+                m.ResultPath,
+                m.CurrentValue,
+                s.Name AS Status,
+                m.PollingIntervalSeconds,
+                m.PollingTimeoutSeconds,
+                m.LastCheckedAt,
+                m.NextExecutionAt,
+                m.CreatedAt,
+                m.LastModifiedAt
+            FROM dbo.Monitors m
+            JOIN HttpMethods AS h ON m.HttpMethod = h.Id
+            JOIN MonitorStatuses AS s ON m.StatusId = s.Id
+            WHERE m.Id = @Id;
+            """;
+
+        return await connection.QuerySingleOrDefaultAsync<MonitorRecord>(
+            new CommandDefinition(sql, new { Id = id }, cancellationToken: ct));
+    }
+
     public async Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
