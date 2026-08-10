@@ -11,6 +11,9 @@ using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.BL.Features.Polling;
 
+/// <summary>
+/// Service responsible for querying due monitors and executing HTTP polling checks against individual monitors.
+/// </summary>
 public class PollingService : IPollingService
 {
     private readonly ILogger<PollingService> _logger;
@@ -39,6 +42,13 @@ public class PollingService : IPollingService
         _monitorPollResultCommands = monitorPollResultCommands;
     }
 
+    /// <summary>
+    /// Retrieves enabled monitors that are due for polling up to the specified maximum record count.
+    /// </summary>
+    /// <param name="numberOfRecords">The maximum number of records to retrieve.</param>
+    /// <param name="ct">The cancellation token for the operation.</param>
+    /// <returns>A result containing due monitor polling records.</returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
     public async Task<Result<IEnumerable<MonitorPollingRecord>>> GetDueEnabledAsync(int numberOfRecords, CancellationToken ct)
     {
         IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(numberOfRecords, ct);
