@@ -76,6 +76,8 @@ public class CreateWidgetHandlerTests
             It.Is<CreateWidgetInput>(i =>
                 i.DashboardTabId == Guid.Parse("00000000-0000-0000-0000-000000000001") &&
                 i.Type == "LineChart" &&
+                i.Title == "Response Time" &&
+                i.Subtitle == "Last 24 Hours" &&
                 i.Metric == "ResponseTime" &&
                 i.TimeRange == "24h" &&
                 i.Settings == "{}" &&

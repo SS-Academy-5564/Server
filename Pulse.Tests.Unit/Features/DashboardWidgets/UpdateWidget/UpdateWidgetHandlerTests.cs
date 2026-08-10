@@ -81,6 +81,8 @@ public class UpdateWidgetHandlerTests
             It.Is<UpdateWidgetInput>(i =>
                 i.Id == Guid.Parse("00000000-0000-0000-0000-000000000001") &&
                 i.Type == "LineChart" &&
+                i.Title == "Response Time" &&
+                i.Subtitle == "Last 24 Hours" &&
                 i.Metric == "ResponseTime" &&
                 i.TimeRange == "24h" &&
                 i.Settings == "{}" &&
