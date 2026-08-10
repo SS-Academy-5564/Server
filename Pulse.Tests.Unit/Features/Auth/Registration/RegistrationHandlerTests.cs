@@ -14,7 +14,6 @@ using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Users;
 using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Common.Repository;
-using Pulse.DAL.Exceptions;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.Tests.Unit.Features.Auth.Registration;
@@ -94,13 +93,14 @@ public class RegistrationHandlerTests
             .Returns("hashed");
         _userCommands
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new DuplicateKeyException("Email"));
+            .ReturnsAsync(new CreateUserResult(CreateUserStatus.DuplicateEmail, null));
 
         Result<RegistrationResult> result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ConflictError);
         _memberCommands.Verify(m => m.CreateMemberAsync(It.IsAny<CreateMemberInput>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class RegistrationHandlerTests
             .Returns(hashedPassword);
         _userCommands
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(userId);
+            .ReturnsAsync(new CreateUserResult(CreateUserStatus.Succeeded, userId));
 
         Result<RegistrationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
@@ -182,7 +182,7 @@ public class RegistrationHandlerTests
             .Returns("hashed_password");
         _userCommands
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(userId);
+            .ReturnsAsync(new CreateUserResult(CreateUserStatus.Succeeded, userId));
 
         Result<RegistrationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
@@ -217,7 +217,7 @@ public class RegistrationHandlerTests
         _passwordHasher.Setup(h => h.HashPassword(command.Password)).Returns("hashed_password");
         _userCommands
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Guid.NewGuid());
+            .ReturnsAsync(new CreateUserResult(CreateUserStatus.Succeeded, Guid.NewGuid()));
         _emailService
             .Setup(s => s.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("Delivery failed"));
