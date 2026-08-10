@@ -1,5 +1,6 @@
 using Dapper;
 using Pulse.DAL.Commands.DashboardWidgets.CreateWidget;
+using Pulse.DAL.Commands.DashboardWidgets.UpdateWidget;
 using Pulse.DAL.Common.Repository;
 
 namespace Pulse.DAL.Commands.DashboardWidgets;
@@ -68,5 +69,36 @@ public class WidgetCommands : IWidgetCommands
                 },
                 transaction: session.Transaction,
                 cancellationToken: ct));
+    }
+
+    public async Task<bool> UpdateAsync(
+        UpdateWidgetInput input,
+        CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
+        const string sql =
+            """
+            UPDATE dbo.DashboardWidgets
+            SET
+                Type = @Type,
+                Title = @Title,
+                Subtitle = @Subtitle,
+                Metric = @Metric,
+                TimeRange = @TimeRange,
+                Settings = @Settings
+            WHERE Id = @Id
+              AND OrganizationId = @OrganizationId;
+            """;
+
+        int affectedRows = await session.Connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                input,
+                transaction: session.Transaction,
+                cancellationToken: ct));
+
+        return affectedRows > 0;
     }
 }
