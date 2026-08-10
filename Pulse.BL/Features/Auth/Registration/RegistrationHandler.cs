@@ -20,7 +20,7 @@ namespace Pulse.BL.Features.Auth.Registration;
 /// <summary>
 /// Registers users and issues their initial email verification message.
 /// </summary>
-public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result>
+public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result<RegistrationResult>>
 {
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
     private readonly IUserCommands _userCommands;
@@ -79,14 +79,14 @@ public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Res
     /// </summary>
     /// <param name="command">The command containing the user's registration data.</param>
     /// <param name="ct">A token to cancel the operation.</param>
-    /// <returns>A <see cref="Result"/> indicating success or a failure with error details.</returns>
-    public async Task<Result> HandleAsync(RegistrationCommand command, CancellationToken ct)
+    /// <returns>A result containing the configured resend cooldown, or a failure with error details.</returns>
+    public async Task<Result<RegistrationResult>> HandleAsync(RegistrationCommand command, CancellationToken ct)
     {
         bool userExists = await _userQueries.EmailExistsAsync(command.Email, ct);
 
         if (userExists)
         {
-            return Result.Fail(new ConflictError("A user with this Email already exists."));
+            return Result.Fail<RegistrationResult>(new ConflictError("A user with this Email already exists."));
         }
 
         string passwordHash = _passwordHasher.HashPassword(command.Password);
@@ -144,16 +144,17 @@ public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Res
                     "Email verification delivery failed. Identifier: {Identifier}",
                     PiiHasher.HashForLogging(command.Email));
 
-                return Result.Fail(new InternalError("Failed to send the verification email."));
+                return Result.Fail<RegistrationResult>(new InternalError("Failed to send the verification email."));
             }
 
             await uow.CommitAsync(ct);
         }
         catch (DuplicateKeyException ex)
         {
-            return Result.Fail(new ConflictError($"A user with this {ex.FieldName} already exists."));
+            return Result.Fail<RegistrationResult>(
+                new ConflictError($"A user with this {ex.FieldName} already exists."));
         }
 
-        return Result.Ok();
+        return Result.Ok(new RegistrationResult(_verificationOptions.ResendCooldownSeconds));
     }
 }

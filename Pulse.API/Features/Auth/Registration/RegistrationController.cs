@@ -15,13 +15,13 @@ namespace Pulse.API.Features.Auth.Registration;
 [Route("api/auth")]
 public class RegistrationController : PulseControllerBase
 {
-    private readonly IAsyncHandler<RegistrationCommand, Result> _handler;
+    private readonly IAsyncHandler<RegistrationCommand, Result<RegistrationResult>> _handler;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RegistrationController"/> class.
     /// </summary>
     /// <param name="handler">The registration command handler.</param>
-    public RegistrationController(IAsyncHandler<RegistrationCommand, Result> handler)
+    public RegistrationController(IAsyncHandler<RegistrationCommand, Result<RegistrationResult>> handler)
     {
         _handler = handler;
     }
@@ -32,7 +32,7 @@ public class RegistrationController : PulseControllerBase
     /// <param name="request">The registration payload containing email, name, and password.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <param name="acceptLanguage">The preferred language supplied in the Accept-Language header.</param>
-    /// <returns>200 OK on success, or a problem details response on failure.</returns>
+    /// <returns>200 OK with resend cooldown guidance on success, or a problem details response on failure.</returns>
     [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync(
         [Validate] RegistrationRequest request,
@@ -46,7 +46,7 @@ public class RegistrationController : PulseControllerBase
             request.LastName,
             request.Password,
             language);
-        Result result = await _handler.HandleAsync(command, ct);
+        Result<RegistrationResult> result = await _handler.HandleAsync(command, ct);
 
         return ToActionResult(result);
     }

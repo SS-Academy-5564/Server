@@ -77,7 +77,7 @@ public class RegistrationHandlerTests
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         _userCommands.Verify(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -96,7 +96,7 @@ public class RegistrationHandlerTests
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new DuplicateKeyException("Email"));
 
-        Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle(e => e is ConflictError);
@@ -122,9 +122,10 @@ public class RegistrationHandlerTests
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userId);
 
-        Result result = await _handler.HandleAsync(command, CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
+        result.Value.ResendCooldownSeconds.Should().Be(60);
 
         _userCommands.Verify(c => c.CreateUserAsync(
             It.Is<CreateUserInput>(u =>
@@ -183,7 +184,7 @@ public class RegistrationHandlerTests
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(userId);
 
-        Result result = await _handler.HandleAsync(command, CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         Uri.TryCreate(expectedVerificationUrl, UriKind.Absolute, out Uri? verificationUri).Should().BeTrue();
@@ -221,7 +222,7 @@ public class RegistrationHandlerTests
             .Setup(s => s.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("Delivery failed"));
 
-        Result result = await _handler.HandleAsync(command, CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle().Which.Should().BeOfType<InternalError>();
