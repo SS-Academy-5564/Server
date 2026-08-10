@@ -5,9 +5,7 @@ using Pulse.DAL.Common.Repository;
 
 namespace Pulse.DAL.Commands.DashboardWidgets;
 
-/// <summary>
-/// Persists dashboard widgets through Dapper commands.
-/// </summary>
+/// <inheritdoc cref="IWidgetCommands"/>
 public class WidgetCommands : IWidgetCommands
 {
     private readonly IDbSessionAccessor _sessionAccessor;
@@ -21,13 +19,7 @@ public class WidgetCommands : IWidgetCommands
         _sessionAccessor = sessionAccessor;
     }
 
-    /// <summary>
-    /// Creates a widget within the current organization.
-    /// </summary>
-    /// <param name="input">The widget configuration to persist.</param>
-    /// <param name="ct">The cancellation token.</param>
-    /// <returns>The identifier of the created widget.</returns>
-    /// <exception cref="InvalidOperationException">There is no active unit of work.</exception>
+    /// <inheritdoc/>
     public async Task<Guid> CreateAsync(
        CreateWidgetInput input,
        CancellationToken ct)
@@ -85,13 +77,7 @@ public class WidgetCommands : IWidgetCommands
                 cancellationToken: ct));
     }
 
-    /// <summary>
-    /// Updates a widget within the current organization.
-    /// </summary>
-    /// <param name="input">The widget configuration to persist.</param>
-    /// <param name="ct">The cancellation token.</param>
-    /// <returns><c>true</c> when a matching widget was updated; otherwise <c>false</c>.</returns>
-    /// <exception cref="InvalidOperationException">There is no active unit of work.</exception>
+    /// <inheritdoc/>
     public async Task<bool> UpdateAsync(
         UpdateWidgetInput input,
         CancellationToken ct)

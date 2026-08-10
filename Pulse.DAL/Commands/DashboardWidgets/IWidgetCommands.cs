@@ -15,6 +15,7 @@ public interface IWidgetCommands : ICommands
     /// <param name="input">The widget configuration to persist.</param>
     /// <param name="ct">The cancellation token.</param>
     /// <returns>The identifier of the created widget.</returns>
+    /// <exception cref="InvalidOperationException">There is no active unit of work.</exception>
     Task<Guid> CreateAsync(CreateWidgetInput input, CancellationToken ct);
 
     /// <summary>
@@ -23,5 +24,6 @@ public interface IWidgetCommands : ICommands
     /// <param name="input">The widget configuration to persist.</param>
     /// <param name="ct">The cancellation token.</param>
     /// <returns>Whether a matching widget was updated.</returns>
+    /// <exception cref="InvalidOperationException">There is no active unit of work.</exception>
     Task<bool> UpdateAsync(UpdateWidgetInput input, CancellationToken ct);
 }
