@@ -42,4 +42,16 @@ public interface IEmailVerificationTokenCommands : ICommands
     Task<EmailVerificationTokenResendPreparation> PrepareResendAsync(
         PrepareEmailVerificationTokenResendInput input,
         CancellationToken ct);
+
+    /// <summary>
+    /// Atomically enforces the account cooldown, invalidates active tokens, and stores a replacement by email.
+    /// </summary>
+    /// <param name="input">The account lookup and replacement token data.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>The recipient email when an eligible account received a stored replacement; otherwise <c>null</c>.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when there is no active unit of work.</exception>
+    Task<string?> PrepareResendByEmailAsync(
+        PrepareEmailVerificationResendByEmailInput input,
+        CancellationToken ct);
 }

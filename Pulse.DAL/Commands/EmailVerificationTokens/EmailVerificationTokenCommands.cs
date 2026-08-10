@@ -187,4 +187,64 @@ public sealed class EmailVerificationTokenCommands : IEmailVerificationTokenComm
                 transaction: session.Transaction,
                 cancellationToken: ct));
     }
+
+    /// <inheritdoc/>
+    public async Task<string?> PrepareResendByEmailAsync(
+        PrepareEmailVerificationResendByEmailInput input,
+        CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
+        const string sql = """
+            DECLARE @UserId UNIQUEIDENTIFIER;
+            DECLARE @RecipientEmail NVARCHAR(256);
+            DECLARE @EmailVerifiedAt DATETIMEOFFSET;
+            DECLARE @LatestCreatedAt DATETIMEOFFSET;
+
+            SELECT
+                @UserId = Id,
+                @RecipientEmail = Email,
+                @EmailVerifiedAt = EmailVerifiedAt
+            FROM Users WITH (UPDLOCK, HOLDLOCK)
+            WHERE Email = @Email;
+
+            IF @UserId IS NULL OR @EmailVerifiedAt IS NOT NULL
+            BEGIN
+                SET @RecipientEmail = NULL;
+            END
+            ELSE
+            BEGIN
+                SELECT @LatestCreatedAt = MAX(CreatedAt)
+                FROM EmailVerificationTokens WITH (UPDLOCK, HOLDLOCK)
+                WHERE UserId = @UserId;
+
+                IF @LatestCreatedAt IS NOT NULL
+                    AND DATEADD(SECOND, @ResendCooldownSeconds, @LatestCreatedAt) > @RequestedAt
+                BEGIN
+                    SET @RecipientEmail = NULL;
+                END
+                ELSE
+                BEGIN
+                    UPDATE EmailVerificationTokens
+                    SET UsedAt = @RequestedAt
+                    WHERE UserId = @UserId
+                        AND UsedAt IS NULL
+                        AND ExpiresAt > @RequestedAt;
+
+                    INSERT INTO EmailVerificationTokens (UserId, TokenHash, ExpiresAt, CreatedAt)
+                    VALUES (@UserId, @ReplacementTokenHash, @ReplacementExpiresAt, @RequestedAt);
+                END
+            END
+
+            SELECT @RecipientEmail;
+            """;
+
+        return await session.Connection.QuerySingleOrDefaultAsync<string?>(
+            new CommandDefinition(
+                sql,
+                input,
+                transaction: session.Transaction,
+                cancellationToken: ct));
+    }
 }
