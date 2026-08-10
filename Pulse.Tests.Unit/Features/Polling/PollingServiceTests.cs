@@ -2,13 +2,11 @@ using System.Data;
 using FluentAssertions;
 using FluentResults;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Moq;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Http;
-using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.Commands.MonitorPollResults;
 using Pulse.DAL.Commands.Monitors;
 using Pulse.DAL.Common.Constants;
@@ -82,11 +80,6 @@ public class PollingServiceTests
 
         _service = new PollingService(
             Mock.Of<ILogger<PollingService>>(),
-            Options.Create(new PollingWorkerOptions
-            {
-                BatchSize = 50,
-                LoopIntervalSeconds = 10
-            }),
             _httpMonitorClient.Object,
             _jsonPathReader.Object,
             _monitorQueries.Object,
@@ -94,11 +87,6 @@ public class PollingServiceTests
             _monitorPollResultsCommands.Object,
             _unitOfWorkFactory.Object);
     }
-
-    private void SetupDueMonitors(params MonitorPollingRecord[] monitors)
-        => _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(monitors);
 
     private void SetupHttpResponse(MonitorPollingRecord monitor, HttpMonitorResponse response)
         => _httpMonitorClient
@@ -128,6 +116,40 @@ public class PollingServiceTests
     {
         _updatedMonitor.Should().NotBeNull();
         _updatedMonitor!.CurrentValue.Should().Be(currentValue);
+    }
+
+    [Fact]
+    public async Task GetDueEnabledAsync_WhenMonitorsAreDue_ReturnsMonitorsAsync()
+    {
+        // Arrange
+        const int numberOfRecords = 50;
+        _monitorQueries
+            .Setup(q => q.GetDueEnabledAsync(numberOfRecords, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([_monitor]);
+
+        // Act
+        Result<IEnumerable<MonitorPollingRecord>> result = await _service.GetDueEnabledAsync(numberOfRecords, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().ContainSingle().Which.Should().Be(_monitor);
+    }
+
+    [Fact]
+    public async Task GetDueEnabledAsync_WhenNoMonitorsAreDue_ReturnsEmptyEnumerableAsync()
+    {
+        // Arrange
+        const int numberOfRecords = 50;
+        _monitorQueries
+            .Setup(q => q.GetDueEnabledAsync(numberOfRecords, It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+
+        // Act
+        Result<IEnumerable<MonitorPollingRecord>> result = await _service.GetDueEnabledAsync(numberOfRecords, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().BeEmpty();
     }
 
     [Fact]
@@ -194,7 +216,7 @@ public class PollingServiceTests
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenMonitorSucceeds_PersistsResultAndUpdatesMonitorAsync()
+    public async Task ProcessMonitorAsync_WhenMonitorSucceeds_PersistsResultAndUpdatesMonitorAsync()
     {
         // Arrange
         HttpMonitorResponse response = new(
@@ -213,14 +235,14 @@ public class PollingServiceTests
             StatusCode = 200
         };
 
-        SetupDueMonitors(_monitor);
         SetupHttpResponse(_monitor, response);
         SetupJsonExtraction(response.Body, _monitor.ResultPath, succeeds: true, extractedValue: "healthy");
 
         // Act
-        await _service.ProcessDueMonitorsAsync();
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(_monitor, CancellationToken.None);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         AssertSavedPollResult("healthy", isSuccess: true, statusCode: 200, responseTimeMs: 123, RequestStatusNames.Success);
 
         AssertMonitorUpdateCommandReceived("healthy");
@@ -233,7 +255,7 @@ public class PollingServiceTests
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenHttpResponseFailed_DoesNotExtractValueAsync()
+    public async Task ProcessMonitorAsync_WhenHttpResponseFailed_DoesNotExtractValueAsync()
     {
         // Arrange
         HttpMonitorResponse response = new(
@@ -250,13 +272,13 @@ public class PollingServiceTests
             StatusCode = 500
         };
 
-        SetupDueMonitors(_monitor);
         SetupHttpResponse(_monitor, response);
 
         // Act
-        await _service.ProcessDueMonitorsAsync();
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(_monitor, CancellationToken.None);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         _jsonPathReader.Verify(
             r => r.TryReadValue(It.IsAny<string>(), It.IsAny<string>(), out It.Ref<string?>.IsAny),
             Times.Never);
@@ -266,7 +288,7 @@ public class PollingServiceTests
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenValueExtractionFails_PersistsExtractionErrorAndUpdatesMonitorAsync()
+    public async Task ProcessMonitorAsync_WhenValueExtractionFails_PersistsExtractionErrorAndUpdatesMonitorAsync()
     {
         // Arrange
         HttpMonitorResponse response = new(
@@ -278,14 +300,14 @@ public class PollingServiceTests
             StatusCode = 200
         };
 
-        SetupDueMonitors(_monitor);
         SetupHttpResponse(_monitor, response);
         SetupJsonExtraction(response.Body, _monitor.ResultPath, succeeds: false, extractedValue: null);
 
         // Act
-        await _service.ProcessDueMonitorsAsync();
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(_monitor, CancellationToken.None);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         AssertSavedPollResult(null, isSuccess: false, statusCode: 200, responseTimeMs: 123, RequestStatusNames.ExtractionError);
         AssertMonitorUpdateCommandReceived(null);
 
@@ -293,7 +315,7 @@ public class PollingServiceTests
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenExpectedValueIsMissing_PersistsExtractionErrorAndUpdatesMonitorAsync()
+    public async Task ProcessMonitorAsync_WhenExpectedValueIsMissing_PersistsExtractionErrorAndUpdatesMonitorAsync()
     {
         // Arrange
         HttpMonitorResponse response = new(
@@ -305,14 +327,14 @@ public class PollingServiceTests
             StatusCode = 200
         };
 
-        SetupDueMonitors(_monitor);
         SetupHttpResponse(_monitor, response);
         SetupJsonExtraction(response.Body, _monitor.ResultPath, succeeds: true, extractedValue: null);
 
         // Act
-        await _service.ProcessDueMonitorsAsync();
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(_monitor, CancellationToken.None);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         AssertSavedPollResult(null, isSuccess: false, statusCode: 200, responseTimeMs: 123, RequestStatusNames.ExtractionError);
         AssertMonitorUpdateCommandReceived(null);
 
@@ -320,7 +342,7 @@ public class PollingServiceTests
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenSuccessfulResponseBodyIsEmpty_PersistsExtractionErrorAndUpdatesMonitorAsync()
+    public async Task ProcessMonitorAsync_WhenSuccessfulResponseBodyIsEmpty_PersistsExtractionErrorAndUpdatesMonitorAsync()
     {
         // Arrange
         HttpMonitorResponse response = new(
@@ -332,13 +354,13 @@ public class PollingServiceTests
             StatusCode = 200
         };
 
-        SetupDueMonitors(_monitor);
         SetupHttpResponse(_monitor, response);
 
         // Act
-        await _service.ProcessDueMonitorsAsync();
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(_monitor, CancellationToken.None);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         _jsonPathReader.Verify(
             r => r.TryReadValue(It.IsAny<string>(), It.IsAny<string>(), out It.Ref<string?>.IsAny),
             Times.Never);
@@ -349,101 +371,45 @@ public class PollingServiceTests
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenMultipleMonitorsAreDue_ProcessesEachMonitorAsync()
+    public async Task ProcessMonitorAsync_WhenExceptionThrown_ReturnsFailedResultAsync()
     {
         // Arrange
-        MonitorPollingRecord second = _monitor with { Id = Guid.NewGuid() };
-        HttpMonitorResponse response = new(
-            IsSuccess: false,
-            ResponseTimeMs: 222,
-            RequestStatus: RequestStatusNames.Failed)
-        {
-            StatusCode = 500
-        };
-
-        _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([_monitor, second]);
-        _httpMonitorClient
-            .Setup(c => c.SendAsync(It.IsAny<MonitorPollingRecord>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(response);
-
-        // Act
-        await _service.ProcessDueMonitorsAsync();
-
-        // Assert
-        _httpMonitorClient.Verify(
-            c => c.SendAsync(It.IsAny<MonitorPollingRecord>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
-        _unitOfWorkFactory.Verify(
-            f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()),
-            Times.Exactly(2));
-        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
-    }
-
-    [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenMonitorProcessingFails_SkipsFailedResultAsync()
-    {
-        // Arrange
-        SetupDueMonitors(_monitor);
         _httpMonitorClient
             .Setup(c => c.SendAsync(_monitor, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("Polling failed."));
 
         // Act
-        Result<List<MonitorPollResult>> result = await _service.ProcessDueMonitorsAsync();
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(_monitor, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeEmpty();
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle();
+        result.Errors[0].Message.Should().Be("Failed to process monitor.");
         _unitOfWorkFactory.Verify(
             f => f.CreateAsync(It.IsAny<IsolationLevel>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenNoMonitorsAreDue_DoesNotProcessAnythingAsync()
+    public async Task ProcessMonitorAsync_WhenCancellationIsRequested_ThrowsOperationCanceledExceptionAsync()
     {
         // Arrange
-        _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([]);
-
-        // Act
-        await _service.ProcessDueMonitorsAsync();
-
-        // Assert
-        _httpMonitorClient.Verify(
-            c => c.SendAsync(It.IsAny<MonitorPollingRecord>(), It.IsAny<CancellationToken>()),
-            Times.Never);
-        _monitorPollResultsCommands.Verify(
-            c => c.CreateAsync(
-                It.IsAny<CreateMonitorPollResultsInput>(),
-                It.IsAny<IDbSession>(),
-                It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
-    [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenCancellationIsRequested_ThrowsOperationCanceledExceptionAsync()
-    {
-        // Arrange
-        _monitorQueries
-            .Setup(q => q.GetDueEnabledAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync([_monitor]);
-
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
 
+        _httpMonitorClient
+            .Setup(c => c.SendAsync(_monitor, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new OperationCanceledException(cts.Token));
+
         // Act
-        Func<Task> act = () => _service.ProcessDueMonitorsAsync(cts.Token);
+        Func<Task> act = () => _service.ProcessMonitorAsync(_monitor, cts.Token);
 
         // Assert
         await act.Should().ThrowAsync<OperationCanceledException>();
     }
 
     [Fact]
-    public async Task ProcessDueMonitorsAsync_WhenPollingFails_SetsMonitorStatusToErrorAsync()
+    public async Task ProcessMonitorAsync_WhenPollingFails_SetsMonitorStatusToErrorAsync()
     {
         // Arrange
         HttpMonitorResponse response = new(
@@ -455,13 +421,13 @@ public class PollingServiceTests
             StatusCode = 500
         };
 
-        SetupDueMonitors(_monitor);
         SetupHttpResponse(_monitor, response);
 
         // Act
-        await _service.ProcessDueMonitorsAsync();
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(_monitor, CancellationToken.None);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         _updatedMonitor.Should().NotBeNull();
         _updatedMonitor!.Status.Should().Be("Error");
     }

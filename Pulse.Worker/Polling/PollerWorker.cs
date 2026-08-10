@@ -1,8 +1,10 @@
+using System.Collections.Concurrent;
 using FluentResults;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Options;
+using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.Worker.Polling;
 
@@ -33,11 +35,22 @@ public sealed class PollerWorker : BackgroundService
                 using IServiceScope scope = _scopeFactory.CreateScope();
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
 
-                Result<List<MonitorPollResult>> monitors = await pollingService.ProcessDueMonitorsAsync(stoppingToken);
+                Result<IEnumerable<MonitorPollingRecord>> monitors = await pollingService.GetDueEnabledAsync(_options.BatchSize, stoppingToken);
+
+                ConcurrentBag<MonitorPollResult> monitorPollResults = new();
+                await Parallel.ForEachAsync(monitors.Value, stoppingToken, async (monitor, ct) =>
+                {
+                    Result<MonitorPollResult> monitorsResults = await pollingService.ProcessMonitorAsync(monitor, ct);
+                    if (monitorsResults.IsSuccess)
+                    {
+                        monitorPollResults.Add(monitorsResults.Value);
+                    }
+                });
+
                 if (monitors.IsSuccess)
                 {
                     IBatchMonitorNotificationService notificationService = scope.ServiceProvider.GetRequiredService<IBatchMonitorNotificationService>();
-                    await notificationService.NotifyAsync(monitors.Value, stoppingToken);
+                    await notificationService.NotifyAsync(monitorPollResults.ToList(), stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (
