@@ -2,8 +2,14 @@ using FluentValidation;
 
 namespace Pulse.API.Features.DashboardWidgets.UpdateWidget;
 
+/// <summary>
+/// Validates an <see cref="UpdateWidgetRequest"/> before it is processed.
+/// </summary>
 public class UpdateWidgetRequestValidator : AbstractValidator<UpdateWidgetRequest>
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateWidgetRequestValidator"/> class.
+    /// </summary>
     public UpdateWidgetRequestValidator()
     {
         RuleFor(x => x.Type)

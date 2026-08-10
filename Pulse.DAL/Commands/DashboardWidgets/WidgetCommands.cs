@@ -5,15 +5,29 @@ using Pulse.DAL.Common.Repository;
 
 namespace Pulse.DAL.Commands.DashboardWidgets;
 
+/// <summary>
+/// Persists dashboard widgets through Dapper commands.
+/// </summary>
 public class WidgetCommands : IWidgetCommands
 {
     private readonly IDbSessionAccessor _sessionAccessor;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="WidgetCommands"/> class.
+    /// </summary>
+    /// <param name="sessionAccessor">The session accessor.</param>
     public WidgetCommands(IDbSessionAccessor sessionAccessor)
     {
         _sessionAccessor = sessionAccessor;
     }
 
+    /// <summary>
+    /// Creates a widget within the current organization.
+    /// </summary>
+    /// <param name="input">The widget configuration to persist.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The identifier of the created widget.</returns>
+    /// <exception cref="InvalidOperationException">There is no active unit of work.</exception>
     public async Task<Guid> CreateAsync(
        CreateWidgetInput input,
        CancellationToken ct)
@@ -71,6 +85,13 @@ public class WidgetCommands : IWidgetCommands
                 cancellationToken: ct));
     }
 
+    /// <summary>
+    /// Updates a widget within the current organization.
+    /// </summary>
+    /// <param name="input">The widget configuration to persist.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns><c>true</c> when a matching widget was updated; otherwise <c>false</c>.</returns>
+    /// <exception cref="InvalidOperationException">There is no active unit of work.</exception>
     public async Task<bool> UpdateAsync(
         UpdateWidgetInput input,
         CancellationToken ct)

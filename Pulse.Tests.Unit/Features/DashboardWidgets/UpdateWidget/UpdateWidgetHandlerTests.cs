@@ -11,6 +11,9 @@ using Pulse.DAL.Common.Repository;
 
 namespace Pulse.Tests.Unit.Features.DashboardWidgets.UpdateWidget;
 
+/// <summary>
+/// Contains unit tests for the <see cref="UpdateWidgetHandler"/>.
+/// </summary>
 public class UpdateWidgetHandlerTests
 {
     private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock = new();
@@ -20,6 +23,9 @@ public class UpdateWidgetHandlerTests
 
     private readonly UpdateWidgetHandler _sut;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UpdateWidgetHandlerTests"/> class.
+    /// </summary>
     public UpdateWidgetHandlerTests()
     {
         _uowFactoryMock
@@ -51,6 +57,9 @@ public class UpdateWidgetHandlerTests
             "{}"
         );
 
+    /// <summary>
+    /// Tests that a valid command returns a success result.
+    /// </summary>
     [Fact]
     public async Task HandleAsync_ValidCommand_ReturnsSuccess()
     {
@@ -60,6 +69,9 @@ public class UpdateWidgetHandlerTests
         result.IsSuccess.Should().BeTrue();
     }
 
+    /// <summary>
+    /// Tests that a valid command passes the input to the widget commands.
+    /// </summary>
     [Fact]
     public async Task HandleAsync_ValidCommand_PassesInputToCommands()
     {
@@ -77,6 +89,9 @@ public class UpdateWidgetHandlerTests
             Times.Once);
     }
 
+    /// <summary>
+    /// Tests that a valid command commits the unit of work.
+    /// </summary>
     [Fact]
     public async Task HandleAsync_ValidCommand_CommitsUnitOfWork()
     {
@@ -87,6 +102,9 @@ public class UpdateWidgetHandlerTests
             Times.Once);
     }
 
+    /// <summary>
+    /// Tests that a missing widget returns a not-found error.
+    /// </summary>
     [Fact]
     public async Task HandleAsync_WidgetNotFound_ReturnsNotFoundError()
     {
@@ -105,6 +123,9 @@ public class UpdateWidgetHandlerTests
             Times.Never);
     }
 
+    /// <summary>
+    /// Tests that a missing organization ID returns an unauthorized error.
+    /// </summary>
     [Fact]
     public async Task HandleAsync_NoOrganizationId_ReturnsUnauthorizedError()
     {
