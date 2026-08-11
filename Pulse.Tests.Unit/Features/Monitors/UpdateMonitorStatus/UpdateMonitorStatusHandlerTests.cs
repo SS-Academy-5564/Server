@@ -29,6 +29,12 @@ public class UpdateMonitorStatusHandlerTests
             .Setup(x => x.OrganizationId)
             .Returns(Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
+        _monitorCommandsMock
+            .Setup(x => x.UpdateStatusAsync(
+                It.IsAny<UpdateMonitorStatusInput>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(1);
+
         _sut = new UpdateMonitorStatusHandler(
             _uowFactoryMock.Object,
             _monitorCommandsMock.Object,
@@ -68,6 +74,22 @@ public class UpdateMonitorStatusHandlerTests
         _monitorCommandsMock.Verify(x => x.UpdateStatusAsync(
             It.IsAny<UpdateMonitorStatusInput>(),
             It.IsAny<CancellationToken>()), Times.Never);
+        _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenNoRowsAffected_ReturnsNotFoundErrorAndDoesNotCommit()
+    {
+        _monitorCommandsMock
+            .Setup(x => x.UpdateStatusAsync(
+                It.IsAny<UpdateMonitorStatusInput>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(0);
+
+        Result result = await _sut.HandleAsync(new UpdateMonitorStatusCommand(Guid.NewGuid(), MonitorStatus.Enabled), CancellationToken.None);
+
+        result.IsFailed.Should().BeTrue();
+        result.Errors.Should().ContainSingle(e => e is NotFoundError);
         _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 

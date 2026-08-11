@@ -32,19 +32,24 @@ public class UpdateMonitorStatusHandler : IAsyncHandler<UpdateMonitorStatusComma
             return organizationIdResult.ToResult();
         }
 
-        if (command.Status == MonitorStatus.Error)
+        if (command.Status is not MonitorStatus.Enabled and not MonitorStatus.Disabled)
         {
             return Result.Fail(new ValidationError("Monitor status cannot be set to Error manually."));
         }
 
         await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct: ct);
 
-        await _monitorCommands.UpdateStatusAsync(
+        int affectedRows = await _monitorCommands.UpdateStatusAsync(
             new UpdateMonitorStatusInput(
                 command.MonitorId,
                 organizationIdResult.Value,
                 command.Status.ToString()),
             ct);
+
+        if (affectedRows == 0)
+        {
+            return Result.Fail(new NotFoundError($"Monitor '{command.MonitorId}' was not found."));
+        }
 
         await uow.CommitAsync(ct);
 
