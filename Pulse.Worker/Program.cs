@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Helpers.Json;
+using Pulse.BL.Common.Notifications;
 using Pulse.BL.Common.Security.Ssrf;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Http;
 using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.DependencyInjection;
+using Pulse.Worker.Common.Notifications;
 using Pulse.Worker.Polling;
 
 IHostBuilder builder = Host.CreateDefaultBuilder(args);
@@ -37,6 +39,20 @@ builder.ConfigureServices((context, services) =>
     services.AddScoped<IPollingService, PollingService>();
     services.AddScoped<IHttpMonitorClient, HttpMonitorClient>();
     services.AddScoped<IJsonPathReader, JsonPathReader>();
+
+    services.AddOptions<NotificationApiOptions>()
+        .Bind(context.Configuration.GetRequiredSection(NotificationApiOptions.SectionName))
+        .ValidateOnStart();
+    services.AddSingleton<IValidateOptions<NotificationApiOptions>, NotificationApiOptionsValidator>();
+    services.AddHttpClient<IBatchMonitorNotificationService, HttpNotificationService>((serviceProvider, client) =>
+    {
+        NotificationApiOptions options = serviceProvider
+            .GetRequiredService<IOptions<NotificationApiOptions>>()
+            .Value;
+
+        client.BaseAddress = new Uri(options.ApiBaseUrl);
+        client.DefaultRequestHeaders.Add(NotificationApiConstants.ApiKeyHeaderName, options.ApiKey);
+    });
 
     services.AddDataAccess();
     services.AddPolling();

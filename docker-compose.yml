@@ -14,6 +14,7 @@ services:
       - Email__FromAddress=${EMAIL_FROM_ADDRESS}
       - Email__FromName=${EMAIL_FROM_NAME}
       - Email__ApiKey=${EMAIL_API_KEY}
+      - InternalNotifications__ApiKey=${INTERNAL_NOTIFICATIONS_API_KEY}
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -27,6 +28,8 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=PulseDb;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True
+      - InternalNotifications__ApiBaseUrl=http://api:8080
+      - InternalNotifications__ApiKey=${INTERNAL_NOTIFICATIONS_API_KEY}
     depends_on:
       api:
         condition: service_started

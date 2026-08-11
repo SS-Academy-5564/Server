@@ -10,6 +10,7 @@ using Pulse.API.Common.Security;
 using Pulse.API.Common.Security.RateLimiting;
 using Pulse.API.Constants;
 using Pulse.API.Documentation;
+using Pulse.API.Filters.InternalNotificatiom;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Common.Security;
@@ -73,6 +74,22 @@ public static class ServiceCollectionExtensions
         {
             services.AddHttpContextAccessor();
             services.AddScoped<ICurrentUserService, CurrentUserService>();
+            return services;
+        }
+
+        /// <summary>
+        /// Registers API-key authorization for internal notification endpoints.
+        /// </summary>
+        /// <param name="configuration">The application configuration containing internal notification settings.</param>
+        /// <returns>The service collection so that additional registrations can be chained.</returns>
+        public IServiceCollection AddInternalNotificationAuthorization(IConfiguration configuration)
+        {
+            services.AddSingleton<IValidateOptions<InternalNotificationOptions>, InternalNotificationOptionsValidator>();
+            services.AddOptions<InternalNotificationOptions>()
+                .Bind(configuration.GetRequiredSection(InternalNotificationOptions.SectionName))
+                .ValidateOnStart();
+            services.AddScoped<InternalNotificationApiKeyFilter>();
+
             return services;
         }
 
@@ -222,7 +239,8 @@ public static class ServiceCollectionExtensions
         /// <returns>The service collection so that additional registrations can be chained.</returns>
         public IServiceCollection AddPulseSignalR()
         {
-            services.AddTransient<INotificationService, SignalrNotificationService>();
+            services.AddTransient<IMonitorNotificationService, SignalrNotificationService>();
+            services.AddTransient<IBatchMonitorNotificationService, SignalrNotificationService>();
             services.AddSignalR();
 
             return services;

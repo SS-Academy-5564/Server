@@ -7,4 +7,5 @@ public sealed record MonitorPollingRecord(
     string ResultPath,
     int PollingIntervalSeconds,
     int PollingTimeoutSeconds,
-    string Status);
+    string Status,
+    Guid OrganizationId);

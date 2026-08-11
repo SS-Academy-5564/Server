@@ -11,7 +11,8 @@ public sealed record MonitorPollResult(
     Guid MonitorId,
     DateTime LastCheckedAt,
     DateTime NextExecutionAt,
-    string Status)
+    string Status,
+    Guid OrganizationId)
 {
     /// <summary>
     /// Gets the value extracted from the monitor response, or <c>null</c> when unavailable.
