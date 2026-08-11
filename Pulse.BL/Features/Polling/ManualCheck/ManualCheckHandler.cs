@@ -15,6 +15,13 @@ public sealed class ManualCheckHandler : IAsyncHandler<ManualCheckCommand, Resul
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<ManualCheckHandler> _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ManualCheckHandler"/> class.
+    /// </summary>
+    /// <param name="monitorQueries">The queries service for retrieving monitor data.</param>
+    /// <param name="queue">The bounded manual check queue.</param>
+    /// <param name="currentUserService">The current user service.</param>
+    /// <param name="logger">The logger for this handler.</param>
     public ManualCheckHandler(
         IMonitorQueries monitorQueries,
         IManualCheckQueue queue,
@@ -40,7 +47,7 @@ public sealed class ManualCheckHandler : IAsyncHandler<ManualCheckCommand, Resul
             command.MonitorId,
             ct);
 
-        if (monitor is null)
+        if (monitor is null || monitor.OrganizationId != command.OrganizationId)
         {
             return Result.Fail(new NotFoundError($"Monitor '{command.MonitorId}' was not found."));
         }

@@ -2,6 +2,9 @@ using Pulse.BL.Features.Polling;
 
 namespace Pulse.API.Hubs;
 
+/// <summary>
+/// Client-side contract for SignalR notifications.
+/// </summary>
 public interface INotificationClient
 {
     /// <summary>

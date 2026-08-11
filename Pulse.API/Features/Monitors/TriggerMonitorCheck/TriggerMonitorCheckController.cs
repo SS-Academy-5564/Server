@@ -18,6 +18,11 @@ public sealed class TriggerMonitorCheckController : PulseControllerBase
     private readonly IAsyncHandler<ManualCheckCommand, Result> _handler;
     private readonly ICurrentUserService _userService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TriggerMonitorCheckController"/> class.
+    /// </summary>
+    /// <param name="handler">The handler responsible for queuing manual monitor check commands.</param>
+    /// <param name="userService">The current user service used to retrieve context information.</param>
     public TriggerMonitorCheckController(IAsyncHandler<ManualCheckCommand, Result> handler, ICurrentUserService userService)
     {
         _handler = handler;

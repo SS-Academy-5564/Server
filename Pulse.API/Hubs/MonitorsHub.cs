@@ -1,15 +1,21 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Pulse.BL.Common.Security;
-using Pulse.DAL.Common.Constants;
 
 namespace Pulse.API.Hubs;
 
+/// <summary>
+/// SignalR hub for dispatching monitor updates to authenticated clients.
+/// </summary>
 [Authorize]
 public sealed class PulseNotificationHub : Hub<INotificationClient>
 {
     private readonly ICurrentUserService _userService;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PulseNotificationHub"/> class.
+    /// </summary>
+    /// <param name="userService">The user service used to resolve current organization context.</param>
     public PulseNotificationHub(ICurrentUserService userService)
     {
         _userService = userService;
@@ -21,7 +27,12 @@ public sealed class PulseNotificationHub : Hub<INotificationClient>
     /// <returns>A task that represents the asynchronous connection operation.</returns>
     public override async Task OnConnectedAsync()
     {
-        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
+        if (_userService.OrganizationId is not { } organizationId || organizationId == Guid.Empty)
+        {
+            Context.Abort();
+            return;
+        }
+
         await Groups.AddToGroupAsync(Context.ConnectionId, organizationId.ToString());
         await base.OnConnectedAsync();
     }
@@ -33,8 +44,11 @@ public sealed class PulseNotificationHub : Hub<INotificationClient>
     /// <returns>A task that represents the asynchronous disconnection operation.</returns>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        Guid organizationId = _userService.OrganizationId ?? SeededIds.Organizations.Default;
-        await Groups.RemoveFromGroupAsync(Context.ConnectionId, organizationId.ToString());
+        if (_userService.OrganizationId is { } organizationId && organizationId != Guid.Empty)
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, organizationId.ToString());
+        }
+
         await base.OnDisconnectedAsync(exception);
     }
 }
