@@ -5,8 +5,8 @@ using Pulse.API.Attributes;
 using Pulse.API.Common.Localization;
 using Pulse.API.Constants;
 using Pulse.API.Controllers;
-using Pulse.BL.Common.Localization;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Localization;
 using Pulse.BL.Features.Auth.EmailVerification;
 
 namespace Pulse.API.Features.Auth.EmailVerification;
