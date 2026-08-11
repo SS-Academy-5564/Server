@@ -50,7 +50,7 @@ public class UpdateMonitorStatusHandler : IAsyncHandler<UpdateMonitorStatusComma
 
         if (command.Status is not MonitorStatus.Enabled and not MonitorStatus.Disabled)
         {
-            return Result.Fail(new ValidationError("Monitor status cannot be set to Error manually."));
+            return Result.Fail(new ValidationError("Monitor status must be Enabled or Disabled."));
         }
 
         await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct: ct);
