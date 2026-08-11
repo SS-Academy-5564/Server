@@ -43,9 +43,22 @@ public class MemberQueries : IMemberQueries
         CancellationToken ct)
     {
         using DbConnection connection = _connectionFactory.CreateConnection();
-        int offset = checked((pageNumber - 1) * pageSize);
+        long offset = ((long)Math.Max(pageNumber, 1) - 1) * pageSize;
 
         const string sql = """
+            DECLARE @TotalCount AS INT = (
+                SELECT COUNT(*)
+                FROM Members m
+                JOIN Users u ON u.Id = m.UserId
+                JOIN Roles r ON r.Id = m.RoleId
+                WHERE m.OrganizationId = @OrganizationId
+            );
+
+            IF @TotalCount > 0 AND @Offset >= @TotalCount
+            BEGIN
+                SET @Offset = ((@TotalCount - 1) / @PageSize) * @PageSize;
+            END;
+
             SELECT u.Id AS UserId,
                    u.Email,
                    u.FirstName,
@@ -59,9 +72,7 @@ public class MemberQueries : IMemberQueries
             ORDER BY m.JoinedAt ASC, m.Id ASC
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
-            SELECT COUNT(*)
-            FROM Members m
-            WHERE m.OrganizationId = @OrganizationId;
+            SELECT @TotalCount AS TotalCount;
             """;
 
         CommandDefinition command = new(

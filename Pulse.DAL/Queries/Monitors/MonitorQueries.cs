@@ -53,7 +53,19 @@ public class MonitorQueries : IMonitorQueries
             : string.Empty;
 
         string sql =
-            $$"""
+            $"""
+            DECLARE @TotalCount AS INT = (
+                SELECT COUNT(*)
+                FROM dbo.Monitors AS m
+                JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
+                {whereClause}
+            );
+
+            IF @TotalCount > 0 AND @Offset >= @TotalCount
+            BEGIN
+                SET @Offset = ((@TotalCount - 1) / @PageSize) * @PageSize;
+            END;
+
             SELECT
                 m.Id,
                 m.Name,
@@ -65,14 +77,11 @@ public class MonitorQueries : IMonitorQueries
                 m.OrganizationId
             FROM dbo.Monitors AS m
             JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            {{whereClause}}
+            {whereClause}
             ORDER BY m.Id
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
 
-            SELECT COUNT(*)
-            FROM dbo.Monitors AS m
-            JOIN dbo.MonitorStatuses AS s ON m.StatusId = s.Id
-            {{whereClause}};
+            SELECT @TotalCount AS TotalCount;
             """;
 
         using SqlMapper.GridReader result = await connection.QueryMultipleAsync(new(
