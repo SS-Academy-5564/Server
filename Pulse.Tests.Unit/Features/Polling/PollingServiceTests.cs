@@ -158,7 +158,7 @@ public class PollingServiceTests
         // Arrange
         Guid monitorId = Guid.NewGuid();
         Guid organizationId = Guid.NewGuid();
-        MonitorPollingRecord monitor = _monitor with { Id = monitorId };
+        MonitorPollingRecord monitor = _monitor with { Id = monitorId, OrganizationId = organizationId };
         HttpMonitorResponse response = new(
             IsSuccess: true,
             ResponseTimeMs: 123,
@@ -191,6 +191,35 @@ public class PollingServiceTests
         _monitorQueries.Verify(
             q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task ProcessMonitorAsync_WhenMonitorBelongsToDifferentOrganization_ReturnsNotFound()
+    {
+        // Arrange
+        Guid monitorId = Guid.NewGuid();
+        Guid requestOrgId = Guid.NewGuid();
+        Guid monitorOrgId = Guid.NewGuid();
+        MonitorPollingRecord monitor = _monitor with { Id = monitorId, OrganizationId = monitorOrgId };
+
+        _monitorQueries
+            .Setup(q => q.GetByIdForPollingAsync(monitorId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(monitor);
+
+        // Act
+        Result<MonitorPollResult> result = await _service.ProcessMonitorAsync(
+            monitorId,
+            requestOrgId,
+            CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle();
+        result.Errors[0].Should().BeOfType<NotFoundError>();
+
+        _httpMonitorClient.Verify(
+            c => c.SendAsync(It.IsAny<MonitorPollingRecord>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 
     [Fact]

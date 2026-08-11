@@ -7,6 +7,7 @@ namespace Pulse.BL.Features.Polling;
 /// <param name="LastCheckedAt">The time when polling completed.</param>
 /// <param name="NextExecutionAt">The time when the monitor should be polled again.</param>
 /// <param name="Status">The monitor status after polling.</param>
+/// <param name="OrganizationId">The identifier of the organization that owns the monitor.</param>
 public sealed record MonitorPollResult(
     Guid MonitorId,
     DateTime LastCheckedAt,
