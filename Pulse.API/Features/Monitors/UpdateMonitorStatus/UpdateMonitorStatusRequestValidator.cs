@@ -14,7 +14,7 @@ public class UpdateMonitorStatusRequestValidator : AbstractValidator<UpdateMonit
     public UpdateMonitorStatusRequestValidator()
     {
         RuleFor(x => x.Status)
-            .Must(status => status == MonitorStatus.Enabled || status == MonitorStatus.Disabled)
+            .Must(status => status is MonitorStatus.Enabled or MonitorStatus.Disabled)
             .WithMessage("Monitor status must be Enabled or Disabled.");
     }
 }
