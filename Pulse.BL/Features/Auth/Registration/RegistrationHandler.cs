@@ -85,7 +85,7 @@ public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Res
 
         if (userExists)
         {
-            return Result.Fail<RegistrationResult>(new ConflictError("A user with this Email already exists."));
+            return Result.Fail(new ConflictError("A user with this Email already exists."));
         }
 
         string passwordHash = _passwordHasher.HashPassword(command.Password);
@@ -108,7 +108,7 @@ public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Res
 
         if (createUserResult.Status == CreateUserStatus.DuplicateEmail)
         {
-            return Result.Fail<RegistrationResult>(new ConflictError("A user with this Email already exists."));
+            return Result.Fail(new ConflictError("A user with this Email already exists."));
         }
 
         if (createUserResult.Status != CreateUserStatus.Succeeded || createUserResult.UserId is not Guid userId)
@@ -152,7 +152,7 @@ public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Res
                 "Email verification delivery failed. Identifier: {Identifier}",
                 PiiHasher.HashForLogging(command.Email));
 
-            return Result.Fail<RegistrationResult>(new InternalError("Failed to send the verification email."));
+            return Result.Fail(new InternalError("Failed to send the verification email."));
         }
 
         await uow.CommitAsync(ct);

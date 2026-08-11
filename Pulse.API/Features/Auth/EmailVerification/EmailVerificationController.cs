@@ -5,6 +5,7 @@ using Pulse.API.Attributes;
 using Pulse.API.Common.Localization;
 using Pulse.API.Constants;
 using Pulse.API.Controllers;
+using Pulse.BL.Common.Localization;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Auth.EmailVerification;
 
@@ -70,9 +71,9 @@ public sealed class EmailVerificationController : PulseControllerBase
     public async Task<IActionResult> RequestResendAsync(
         [Validate] RequestEmailVerificationResendRequest request,
         CancellationToken ct,
-        [FromHeader(Name = "Accept-Language")] string? acceptLanguage = null)
+        [FromHeader(Name = "Accept-Language")] string? acceptLanguage = LanguageCodes.English)
     {
-        string language = EmailLanguageResolver.Resolve(acceptLanguage ?? Request.Headers.AcceptLanguage.ToString());
+        string language = EmailLanguageResolver.Resolve(acceptLanguage);
         Result<ResendEmailVerificationResult> result = await _requestResendHandler.HandleAsync(
             new RequestEmailVerificationResendCommand(request.Email, language),
             ct);
@@ -96,9 +97,9 @@ public sealed class EmailVerificationController : PulseControllerBase
     public async Task<IActionResult> ResendExpiredAsync(
         [Validate] ResendEmailVerificationRequest request,
         CancellationToken ct,
-        [FromHeader(Name = "Accept-Language")] string? acceptLanguage = null)
+        [FromHeader(Name = "Accept-Language")] string? acceptLanguage = LanguageCodes.English)
     {
-        string language = EmailLanguageResolver.Resolve(acceptLanguage ?? Request.Headers.AcceptLanguage.ToString());
+        string language = EmailLanguageResolver.Resolve(acceptLanguage);
         Result<ResendEmailVerificationResult> result = await _resendHandler.HandleAsync(
             new ResendEmailVerificationCommand(request.Token, language),
             ct);

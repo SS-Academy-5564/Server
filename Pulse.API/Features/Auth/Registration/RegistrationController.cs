@@ -4,6 +4,7 @@ using Pulse.API.Attributes;
 using Pulse.API.Common.Localization;
 using Pulse.API.Controllers;
 using Pulse.BL.Common.Handlers;
+using Pulse.BL.Common.Localization;
 using Pulse.BL.Features.Auth.Registration;
 
 namespace Pulse.API.Features.Auth.Registration;
@@ -37,9 +38,9 @@ public class RegistrationController : PulseControllerBase
     public async Task<IActionResult> RegisterAsync(
         [Validate] RegistrationRequest request,
         CancellationToken ct,
-        [FromHeader(Name = "Accept-Language")] string? acceptLanguage = null)
+        [FromHeader(Name = "Accept-Language")] string? acceptLanguage = LanguageCodes.English)
     {
-        string language = EmailLanguageResolver.Resolve(acceptLanguage ?? Request.Headers.AcceptLanguage.ToString());
+        string language = EmailLanguageResolver.Resolve(acceptLanguage);
         RegistrationCommand command = new(
             request.Email,
             request.FirstName,
