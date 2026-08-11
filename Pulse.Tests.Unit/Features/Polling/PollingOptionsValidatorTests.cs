@@ -15,7 +15,8 @@ public class PollingOptionsValidatorTests
         PollingWorkerOptions options = new()
         {
             BatchSize = 50,
-            LoopIntervalSeconds = 10
+            LoopIntervalSeconds = 10,
+            MaxDegreeOfParallelism = 4
         };
 
         // Act
@@ -32,7 +33,8 @@ public class PollingOptionsValidatorTests
         PollingWorkerOptions options = new()
         {
             BatchSize = 0,
-            LoopIntervalSeconds = 10
+            LoopIntervalSeconds = 10,
+            MaxDegreeOfParallelism = 4
         };
 
         // Act
@@ -52,7 +54,8 @@ public class PollingOptionsValidatorTests
         PollingWorkerOptions options = new()
         {
             BatchSize = 10,
-            LoopIntervalSeconds = loopIntervalSeconds
+            LoopIntervalSeconds = loopIntervalSeconds,
+            MaxDegreeOfParallelism = 4
         };
 
         // Act
@@ -63,6 +66,27 @@ public class PollingOptionsValidatorTests
         result.Failures.Should().Contain("PollingWorker:LoopIntervalSeconds must be between 1 and 60 seconds.");
     }
 
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Validate_WhenMaxDegreeOfParallelismIsZeroOrNegative_ReturnsFailure(int maxDegreeOfParallelism)
+    {
+        // Arrange
+        PollingWorkerOptions options = new()
+        {
+            BatchSize = 10,
+            LoopIntervalSeconds = 10,
+            MaxDegreeOfParallelism = maxDegreeOfParallelism
+        };
+
+        // Act
+        ValidateOptionsResult result = _validator.Validate(null, options);
+
+        // Assert
+        result.Failed.Should().BeTrue();
+        result.Failures.Should().Contain("PollingWorker:MaxDegreeOfParallelism must be greater than zero.");
+    }
+
     [Fact]
     public void Validate_WhenMultipleValuesAreInvalid_ReturnsAllFailures()
     {
@@ -70,13 +94,14 @@ public class PollingOptionsValidatorTests
         PollingWorkerOptions options = new()
         {
             BatchSize = 0,
-            LoopIntervalSeconds = 100
+            LoopIntervalSeconds = 100,
+            MaxDegreeOfParallelism = 0
         };
 
         // Act
         ValidateOptionsResult result = _validator.Validate(null, options);
 
         // Assert
-        result.Failures.Should().HaveCount(2);
+        result.Failures.Should().HaveCount(3);
     }
 }

@@ -28,6 +28,11 @@ public sealed class PollingWorkerOptionsValidator : IValidateOptions<PollingWork
             errors.Add($"{optionsPath}:LoopIntervalSeconds must be between 1 and 60 seconds.");
         }
 
+        if (options.MaxDegreeOfParallelism <= 0)
+        {
+            errors.Add($"{optionsPath}:MaxDegreeOfParallelism must be greater than zero.");
+        }
+
         return errors.Count > 0
             ? ValidateOptionsResult.Fail(errors)
             : ValidateOptionsResult.Success;

@@ -36,9 +36,11 @@ public sealed class PollerWorker : BackgroundService
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
 
                 Result<IEnumerable<MonitorPollingRecord>> monitors = await pollingService.GetDueEnabledAsync(_options.BatchSize, stoppingToken);
-
                 ConcurrentBag<MonitorPollResult> monitorPollResults = new();
-                await Parallel.ForEachAsync(monitors.Value, stoppingToken, async (monitor, ct) =>
+
+                ParallelOptions options = new() { CancellationToken = stoppingToken, MaxDegreeOfParallelism = _options.MaxDegreeOfParallelism };
+
+                await Parallel.ForEachAsync(monitors.Value, options, async (monitor, ct) =>
                 {
                     Result<MonitorPollResult> monitorsResults = await pollingService.ProcessMonitorAsync(monitor, ct);
                     if (monitorsResults.IsSuccess)
