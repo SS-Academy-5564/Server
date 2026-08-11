@@ -23,7 +23,7 @@ public class SignalrNotificationService : IMonitorNotificationService, IBatchMon
     /// <returns>A task that represents the asynchronous notification operation.</returns>
     public async Task NotifyAsync(MonitorPollResult monitor, CancellationToken ct)
     {
-        await _hubContext.Clients.Group(monitor.OrganizationId.ToString()).SendUpdatedMonitorAsync(monitor, ct);
+        await _hubContext.Clients.Group(monitor.OrganizationId.ToString()).SendUpdatedMonitorsAsync([monitor], ct);
     }
 
     public async Task NotifyAsync(IReadOnlyCollection<MonitorPollResult> monitors, CancellationToken ct)

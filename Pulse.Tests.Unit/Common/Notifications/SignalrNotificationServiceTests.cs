@@ -13,7 +13,7 @@ public sealed class SignalrNotificationServiceTests
     {
         // Arrange
         Guid organizationId = Guid.NewGuid();
-        MonitorPollResult update = new(
+        List<MonitorPollResult> update = new(){new MonitorPollResult(
             Guid.NewGuid(),
             DateTime.UtcNow,
             DateTime.UtcNow.AddMinutes(1),
@@ -21,7 +21,7 @@ public sealed class SignalrNotificationServiceTests
             organizationId)
         {
             CurrentValue = "healthy"
-        };
+        }};
 
         Mock<INotificationClient> client = new();
         Mock<IHubClients<INotificationClient>> clients = new();
@@ -39,6 +39,6 @@ public sealed class SignalrNotificationServiceTests
         await service.NotifyAsync(update, cts.Token);
 
         // Assert
-        client.Verify(c => c.SendUpdatedMonitorAsync(update, cts.Token), Times.Once);
+        client.Verify(c => c.SendUpdatedMonitorsAsync(update, cts.Token), Times.Once);
     }
 }
