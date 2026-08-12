@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Notifications;
 
-namespace Pulse.API.Filters.InternalNotificatiom;
+namespace Pulse.API.Filters.InternalNotification;
 
 /// <summary>
 /// Authorization filter that validates incoming HTTP requests using an API key header.

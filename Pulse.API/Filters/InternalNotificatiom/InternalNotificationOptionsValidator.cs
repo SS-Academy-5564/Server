@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Options;
 
-namespace Pulse.API.Filters.InternalNotificatiom;
+namespace Pulse.API.Filters.InternalNotification;
 
 /// <summary>
 /// Validates options for internal notification authentication.

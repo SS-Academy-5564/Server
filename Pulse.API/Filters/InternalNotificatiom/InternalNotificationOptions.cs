@@ -1,4 +1,4 @@
-namespace Pulse.API.Filters.InternalNotificatiom;
+namespace Pulse.API.Filters.InternalNotification;
 
 /// <summary>
 /// Configuration options for internal notification services.

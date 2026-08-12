@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Pulse.API.Controllers;
-using Pulse.API.Filters.InternalNotificatiom;
+using Pulse.API.Filters.InternalNotification;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Features.Polling;
 
