@@ -8,6 +8,6 @@ public record WidgetQueryResult(
     string? Title,
     string? Subtitle,
     string Metric,
-    string TimeRange,
+    DateTimeOffset TimeRange,
     string? Settings
 );

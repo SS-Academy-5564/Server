@@ -1,5 +1,4 @@
 using FluentResults;
-using Microsoft.Extensions.Logging;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security;
 using Pulse.DAL.Common.Repository;
@@ -8,14 +7,24 @@ using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.BL.Features.DashboardWidgets.GetWidgets;
 
+/// <summary>
+/// Handles the query to retrieve dashboard widgets for a specified tab.
+/// </summary>
 public class GetWidgetsHandler
     : IAsyncHandler<GetWidgetsQuery, Result<IReadOnlyList<GetWidgetsResult>>>
 {
     private readonly IWidgetQueries _widgetQueries;
     private readonly ICurrentUserService _currentUserService;
     private readonly IUnitOfWorkFactory _unitOfWorkFactory;
-    private readonly IMonitorQueries  _monitorQueries;
+    private readonly IMonitorQueries _monitorQueries;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GetWidgetsHandler"/> class.
+    /// </summary>
+    /// <param name="widgetQueries">The widget queries repository.</param>
+    /// <param name="currentUserService">The service providing current user context.</param>
+    /// <param name="unitOfWorkFactory">The unit of work factory.</param>
+    /// <param name="monitorQueries">The monitor queries repository.</param>
     public GetWidgetsHandler(
         IWidgetQueries widgetQueries,
         ICurrentUserService currentUserService,
@@ -28,6 +37,12 @@ public class GetWidgetsHandler
         _monitorQueries = monitorQueries;
     }
 
+    /// <summary>
+    /// Executes the widget retrieval operation asynchronously.
+    /// </summary>
+    /// <param name="query">The query containing the dashboard tab ID.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>A result containing the list of widgets if successful; otherwise, an application error.</returns>
     public async Task<Result<IReadOnlyList<GetWidgetsResult>>> HandleAsync(
         GetWidgetsQuery query,
         CancellationToken ct = default)

@@ -6,7 +6,7 @@ public record CreateWidgetRequest(
     string? Title,
     string? Subtitle,
     string Metric,
-    string TimeRange,
+    DateTimeOffset TimeRange,
     string? Settings,
     Guid MonitorId
 );

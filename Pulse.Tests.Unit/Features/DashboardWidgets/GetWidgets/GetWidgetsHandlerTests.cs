@@ -8,6 +8,8 @@ using Pulse.BL.Features.DashboardWidgets.GetWidgets;
 using Pulse.DAL.Common.Repository;
 using Pulse.DAL.Queries.DashboardWidgets.GetWidgets;
 
+using Pulse.DAL.Queries.Monitors;
+
 namespace Pulse.Tests.Unit.Features.DashboardWidgets.GetWidgets;
 
 public class GetWidgetsHandlerTests
@@ -16,6 +18,7 @@ public class GetWidgetsHandlerTests
     private readonly Mock<ICurrentUserService> _currentUserServiceMock = new();
     private readonly Mock<IUnitOfWorkFactory> _uowFactoryMock = new();
     private readonly Mock<IUnitOfWork> _uowMock = new();
+    private readonly Mock<IMonitorQueries> _monitorQueriesMock = new();
 
     private readonly GetWidgetsHandler _sut;
 
@@ -29,10 +32,15 @@ public class GetWidgetsHandlerTests
             .Setup(x => x.OrganizationId)
             .Returns(Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
+        _monitorQueriesMock
+            .Setup(x => x.GetMonitorsStatisticsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<(Guid, string)>().ToLookup(x => x.Item1, x => x.Item2));
+
         _sut = new GetWidgetsHandler(
             _queriesMock.Object,
             _currentUserServiceMock.Object,
-            _uowFactoryMock.Object);
+            _uowFactoryMock.Object,
+            _monitorQueriesMock.Object);
     }
 
     private static GetWidgetsQuery ValidQuery()
@@ -41,18 +49,20 @@ public class GetWidgetsHandlerTests
     [Fact]
     public async Task HandleAsync_ValidQuery_ReturnsWidgets()
     {
+        Guid monitorId = Guid.NewGuid();
+        DateTimeOffset timeRange = DateTimeOffset.UtcNow.AddHours(-24);
         List<WidgetQueryResult> widgets =
         [
             new(
                 Guid.NewGuid(),
                 Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                monitorId,
                 "LineChart",
                 "ResponseTime",
                 "Last24Hours",
                 "ResponseTime",
-                "24h",
-                "{}",
-                123)
+                timeRange,
+                "{}")
         ];
 
         _queriesMock
@@ -69,7 +79,7 @@ public class GetWidgetsHandlerTests
         result.Value.Should().HaveCount(1);
         result.Value[0].Type.Should().Be("LineChart");
         result.Value[0].Metric.Should().Be("ResponseTime");
-        result.Value[0].TimeRange.Should().Be("24h");
+        result.Value[0].TimeRange.Should().Be(timeRange);
         result.Value[0].Settings.Should().Be("{}");
     }
 

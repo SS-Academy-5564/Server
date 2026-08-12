@@ -1,0 +1,2 @@
+ALTER TABLE dbo.DashboardWidgets
+    ALTER COLUMN TimeRange DATETIMEOFFSET NOT NULL;

@@ -40,6 +40,9 @@ public class CreateWidgetHandlerTests
             _currentUserServiceMock.Object);
     }
 
+    private static readonly DateTimeOffset ValidTimeRange =
+        new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
     private static CreateWidgetCommand ValidCommand()
     => new(
         Guid.Parse("00000000-0000-0000-0000-000000000001"),
@@ -47,8 +50,9 @@ public class CreateWidgetHandlerTests
         "Response Time",
         "Last 24 Hours",
         "ResponseTime",
-        "24h",
-        "{}"
+        ValidTimeRange,
+        "{}",
+        Guid.NewGuid()
     );
 
     [Fact]
@@ -77,7 +81,7 @@ public class CreateWidgetHandlerTests
                 i.DashboardTabId == Guid.Parse("00000000-0000-0000-0000-000000000001") &&
                 i.Type == "LineChart" &&
                 i.Metric == "ResponseTime" &&
-                i.TimeRange == "24h" &&
+                i.TimeRange == ValidTimeRange &&
                 i.Settings == "{}" &&
                 i.OrganizationId == Guid.Parse("B1000000-0000-0000-0000-000000000001")),
             It.IsAny<CancellationToken>()),
