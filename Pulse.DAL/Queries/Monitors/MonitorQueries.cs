@@ -160,4 +160,16 @@ public class MonitorQueries : IMonitorQueries
                 new { Id = id },
                 cancellationToken: ct));
     }
+
+    public async Task<IEnumerable<MonitorLookupRecord>> GetMonitorsLookupAsync(Guid orgId, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        return await connection.QueryAsync<MonitorLookupRecord>(
+            new CommandDefinition(
+                "SELECT m.Name, m.Id " +
+                "FROM Monitors AS m " +
+                "WHERE m.OrganizationId = @organizationId",
+                new { organizationId = orgId }, cancellationToken: ct));
+    }
 }

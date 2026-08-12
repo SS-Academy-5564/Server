@@ -46,4 +46,6 @@ public interface IMonitorQueries : IQueries
     Task<MonitorRecord?> GetByIdAsync(Guid id, CancellationToken ct);
 
     Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct);
+
+    Task<IEnumerable<MonitorLookupRecord>> GetMonitorsLookupAsync(Guid organizationId, CancellationToken ct);
 }

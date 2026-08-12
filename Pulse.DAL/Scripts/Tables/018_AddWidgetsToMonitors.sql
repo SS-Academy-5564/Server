@@ -1,5 +1,5 @@
 ALTER TABLE DashboardWidgets
-    ADD MonitorId UNIQUEIDENTIFIER NULL;
+    ADD MonitorId UNIQUEIDENTIFIER NOT NULL;
 
 ALTER TABLE DashboardWidgets
     ADD CONSTRAINT FK_DashboardWidgets_Monitors
