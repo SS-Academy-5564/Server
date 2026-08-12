@@ -180,11 +180,10 @@ public class MonitorQueries : IMonitorQueries
 
         var records = await connection.QueryAsync<(Guid MonitorId, string Value)>(
             new CommandDefinition(
-                """
-                SELECT MonitorId, Value
-                FROM MonitorPollResults
-                WHERE MonitorId IN @Ids
-                """,
+                "SELECT MonitorId, Value "+
+                "FROM MonitorPollResults " +
+                "WHERE MonitorId IN @Ids "+
+                "AND Value IS NOT NULL ",
                 new { Ids = monitorIds.Distinct() },
                 cancellationToken: ct));
 
