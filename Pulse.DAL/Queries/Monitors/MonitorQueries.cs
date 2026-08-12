@@ -172,4 +172,22 @@ public class MonitorQueries : IMonitorQueries
                 "WHERE m.OrganizationId = @organizationId",
                 new { organizationId = orgId }, cancellationToken: ct));
     }
+
+     // bassed on the metric type we need to get different types of value
+    public async Task<ILookup<Guid, string>> GetMonitorsStatisticsAsync(IEnumerable<Guid> monitorIds, CancellationToken ct)
+    {
+        using IDbConnection connection = _connectionFactory.CreateConnection();
+
+        var records = await connection.QueryAsync<(Guid MonitorId, string Value)>(
+            new CommandDefinition(
+                """
+                SELECT MonitorId, Value
+                FROM MonitorPollResults
+                WHERE MonitorId IN @Ids
+                """,
+                new { Ids = monitorIds.Distinct() },
+                cancellationToken: ct));
+
+        return records.ToLookup(r => r.MonitorId, r => r.Value);
+    }
 }

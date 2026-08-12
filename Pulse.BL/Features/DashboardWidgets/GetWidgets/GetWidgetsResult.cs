@@ -9,5 +9,5 @@ public record GetWidgetsResult(
     string Metric,
     string TimeRange,
     string? Settings,
-    decimal? Value
+    IEnumerable<string> Value
 );
