@@ -107,4 +107,29 @@ public class MonitorCommands : IMonitorCommands
                 transaction: session.Transaction,
                 cancellationToken: ct));
     }
+
+    public async Task<int> UpdateStatusAsync(UpdateMonitorStatusInput input, CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
+        const string sql =
+            """
+            UPDATE dbo.Monitors
+            SET StatusId = (
+                SELECT Id
+                FROM dbo.MonitorStatuses
+                WHERE Name = @Status
+            )
+            WHERE Id = @MonitorId
+              AND OrganizationId = @OrganizationId;
+            """;
+
+        return await session.Connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                input,
+                transaction: session.Transaction,
+                cancellationToken: ct));
+    }
 }

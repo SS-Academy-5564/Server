@@ -33,4 +33,12 @@ public interface IMonitorCommands : ICommands
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task UpdateAfterPollAsync(UpdateMonitorAfterPollInput input, IDbSession session, CancellationToken ct);
+
+    /// <summary>
+    /// Updates the status of an existing monitor belonging to the specified organization.
+    /// </summary>
+    /// <param name="input">The monitor identifier, organization identifier, and target status.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>The number of rows affected by the update.</returns>
+    Task<int> UpdateStatusAsync(UpdateMonitorStatusInput input, CancellationToken ct);
 }
