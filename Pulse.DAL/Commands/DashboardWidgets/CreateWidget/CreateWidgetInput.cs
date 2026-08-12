@@ -8,5 +8,6 @@ public record CreateWidgetInput(
     string Metric,
     string TimeRange,
     string? Settings,
+    Guid MonitorId,
     Guid OrganizationId
 );

@@ -47,6 +47,7 @@ public class CreateWidgetHandler : IAsyncHandler<CreateWidgetCommand, Result<Cre
                 command.Metric,
                 command.TimeRange,
                 command.Settings,
+                command.MonitorId,
                 organizationIdResult.Value),
             ct);
 
