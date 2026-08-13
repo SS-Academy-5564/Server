@@ -15,6 +15,7 @@ using Pulse.API.Responses;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Common.Security;
 using Pulse.BL.Common.Security.Tokens;
+using Pulse.BL.Features.Auth.EmailVerification;
 
 namespace Pulse.API.Extensions;
 
@@ -118,8 +119,9 @@ public static class ServiceCollectionExtensions
             services.AddOptions<RateLimiterOptions>()
                 .Configure<
                     IOptionsMonitor<RateLimitRuleOptions>,
-                    IOptionsMonitor<SlidingWindowRateLimitRuleOptions>>(
-                    (rateLimiterOptions, rateLimitRules, slidingWindowRules) =>
+                    IOptionsMonitor<SlidingWindowRateLimitRuleOptions>,
+                    IOptions<EmailVerificationOptions>>(
+                    (rateLimiterOptions, rateLimitRules, slidingWindowRules, emailVerificationOptions) =>
                 {
                     rateLimiterOptions.AddPolicy(RateLimitPolicies.Login, context =>
                     {
@@ -150,6 +152,21 @@ public static class ServiceCollectionExtensions
                                 TokensPerPeriod = 1,
                                 ReplenishmentPeriod = TimeSpan.FromSeconds(
                                     refreshRateLimit.PeriodMinutes * 60.0 / refreshRateLimit.MaxAttempts),
+                                QueueLimit = 0,
+                                AutoReplenishment = true
+                            });
+                    });
+
+                    rateLimiterOptions.AddPolicy(RateLimitPolicies.EmailVerificationResend, context =>
+                    {
+                        return RateLimitPartition.GetTokenBucketLimiter(
+                            partitionKey: GetClientIdentifier(context),
+                            factory: _ => new TokenBucketRateLimiterOptions
+                            {
+                                TokenLimit = 1,
+                                TokensPerPeriod = 1,
+                                ReplenishmentPeriod = TimeSpan.FromSeconds(
+                                    emailVerificationOptions.Value.ResendCooldownSeconds),
                                 QueueLimit = 0,
                                 AutoReplenishment = true
                             });
@@ -222,11 +239,15 @@ public static class ServiceCollectionExtensions
                             retryMessage = "Please try again later.";
                         }
 
-                        string message = httpContext.Request.Path.StartsWithSegments(
+                        string? policyName = httpContext.GetEndpoint()?
+                            .Metadata.GetMetadata<EnableRateLimitingAttribute>()?.PolicyName;
+                        string message = policyName == RateLimitPolicies.EmailVerificationResend
+                            ? $"Verification email requests are limited. {retryMessage}"
+                            : httpContext.Request.Path.StartsWithSegments(
                                 "/api/monitors",
                                 StringComparison.OrdinalIgnoreCase)
-                            ? $"Manual check was already triggered recently. {retryMessage}"
-                            : $"Too many requests. {retryMessage}";
+                                ? $"Manual check was already triggered recently. {retryMessage}"
+                                : $"Too many requests. {retryMessage}";
 
                         await httpContext.Response.WriteAsJsonAsync(new ApiResponse
                         {

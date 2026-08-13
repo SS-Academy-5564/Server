@@ -71,7 +71,8 @@ public class LoginHandlerTests
             roleName,
             "Test Organization",
             0,
-            false);
+            false,
+            DateTimeOffset.UtcNow);
 
         LoginCommand command = new(email, password, "127.0.0.1");
 
@@ -117,7 +118,8 @@ public class LoginHandlerTests
             "User",
             "Test Organization",
             2,
-            false);
+            false,
+            DateTimeOffset.UtcNow);
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(userRecord.Email, It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -184,7 +186,8 @@ public class LoginHandlerTests
             "User",
             "Test Organization",
             0,
-            false);
+            false,
+            null);
 
         LoginCommand command = new(email, password, "127.0.0.1");
 
@@ -224,7 +227,8 @@ public class LoginHandlerTests
             "User",
             "Test Organization",
             3,
-            true);
+            true,
+            DateTimeOffset.UtcNow);
 
         _userQueriesMock
             .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -240,6 +244,53 @@ public class LoginHandlerTests
             .Which.Message.Should().Be("Invalid email or password.");
         _passwordHasherMock.Verify(
             x => x.VerifyHashedPassword(It.IsAny<string>(), It.IsAny<string>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_WhenEmailIsNotVerified_ReturnsForbiddenWithoutIssuingTokens()
+    {
+        const string email = "unverified@example.com";
+        const string password = "Password123";
+        const string passwordHash = "password-hash";
+        UserAuthRecord userRecord = new(
+            Guid.NewGuid(),
+            email,
+            passwordHash,
+            Guid.NewGuid(),
+            "User",
+            "Test Organization",
+            0,
+            false,
+            null);
+
+        _userQueriesMock
+            .Setup(x => x.GetByEmailForAuthAsync(
+                email,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(userRecord);
+        _passwordHasherMock
+            .Setup(x => x.VerifyHashedPassword(passwordHash, password))
+            .Returns(true);
+
+        Result<LoginResult> result = await _sut.HandleAsync(
+            new LoginCommand(email, password, "127.0.0.1"),
+            CancellationToken.None);
+
+        result.IsFailed.Should().BeTrue();
+        ForbiddenError error = result.Errors.Should().ContainSingle()
+            .Which.Should().BeOfType<ForbiddenError>().Subject;
+        error.Code.Should().Be(AppError.Codes.EmailNotVerified);
+        _jwtTokenGeneratorMock.Verify(
+            x => x.GenerateToken(
+                It.IsAny<Guid>(),
+                It.IsAny<string>(),
+                It.IsAny<Guid>(),
+                It.IsAny<string>()),
+            Times.Never);
+        _refreshTokenCommandsMock.Verify(
+            x => x.CreateAsync(It.IsAny<Pulse.DAL.Queries.RefreshTokens.RefreshTokenRecord>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
 }

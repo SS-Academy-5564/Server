@@ -1,12 +1,10 @@
 using System.Globalization;
 using Pulse.BL.Common.Localization;
 
-namespace Pulse.API.Features.Auth.PasswordReset;
+namespace Pulse.API.Common.Localization;
 
 /// <summary>
-/// Resolves the best-matching language for emails based on the Accept-Language HTTP header.
-/// Implements RFC 7231 language preference parsing with quality values.
-/// Falls back to English if no supported language is found.
+/// Resolves the best-matching supported email language from an Accept-Language header.
 /// </summary>
 internal static class EmailLanguageResolver
 {
@@ -14,12 +12,10 @@ internal static class EmailLanguageResolver
     private static readonly IReadOnlySet<string> SupportedLanguages = LanguageCodes.Supported;
 
     /// <summary>
-    /// Resolves the best-matching email language from the Accept-Language header.
-    /// Parses language preferences with quality values (RFC 7231) and returns the highest-priority
-    /// supported language. Returns English if the header is missing or contains no supported languages.
+    /// Resolves the highest-priority supported language or English when no supported language is present.
     /// </summary>
-    /// <param name="acceptLanguageHeader">The Accept-Language HTTP header value (e.g., "uk-UA,uk;q=0.9,en;q=0.8").</param>
-    /// <returns>A supported language code ("en" or "uk").</returns>
+    /// <param name="acceptLanguageHeader">The Accept-Language header value.</param>
+    /// <returns>A supported primary language code.</returns>
     public static string Resolve(string? acceptLanguageHeader)
     {
         if (string.IsNullOrWhiteSpace(acceptLanguageHeader))
@@ -45,20 +41,13 @@ internal static class EmailLanguageResolver
         return bestMatch?.Language ?? FallbackLanguage;
     }
 
-    // Parses "lang;q=value" segments from a comma-separated Accept-Language header, yielding valid preferences in order.
     private static IEnumerable<LanguagePreference> ParsePreferences(string header)
     {
         string[] segments = header.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         for (int i = 0; i < segments.Length; i++)
         {
-            string segment = segments[i];
-            if (string.IsNullOrWhiteSpace(segment))
-            {
-                continue;
-            }
-
-            string[] parts = segment.Split(';', StringSplitOptions.TrimEntries);
+            string[] parts = segments[i].Split(';', StringSplitOptions.TrimEntries);
             if (parts.Length == 0)
             {
                 continue;
