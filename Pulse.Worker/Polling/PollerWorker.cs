@@ -1,8 +1,10 @@
+using System.Collections.Concurrent;
 using FluentResults;
 using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Notifications;
 using Pulse.BL.Features.Polling;
 using Pulse.BL.Features.Polling.Options;
+using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.Worker.Polling;
 
@@ -34,10 +36,23 @@ public sealed class PollerWorker : BackgroundService
                 IPollingService pollingService = scope.ServiceProvider.GetRequiredService<IPollingService>();
                 IBatchMonitorNotificationService notificationService = scope.ServiceProvider.GetRequiredService<IBatchMonitorNotificationService>();
 
-                Result<List<MonitorPollResult>> monitors = await pollingService.ProcessDueMonitorsAsync(stoppingToken);
+                Result<IEnumerable<MonitorPollingRecord>> monitors = await pollingService.GetDueEnabledAsync(_options.BatchSize, stoppingToken);
                 if (monitors.IsSuccess)
                 {
-                    await notificationService.NotifyAsync(monitors.Value, stoppingToken);
+                    ConcurrentBag<MonitorPollResult> monitorPollResults = new();
+
+                    ParallelOptions options = new() { CancellationToken = stoppingToken, MaxDegreeOfParallelism = _options.MaxDegreeOfParallelism };
+
+                    await Parallel.ForEachAsync(monitors.Value, options, async (monitor, ct) =>
+                    {
+                        Result<MonitorPollResult> monitorsResults = await pollingService.ProcessMonitorAsync(monitor, ct);
+                        if (monitorsResults.IsSuccess)
+                        {
+                            monitorPollResults.Add(monitorsResults.Value);
+                        }
+                    });
+
+                    await notificationService.NotifyAsync(monitorPollResults.ToList(), stoppingToken);
                 }
             }
             catch (OperationCanceledException) when (

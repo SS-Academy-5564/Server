@@ -1,10 +1,8 @@
 using FluentResults;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Helpers.Json;
 using Pulse.BL.Features.Polling.Http;
-using Pulse.BL.Features.Polling.Options;
 using Pulse.DAL.Commands.MonitorPollResults;
 using Pulse.DAL.Commands.Monitors;
 using Pulse.DAL.Common.Constants;
@@ -13,10 +11,12 @@ using Pulse.DAL.Queries.Monitors;
 
 namespace Pulse.BL.Features.Polling;
 
+/// <summary>
+/// Service responsible for querying due monitors and executing HTTP polling checks against individual monitors.
+/// </summary>
 public class PollingService : IPollingService
 {
     private readonly ILogger<PollingService> _logger;
-    private readonly PollingWorkerOptions _options;
     private readonly IMonitorQueries _monitorQueries;
     private readonly IMonitorCommands _monitorCommands;
     private readonly IMonitorPollResultsCommands _monitorPollResultCommands;
@@ -26,7 +26,6 @@ public class PollingService : IPollingService
 
     public PollingService(
         ILogger<PollingService> logger,
-        IOptions<PollingWorkerOptions> options,
         IHttpMonitorClient httpMonitorClient,
         IJsonPathReader jsonPathReader,
         IMonitorQueries monitorQueries,
@@ -35,7 +34,6 @@ public class PollingService : IPollingService
         IUnitOfWorkFactory unitOfWorkFactory)
     {
         _logger = logger;
-        _options = options.Value;
         _httpMonitorClient = httpMonitorClient;
         _jsonPathReader = jsonPathReader;
         _monitorQueries = monitorQueries;
@@ -45,30 +43,17 @@ public class PollingService : IPollingService
     }
 
     /// <summary>
-    /// Processes the enabled monitors that are due for polling.
+    /// Retrieves enabled monitors that are due for polling up to the specified maximum record count.
     /// </summary>
-    /// <param name="ct">The cancellation token used to stop batch processing.</param>
-    /// <returns>A result containing the successfully completed monitor polling data.</returns>
-    /// <exception cref="OperationCanceledException">Batch processing is canceled.</exception>
-    public async Task<Result<List<MonitorPollResult>>> ProcessDueMonitorsAsync(CancellationToken ct = default)
+    /// <param name="numberOfRecords">The maximum number of records to retrieve.</param>
+    /// <param name="ct">The cancellation token for the operation.</param>
+    /// <returns>A result containing due monitor polling records.</returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
+    public async Task<Result<IEnumerable<MonitorPollingRecord>>> GetDueEnabledAsync(int numberOfRecords, CancellationToken ct)
     {
-        IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(_options.BatchSize, ct);
-        List<MonitorPollResult> monitorsResults = new();
+        IEnumerable<MonitorPollingRecord> monitors = await _monitorQueries.GetDueEnabledAsync(numberOfRecords, ct);
 
-        foreach (MonitorPollingRecord monitor in monitors)
-        {
-            ct.ThrowIfCancellationRequested();
-
-            Result<MonitorPollResult> monitorsResult = await ProcessMonitorAsync(monitor, ct);
-            if (monitorsResult.IsFailed)
-            {
-                continue;
-            }
-
-            monitorsResults.Add(monitorsResult.Value);
-        }
-
-        return Result.Ok(monitorsResults);
+        return Result.Ok(monitors);
     }
 
     /// <summary>

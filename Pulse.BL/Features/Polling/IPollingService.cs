@@ -6,12 +6,13 @@ namespace Pulse.BL.Features.Polling;
 public interface IPollingService
 {
     /// <summary>
-    /// Processes the enabled monitors that are due for polling.
+    /// Retrieves enabled monitors that are due for polling up to the specified maximum record count.
     /// </summary>
-    /// <param name="stoppingToken">The cancellation token used to stop batch processing.</param>
-    /// <returns>A result containing the successfully completed monitor polling data.</returns>
-    /// <exception cref="OperationCanceledException">Batch processing is canceled.</exception>
-    Task<Result<List<MonitorPollResult>>> ProcessDueMonitorsAsync(CancellationToken stoppingToken);
+    /// <param name="numberOfRecords">The maximum number of records to retrieve.</param>
+    /// <param name="ct">The cancellation token for the operation.</param>
+    /// <returns>A result containing due monitor polling records.</returns>
+    /// <exception cref="OperationCanceledException">The operation is canceled.</exception>
+    Task<Result<IEnumerable<MonitorPollingRecord>>> GetDueEnabledAsync(int numberOfRecords, CancellationToken ct);
 
     /// <summary>
     /// Processes the supplied monitor polling record.

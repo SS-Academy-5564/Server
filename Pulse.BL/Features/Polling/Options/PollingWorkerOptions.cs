@@ -17,4 +17,10 @@ public class PollingWorkerOptions
     /// Limits the number of monitors selected per worker iteration.
     /// </summary>
     public int BatchSize { get; init; }
+
+    /// <summary>
+    /// Defines the maximum degree of parallelism for processing monitor checks concurrently.
+    /// Must be greater than zero.
+    /// </summary>
+    public int MaxDegreeOfParallelism { get; init; }
 }
