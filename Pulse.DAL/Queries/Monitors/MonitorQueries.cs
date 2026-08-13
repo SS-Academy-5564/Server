@@ -192,22 +192,24 @@ public class MonitorQueries : IMonitorQueries
                 await connection.QueryAsync<(Guid MonitorId, decimal Value)>(
                     new CommandDefinition(
                         sql,
-                        new { Ids = ids, From = group.Key.From },
+                        new { Ids = ids, group.Key.From },
                         cancellationToken: ct));
 
             foreach ((Guid MonitorId, decimal Value) row in rows)
             {
                 MonitorMetric? match = group.FirstOrDefault(m => m.MonitorId == row.MonitorId);
                 if (match is not null)
+                {
                     allRecords.Add((match, row.Value));
+                }
             }
         }
 
         return allRecords.ToLookup(r => r.Monitor, r => r.Value);
     }
 
-    private static string BuildStatisticsSql(MetricType metric) =>
-        metric switch
+    private static string BuildStatisticsSql(MetricType metric)
+        => metric switch
         {
             MetricType.Availability =>
                 "SELECT MonitorId, " +

@@ -49,7 +49,7 @@ public interface IMonitorQueries : IQueries
 
     Task<IEnumerable<MonitorLookupRecord>> GetMonitorsLookupAsync(Guid organizationId, CancellationToken ct);
 
-      /// <summary>
+    /// <summary>
     /// Retrieves poll-result values for each <see cref="MonitorMetric"/> request,
     /// batching DB calls by <c>(MetricType, From)</c> internally.
     /// </summary>

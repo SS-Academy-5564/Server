@@ -41,7 +41,7 @@ public class CreateWidgetHandlerTests
     }
 
     private static readonly DateTimeOffset ValidTimeRange =
-        new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
+        new(2026, 1, 1, 0, 0, 0, TimeSpan.Zero);
 
     private static CreateWidgetCommand ValidCommand()
     => new(
