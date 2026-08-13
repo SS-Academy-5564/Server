@@ -65,10 +65,10 @@ public interface IMonitorQueries : IQueries
     /// </param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>
-    /// A lookup keyed by (MonitorId, Metric, From) so callers can retrieve values
-    /// for an exact (MonitorId, Metric, From) combination without ambiguity.
+    /// A lookup keyed by <see cref="MonitorMetricRecord"/> so callers can retrieve values
+    /// for an exact metric request without ambiguity.
     /// </returns>
-    Task<ILookup<(Guid MonitorId, MetricType Metric, DateTimeOffset From), decimal>> GetMonitorsStatisticsAsync(
-        IEnumerable<(Guid MonitorId, MetricType Metric, DateTimeOffset From)> monitors,
+    Task<ILookup<MonitorMetricRecord, decimal>> GetMonitorsStatisticsAsync(
+        IEnumerable<MonitorMetricRecord> monitors,
         CancellationToken ct);
 }

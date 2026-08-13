@@ -174,16 +174,16 @@ public class MonitorQueries : IMonitorQueries
                 new { organizationId }, cancellationToken: ct));
     }
 
-    public async Task<ILookup<(Guid MonitorId, MetricType Metric, DateTimeOffset From), decimal>> GetMonitorsStatisticsAsync(
-        IEnumerable<(Guid MonitorId, MetricType Metric, DateTimeOffset From)> monitors,
+    public async Task<ILookup<MonitorMetricRecord, decimal>> GetMonitorsStatisticsAsync(
+        IEnumerable<MonitorMetricRecord> monitors,
         CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
 
-        IReadOnlyList<(Guid MonitorId, MetricType Metric, DateTimeOffset From)> monitorList = monitors.Distinct().ToList();
-        var allRecords = new List<((Guid MonitorId, MetricType Metric, DateTimeOffset From) Key, decimal Value)>();
+        IReadOnlyList<MonitorMetricRecord> monitorList = monitors.Distinct().ToList();
+        var allRecords = new List<(MonitorMetricRecord Key, decimal Value)>();
 
-        foreach (IGrouping<(MetricType Metric, DateTimeOffset From), (Guid MonitorId, MetricType Metric, DateTimeOffset From)> group in
+        foreach (IGrouping<(MetricType Metric, DateTimeOffset From), MonitorMetricRecord> group in
             monitorList.GroupBy(m => (m.Metric, m.From)))
         {
             IEnumerable<Guid> ids = group.Select(m => m.MonitorId).Distinct();
@@ -198,7 +198,7 @@ public class MonitorQueries : IMonitorQueries
 
             foreach ((Guid MonitorId, decimal Value) row in rows)
             {
-                foreach ((Guid MonitorId, MetricType Metric, DateTimeOffset From) item in group.Where(m => m.MonitorId == row.MonitorId))
+                foreach (MonitorMetricRecord item in group.Where(m => m.MonitorId == row.MonitorId))
                 {
                     allRecords.Add((item, row.Value));
                 }
