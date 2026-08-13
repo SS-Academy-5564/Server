@@ -63,11 +63,11 @@ public class GetWidgetsHandler
                 organizationResult.Value,
                 ct);
 
-        IEnumerable<MonitorMetric> monitorMetrics = widgets
-            .Select(w => MonitorMetric.FromWidget(w.MonitorId, w.Metric, w.TimeRange))
+        IEnumerable<(Guid MonitorId, MetricType Metric, DateTimeOffset From)> monitorMetrics = widgets
+            .Select(w => (w.MonitorId, ParseMetric(w.Metric), w.TimeRange))
             .Distinct();
 
-        ILookup<MonitorMetric, decimal> stats =
+        ILookup<(Guid MonitorId, MetricType Metric, DateTimeOffset From), decimal> stats =
             await _monitorQueries.GetMonitorsStatisticsAsync(monitorMetrics, ct);
 
         var results = widgets.Select(x => new GetWidgetsResult(
@@ -79,9 +79,14 @@ public class GetWidgetsHandler
             x.Metric,
             x.TimeRange,
             x.Settings,
-            Value: stats[MonitorMetric.FromWidget(x.MonitorId, x.Metric, x.TimeRange)]
+            Value: stats[(x.MonitorId, ParseMetric(x.Metric), x.TimeRange)]
         )).ToList();
 
         return Result.Ok<IReadOnlyList<GetWidgetsResult>>(results);
     }
+
+    private static MetricType ParseMetric(string metric)
+        => Enum.TryParse(metric, ignoreCase: true, out MetricType parsed)
+            ? parsed
+            : MetricType.ResponseTime;
 }

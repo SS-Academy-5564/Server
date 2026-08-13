@@ -5,7 +5,7 @@ namespace Pulse.DAL.Queries.Monitors;
 /// </summary>
 public enum MetricType
 {
-    /// <summary>Response time in milliseconds per poll result.</summary>
+    /// <summary>Response time in seconds per poll result.</summary>
     ResponseTime,
 
     /// <summary>Percentage of successful polls over the requested time window.</summary>

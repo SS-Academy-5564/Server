@@ -34,9 +34,9 @@ public class GetWidgetsHandlerTests
 
         _monitorQueriesMock
             .Setup(x => x.GetMonitorsStatisticsAsync(
-                It.IsAny<IEnumerable<MonitorMetric>>(),
+                It.IsAny<IEnumerable<(Guid MonitorId, MetricType Metric, DateTimeOffset From)>>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(MonitorMetric, decimal)>().ToLookup(x => x.Item1, x => x.Item2));
+            .ReturnsAsync(new List<((Guid MonitorId, MetricType Metric, DateTimeOffset From), decimal)>().ToLookup(x => x.Item1, x => x.Item2));
 
         _sut = new GetWidgetsHandler(
             _queriesMock.Object,
@@ -155,7 +155,7 @@ public class GetWidgetsHandlerTests
         await _sut.HandleAsync(ValidQuery(), CancellationToken.None);
 
         _monitorQueriesMock.Verify(x => x.GetMonitorsStatisticsAsync(
-            It.Is<IEnumerable<MonitorMetric>>(metrics =>
+            It.Is<IEnumerable<(Guid MonitorId, MetricType Metric, DateTimeOffset From)>>(metrics =>
                 metrics.Any(m => m.MonitorId == monitorId && m.From == expectedFrom && m.Metric == MetricType.Availability)),
             It.IsAny<CancellationToken>()),
             Times.Once);
@@ -189,14 +189,14 @@ public class GetWidgetsHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(widgets);
 
-        var statsData = new List<(MonitorMetric Monitor, decimal Value)>
+        var statsData = new List<((Guid MonitorId, MetricType Metric, DateTimeOffset From) Monitor, decimal Value)>
         {
-            (MonitorMetric.FromWidget(monitorId, metric, timeRange), 120m),
-            (MonitorMetric.FromWidget(monitorId, metric, timeRange), 95m),
+            ((monitorId, MetricType.ResponseTime, timeRange), 120m),
+            ((monitorId, MetricType.ResponseTime, timeRange), 95m),
         };
         _monitorQueriesMock
             .Setup(x => x.GetMonitorsStatisticsAsync(
-                It.IsAny<IEnumerable<MonitorMetric>>(),
+                It.IsAny<IEnumerable<(Guid MonitorId, MetricType Metric, DateTimeOffset From)>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(statsData.ToLookup(x => x.Monitor, x => x.Value));
 
@@ -225,18 +225,18 @@ public class GetWidgetsHandlerTests
             .Setup(x => x.GetByTabIdAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(widgets);
 
-        var rtMetric = MonitorMetric.FromWidget(monitorId, "responseTime", timeRange);
-        var avMetric = MonitorMetric.FromWidget(monitorId, "availability", timeRange);
+        var rtKey = (monitorId, MetricType.ResponseTime, timeRange);
+        var avKey = (monitorId, MetricType.Availability, timeRange);
 
-        var statsData = new List<(MonitorMetric Monitor, decimal Value)>
+        var statsData = new List<((Guid MonitorId, MetricType Metric, DateTimeOffset From) Monitor, decimal Value)>
         {
-            (rtMetric, 150m),
-            (avMetric, 99.5m)
+            (rtKey, 150m),
+            (avKey, 99.5m)
         };
 
         _monitorQueriesMock
             .Setup(x => x.GetMonitorsStatisticsAsync(
-                It.IsAny<IEnumerable<MonitorMetric>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<IEnumerable<(Guid MonitorId, MetricType Metric, DateTimeOffset From)>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(statsData.ToLookup(x => x.Monitor, x => x.Value));
 
         Result<IReadOnlyList<GetWidgetsResult>> result =
@@ -269,8 +269,8 @@ public class GetWidgetsHandlerTests
 
         _monitorQueriesMock
             .Setup(x => x.GetMonitorsStatisticsAsync(
-                It.IsAny<IEnumerable<MonitorMetric>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(MonitorMetric, decimal)>().ToLookup(x => x.Item1, x => x.Item2));
+                It.IsAny<IEnumerable<(Guid MonitorId, MetricType Metric, DateTimeOffset From)>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<((Guid MonitorId, MetricType Metric, DateTimeOffset From), decimal)>().ToLookup(x => x.Item1, x => x.Item2));
 
         Result<IReadOnlyList<GetWidgetsResult>> result =
             await _sut.HandleAsync(ValidQuery(), CancellationToken.None);
