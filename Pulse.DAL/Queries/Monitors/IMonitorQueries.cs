@@ -47,6 +47,12 @@ public interface IMonitorQueries : IQueries
 
     Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct);
 
+    /// <summary>
+    /// Retrieves a list of monitor lookup records for a specific organization.
+    /// </summary>
+    /// <param name="organizationId">The organization identifier to filter monitors by.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A collection of <see cref="MonitorLookupRecord"/> instances belonging to the specified organization.</returns>
     Task<IEnumerable<MonitorLookupRecord>> GetMonitorsLookupAsync(Guid organizationId, CancellationToken ct);
 
     /// <summary>

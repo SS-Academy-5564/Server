@@ -161,7 +161,8 @@ public class MonitorQueries : IMonitorQueries
                 cancellationToken: ct));
     }
 
-    public async Task<IEnumerable<MonitorLookupRecord>> GetMonitorsLookupAsync(Guid orgId, CancellationToken ct)
+    /// <inheritdoc/>
+    public async Task<IEnumerable<MonitorLookupRecord>> GetMonitorsLookupAsync(Guid organizationId, CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
 
@@ -170,7 +171,7 @@ public class MonitorQueries : IMonitorQueries
                 "SELECT m.Name, m.Id " +
                 "FROM Monitors AS m " +
                 "WHERE m.OrganizationId = @organizationId",
-                new { organizationId = orgId }, cancellationToken: ct));
+                new { organizationId }, cancellationToken: ct));
     }
 
     public async Task<ILookup<MonitorMetric, decimal>> GetMonitorsStatisticsAsync(
