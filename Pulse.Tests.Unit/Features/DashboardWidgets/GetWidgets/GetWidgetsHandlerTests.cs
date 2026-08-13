@@ -33,8 +33,10 @@ public class GetWidgetsHandlerTests
             .Returns(Guid.Parse("B1000000-0000-0000-0000-000000000001"));
 
         _monitorQueriesMock
-            .Setup(x => x.GetMonitorsStatisticsAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<(Guid, string)>().ToLookup(x => x.Item1, x => x.Item2));
+            .Setup(x => x.GetMonitorsStatisticsAsync(
+                It.IsAny<IEnumerable<MonitorMetric>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<(MonitorMetric, decimal)>().ToLookup(x => x.Item1, x => x.Item2));
 
         _sut = new GetWidgetsHandler(
             _queriesMock.Object,
@@ -120,5 +122,160 @@ public class GetWidgetsHandlerTests
             It.IsAny<Guid>(),
             It.IsAny<CancellationToken>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ValidQuery_PassesTimeRangeAndMetricToStatistics()
+    {
+        Guid monitorId = Guid.NewGuid();
+        DateTimeOffset expectedFrom = DateTimeOffset.UtcNow.AddDays(-7);
+        const string expectedMetric = "availability";
+
+        List<WidgetQueryResult> widgets =
+        [
+            new(
+                Guid.NewGuid(),
+                Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                monitorId,
+                "LineChart",
+                "Title",
+                "Subtitle",
+                expectedMetric,
+                expectedFrom,
+                null)
+        ];
+
+        _queriesMock
+            .Setup(x => x.GetByTabIdAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(widgets);
+
+        await _sut.HandleAsync(ValidQuery(), CancellationToken.None);
+
+        _monitorQueriesMock.Verify(x => x.GetMonitorsStatisticsAsync(
+            It.Is<IEnumerable<MonitorMetric>>(metrics =>
+                metrics.Any(m => m.MonitorId == monitorId && m.From == expectedFrom && m.Metric == MetricType.Availability)),
+            It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ValidQuery_StatisticsValuesAreMappedToWidget()
+    {
+        Guid monitorId = Guid.NewGuid();
+        DateTimeOffset timeRange = DateTimeOffset.UtcNow.AddHours(-24);
+        const string metric = "responseTime";
+
+        List<WidgetQueryResult> widgets =
+        [
+            new(
+                Guid.NewGuid(),
+                Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                monitorId,
+                "LineChart",
+                "Title",
+                "Subtitle",
+                metric,
+                timeRange,
+                null)
+        ];
+
+        _queriesMock
+            .Setup(x => x.GetByTabIdAsync(
+                It.IsAny<Guid>(),
+                It.IsAny<Guid>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(widgets);
+
+        var statsData = new List<(MonitorMetric Monitor, decimal Value)>
+        {
+            (MonitorMetric.FromWidget(monitorId, metric, timeRange), 120m),
+            (MonitorMetric.FromWidget(monitorId, metric, timeRange), 95m),
+        };
+        _monitorQueriesMock
+            .Setup(x => x.GetMonitorsStatisticsAsync(
+                It.IsAny<IEnumerable<MonitorMetric>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(statsData.ToLookup(x => x.Monitor, x => x.Value));
+
+        Result<IReadOnlyList<GetWidgetsResult>> result =
+            await _sut.HandleAsync(ValidQuery(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value[0].Value.Should().BeEquivalentTo([120m, 95m]);
+    }
+
+    [Fact]
+    public async Task HandleAsync_TwoWidgetsSameMonitorDifferentMetrics_EachReceivesItsOwnValues()
+    {
+        Guid monitorId = Guid.NewGuid();
+        DateTimeOffset timeRange = DateTimeOffset.UtcNow.AddHours(-24);
+
+        List<WidgetQueryResult> widgets =
+        [
+            new(Guid.NewGuid(), Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                monitorId, "LineChart", "T1", "S1", "responseTime", timeRange, null),
+            new(Guid.NewGuid(), Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                monitorId, "Counter", "T2", "S2", "availability", timeRange, null),
+        ];
+
+        _queriesMock
+            .Setup(x => x.GetByTabIdAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(widgets);
+
+        var rtMetric = MonitorMetric.FromWidget(monitorId, "responseTime", timeRange);
+        var avMetric = MonitorMetric.FromWidget(monitorId, "availability", timeRange);
+
+        var statsData = new List<(MonitorMetric Monitor, decimal Value)>
+        {
+            (rtMetric, 150m),
+            (avMetric, 99.5m)
+        };
+
+        _monitorQueriesMock
+            .Setup(x => x.GetMonitorsStatisticsAsync(
+                It.IsAny<IEnumerable<MonitorMetric>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(statsData.ToLookup(x => x.Monitor, x => x.Value));
+
+        Result<IReadOnlyList<GetWidgetsResult>> result =
+            await _sut.HandleAsync(ValidQuery(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+
+        GetWidgetsResult rtWidget = result.Value.First(w => w.Metric == "responseTime");
+        GetWidgetsResult avWidget = result.Value.First(w => w.Metric == "availability");
+
+        rtWidget.Value.Should().BeEquivalentTo([150m]);
+        avWidget.Value.Should().BeEquivalentTo([99.5m]);
+    }
+
+    [Fact]
+    public async Task HandleAsync_NoStatisticsForWidget_ReturnsEmptyValues()
+    {
+        Guid monitorId = Guid.NewGuid();
+        DateTimeOffset timeRange = DateTimeOffset.UtcNow.AddHours(-24);
+
+        List<WidgetQueryResult> widgets =
+        [
+            new(Guid.NewGuid(), Guid.Parse("00000000-0000-0000-0000-000000000001"),
+                monitorId, "LineChart", "T1", "S1", "responseTime", timeRange, null),
+        ];
+
+        _queriesMock
+            .Setup(x => x.GetByTabIdAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(widgets);
+
+        _monitorQueriesMock
+            .Setup(x => x.GetMonitorsStatisticsAsync(
+                It.IsAny<IEnumerable<MonitorMetric>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<(MonitorMetric, decimal)>().ToLookup(x => x.Item1, x => x.Item2));
+
+        Result<IReadOnlyList<GetWidgetsResult>> result =
+            await _sut.HandleAsync(ValidQuery(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value[0].Value.Should().BeEmpty();
     }
 }

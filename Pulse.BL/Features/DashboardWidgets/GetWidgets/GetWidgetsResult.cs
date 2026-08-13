@@ -21,5 +21,5 @@ public record GetWidgetsResult(
     string Metric,
     DateTimeOffset TimeRange,
     string? Settings,
-    IEnumerable<string> Value
+    IEnumerable<decimal> Value
 );

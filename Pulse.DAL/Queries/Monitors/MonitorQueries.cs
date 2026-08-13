@@ -173,20 +173,67 @@ public class MonitorQueries : IMonitorQueries
                 new { organizationId = orgId }, cancellationToken: ct));
     }
 
-     // bassed on the metric type we need to get different types of value
-    public async Task<ILookup<Guid, string>> GetMonitorsStatisticsAsync(IEnumerable<Guid> monitorIds, CancellationToken ct)
+    public async Task<ILookup<MonitorMetric, decimal>> GetMonitorsStatisticsAsync(
+        IEnumerable<MonitorMetric> monitors,
+        CancellationToken ct)
     {
         using IDbConnection connection = _connectionFactory.CreateConnection();
 
-        var records = await connection.QueryAsync<(Guid MonitorId, string Value)>(
-            new CommandDefinition(
-                "SELECT MonitorId, Value "+
-                "FROM MonitorPollResults " +
-                "WHERE MonitorId IN @Ids "+
-                "AND Value IS NOT NULL ",
-                new { Ids = monitorIds.Distinct() },
-                cancellationToken: ct));
+        IReadOnlyList<MonitorMetric> monitorList = monitors.Distinct().ToList();
+        var allRecords = new List<(MonitorMetric Monitor, decimal Value)>();
 
-        return records.ToLookup(r => r.MonitorId, r => r.Value);
+        foreach (IGrouping<(MetricType Metric, DateTimeOffset From), MonitorMetric> group in
+            monitorList.GroupBy(m => (m.Metric, m.From)))
+        {
+            IEnumerable<Guid> ids = group.Select(m => m.MonitorId).Distinct();
+            string sql = BuildStatisticsSql(group.Key.Metric);
+
+            IEnumerable<(Guid MonitorId, decimal Value)> rows =
+                await connection.QueryAsync<(Guid MonitorId, decimal Value)>(
+                    new CommandDefinition(
+                        sql,
+                        new { Ids = ids, From = group.Key.From },
+                        cancellationToken: ct));
+
+            foreach ((Guid MonitorId, decimal Value) row in rows)
+            {
+                MonitorMetric? match = group.FirstOrDefault(m => m.MonitorId == row.MonitorId);
+                if (match is not null)
+                    allRecords.Add((match, row.Value));
+            }
+        }
+
+        return allRecords.ToLookup(r => r.Monitor, r => r.Value);
     }
+
+    private static string BuildStatisticsSql(MetricType metric) =>
+        metric switch
+        {
+            MetricType.Availability =>
+                "SELECT MonitorId, " +
+                "CAST(ROUND(100.0 * SUM(CAST(IsSuccess AS INT)) / COUNT(*), 2) AS DECIMAL(18,2)) AS Value " +
+                "FROM MonitorPollResults " +
+                "WHERE MonitorId IN @Ids AND CheckedAt >= @From " +
+                "GROUP BY MonitorId",
+
+            MetricType.Requests =>
+                "SELECT MonitorId, " +
+                "CAST(COUNT(*) AS DECIMAL(18,2)) AS Value " +
+                "FROM MonitorPollResults " +
+                "WHERE MonitorId IN @Ids AND CheckedAt >= @From " +
+                "GROUP BY MonitorId",
+
+            MetricType.Errors =>
+                "SELECT MonitorId, " +
+                "CAST(SUM(CASE WHEN IsSuccess = 0 THEN 1 ELSE 0 END) AS DECIMAL(18,2)) AS Value " +
+                "FROM MonitorPollResults " +
+                "WHERE MonitorId IN @Ids AND CheckedAt >= @From " +
+                "GROUP BY MonitorId",
+
+            _ =>
+                "SELECT MonitorId, " +
+                "CAST(ResponseTimeMs AS DECIMAL(18,2)) AS Value " +
+                "FROM MonitorPollResults " +
+                "WHERE MonitorId IN @Ids AND CheckedAt >= @From",
+        };
 }

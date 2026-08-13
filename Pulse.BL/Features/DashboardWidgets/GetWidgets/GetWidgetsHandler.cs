@@ -63,8 +63,12 @@ public class GetWidgetsHandler
                 organizationResult.Value,
                 ct);
 
-        var monitorIds = widgets.Select(w => w.MonitorId);
-        ILookup<Guid, string> statsLookup = await _monitorQueries.GetMonitorsStatisticsAsync(monitorIds, ct);
+        IEnumerable<MonitorMetric> monitorMetrics = widgets
+            .Select(w => MonitorMetric.FromWidget(w.MonitorId, w.Metric, w.TimeRange))
+            .Distinct();
+
+        ILookup<MonitorMetric, decimal> stats =
+            await _monitorQueries.GetMonitorsStatisticsAsync(monitorMetrics, ct);
 
         var results = widgets.Select(x => new GetWidgetsResult(
             x.Id,
@@ -75,7 +79,7 @@ public class GetWidgetsHandler
             x.Metric,
             x.TimeRange,
             x.Settings,
-            Value: statsLookup[x.MonitorId]
+            Value: stats[MonitorMetric.FromWidget(x.MonitorId, x.Metric, x.TimeRange)]
         )).ToList();
 
         return Result.Ok<IReadOnlyList<GetWidgetsResult>>(results);
