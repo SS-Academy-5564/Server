@@ -46,4 +46,29 @@ public interface IMonitorQueries : IQueries
     Task<MonitorRecord?> GetByIdAsync(Guid id, CancellationToken ct);
 
     Task<MonitorPollingRecord?> GetByIdForPollingAsync(Guid id, CancellationToken ct);
+
+    /// <summary>
+    /// Retrieves a list of monitor lookup records for a specific organization.
+    /// </summary>
+    /// <param name="organizationId">The organization identifier to filter monitors by.</param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>A collection of <see cref="MonitorLookupRecord"/> instances belonging to the specified organization.</returns>
+    Task<IEnumerable<MonitorLookupRecord>> GetMonitorsLookupAsync(Guid organizationId, CancellationToken ct);
+
+    /// <summary>
+    /// Retrieves poll-result values for each monitor statistics request,
+    /// batching DB calls by <c>(MetricType, From)</c> internally.
+    /// </summary>
+    /// <param name="monitors">
+    /// Collection of requests, each carrying a monitor ID, metric type, and time-window start.
+    /// Duplicate entries are ignored.
+    /// </param>
+    /// <param name="ct">A token to cancel the operation.</param>
+    /// <returns>
+    /// A lookup keyed by <see cref="MonitorMetricRecord"/> so callers can retrieve values
+    /// for an exact metric request without ambiguity.
+    /// </returns>
+    Task<ILookup<MonitorMetricRecord, decimal>> GetMonitorsStatisticsAsync(
+        IEnumerable<MonitorMetricRecord> monitors,
+        CancellationToken ct);
 }

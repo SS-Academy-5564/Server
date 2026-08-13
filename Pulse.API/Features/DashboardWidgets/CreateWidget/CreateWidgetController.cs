@@ -33,7 +33,8 @@ public class CreateWidgetController : PulseControllerBase
             request.Subtitle,
             request.Metric,
             request.TimeRange,
-            request.Settings
+            request.Settings,
+            request.MonitorId
         );
 
         Result<CreateWidgetResult> result = await _handler.HandleAsync(command, ct);
