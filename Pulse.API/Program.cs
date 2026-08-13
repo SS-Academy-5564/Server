@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using FluentValidation;
 using Pulse.API.Extensions;
+using Pulse.API.Hubs;
 using Pulse.BL;
 using Pulse.BL.DependencyInjection;
 using Pulse.DAL.Database;
@@ -24,6 +25,8 @@ builder.Services.AddNativeOpenApi();
 builder.Services.AddPulseRateLimiting(builder.Configuration);
 builder.Services.AddJwtAuthentication();
 builder.Services.AddCurrentUserService();
+builder.Services.AddInternalNotificationAuthorization(builder.Configuration);
+builder.Services.AddPulseSignalR();
 
 string[] allowedOrigins = builder.Configuration
     .GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -82,6 +85,8 @@ app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHub<PulseNotificationHub>("/hubs/monitors");
 
 app.MapControllers();
 

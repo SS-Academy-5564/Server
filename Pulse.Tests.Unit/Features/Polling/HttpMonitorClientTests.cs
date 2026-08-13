@@ -61,7 +61,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.NewGuid());
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -105,7 +106,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.NewGuid());
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -136,7 +138,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.NewGuid());
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -174,7 +177,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.NewGuid());
 
         using var cts = new CancellationTokenSource();
 
@@ -206,7 +210,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.NewGuid());
 
         // Act
         HttpMonitorResponse result = await _client.SendAsync(monitorPolling, CancellationToken.None);
@@ -240,7 +245,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.NewGuid());
 
         using var cts = new CancellationTokenSource();
         await cts.CancelAsync();
@@ -271,7 +277,8 @@ public class HttpMonitorClientTests
             "status",
             60,
             30,
-            "Enabled");
+            "Enabled",
+            Guid.NewGuid());
 
         // Act
         await _client.SendAsync(monitorPolling, CancellationToken.None);

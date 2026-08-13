@@ -102,7 +102,7 @@ public class MonitorQueries : IMonitorQueries
 
         return await connection.QueryAsync<MonitorPollingRecord>(
             new CommandDefinition(
-                "SELECT TOP (@Max) m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status " +
+                "SELECT TOP (@Max) m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status, m.OrganizationId " +
                 "FROM Monitors AS m " +
                 "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
                 "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
@@ -151,7 +151,7 @@ public class MonitorQueries : IMonitorQueries
 
         return await connection.QuerySingleOrDefaultAsync<MonitorPollingRecord>(
             new CommandDefinition(
-                "SELECT m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status " +
+                "SELECT m.Id, m.Url, h.Name AS HttpMethod, m.ResultPath, m.PollingIntervalSeconds, m.PollingTimeoutSeconds, s.Name AS Status, m.OrganizationId " +
                 "FROM Monitors AS m " +
                 "JOIN HttpMethods AS h ON m.HttpMethod = h.Id " +
                 "JOIN MonitorStatuses AS s ON m.StatusId = s.Id " +
