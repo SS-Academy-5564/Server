@@ -62,7 +62,7 @@ public class ManualCheckHandlerTests
             60,
             10,
             "Enabled",
-            Guid.NewGuid());
+            organizationId);
 
         _monitorQueries
             .Setup(q => q.GetByIdForPollingAsync(monitor.Id, It.IsAny<CancellationToken>()))
@@ -83,6 +83,42 @@ public class ManualCheckHandlerTests
     }
 
     [Fact]
+    public async Task HandleAsync_MonitorFromDifferentOrganization_ReturnsNotFoundAndDoesNotEnqueue()
+    {
+        // Arrange
+        ManualCheckHandler handler = CreateHandler();
+        Guid userOrganizationId = Guid.NewGuid();
+        Guid monitorOrganizationId = Guid.NewGuid();
+        _currentUserService.SetupGet(service => service.OrganizationId).Returns(userOrganizationId);
+
+        MonitorPollingRecord monitor = new(
+            Guid.NewGuid(),
+            "https://example.com/health",
+            "GET",
+            "status",
+            60,
+            10,
+            "Enabled",
+            monitorOrganizationId);
+
+        _monitorQueries
+            .Setup(q => q.GetByIdForPollingAsync(monitor.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(monitor);
+
+        // Act
+        Result result = await handler.HandleAsync(
+            new ManualCheckCommand(monitor.Id, userOrganizationId),
+            CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Errors.Should().ContainSingle();
+        result.Errors[0].Should().BeOfType<NotFoundError>();
+
+        _queue.Verify(q => q.TryEnqueue(It.IsAny<ManualCheckCommand>()), Times.Never);
+    }
+
+    [Fact]
     public async Task HandleAsync_WhenQueueIsFull_ReturnsTooManyRequestsError()
     {
         // Arrange
@@ -98,7 +134,7 @@ public class ManualCheckHandlerTests
             60,
             10,
             "Enabled",
-            Guid.NewGuid());
+            organizationId);
 
         _monitorQueries
             .Setup(q => q.GetByIdForPollingAsync(monitor.Id, It.IsAny<CancellationToken>()))

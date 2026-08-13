@@ -16,6 +16,11 @@ public static class RateLimitPolicies
     public const string PasswordReset = "PasswordResetLimit";
 
     /// <summary>
+    /// The policy used to rate limit registration attempts.
+    /// </summary>
+    public const string Registration = "RegistrationRateLimit";
+
+    /// <summary>
     /// The policy used to rate limit manual monitor triggers.
     /// </summary>
     public const string ManualMonitorTrigger = "ManualMonitorTrigger";

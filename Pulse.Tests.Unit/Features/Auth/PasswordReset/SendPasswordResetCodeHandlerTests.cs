@@ -118,7 +118,7 @@ public class SendPasswordResetCodeHandlerTests
     }
 
     [Fact]
-    public async Task RequestAsync_WhenEmailFails_ReturnsOkButDoesNotCreateCode()
+    public async Task HandleAsync_WhenEmailFails_ReturnsOkButStillPersistsCode()
     {
         // Arrange
         string email = "test@example.com";
@@ -133,20 +133,33 @@ public class SendPasswordResetCodeHandlerTests
             .Setup(x => x.GetActiveByUserIdAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((PasswordResetCodeRecord?)null);
 
+        _passwordHasherMock
+            .Setup(x => x.HashPassword(It.IsAny<string>()))
+            .Returns("hashed_code");
+
         _emailServiceMock
             .Setup(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("SMTP Error"));
 
         _timeProviderMock.Setup(x => x.GetUtcNow()).Returns(DateTimeOffset.UtcNow);
 
+        var sequence = new MockSequence();
+        _codeCommandsMock.InSequence(sequence)
+            .Setup(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Guid.NewGuid());
+        _emailServiceMock.InSequence(sequence)
+            .Setup(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Fail("SMTP Error"));
+
         // Act
         Result<SendCodeResult> result = await _sut.HandleAsync(command, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeTrue(); // Endpoint should still succeed to avoid enumeration
+        result.IsSuccess.Should().BeTrue();
         result.Value.ResendCooldownSeconds.Should().Be(60);
 
-        _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Never);
+        _codeCommandsMock.Verify(x => x.ReplaceAsync(It.IsAny<PasswordResetCodeInput>(), It.IsAny<CancellationToken>()), Times.Once);
+        _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()), Times.Once);
     }
     [Fact]
     public async Task RequestAsync_WhenLanguageIsUkrainian_SendsLocalizedSubjectAndBody()

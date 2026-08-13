@@ -1,3 +1,3 @@
 namespace Pulse.BL.Features.Auth.Login;
 
-public sealed record LoginCommand(string Email, string Password);
+public sealed record LoginCommand(string Email, string Password, string Identifier);

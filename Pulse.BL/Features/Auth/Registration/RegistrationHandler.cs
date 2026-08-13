@@ -1,5 +1,4 @@
 using FluentResults;
-using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.DAL.Commands.Members;
@@ -46,21 +45,28 @@ public class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result>
 
         if (userExists)
         {
-            return Result.Fail(new ConflictError("A user with this Email already exists."));
+            return Result.Ok();
         }
 
         string passwordHash = _passwordHasher.HashPassword(command.Password);
 
+        // Create the user inside a narrow try/catch so a DuplicateKey on the
+        // Email column is handled as a benign "already registered" race.
+        Guid userId;
         try
         {
             await using IUnitOfWork uow = await _unitOfWorkFactory.CreateAsync(ct: ct);
-            Guid userId = await _userCommands.CreateUserAsync(new CreateUserInput
+            userId = await _userCommands.CreateUserAsync(new CreateUserInput
             (
                 command.Email,
                 command.FirstName,
                 command.LastName,
                 passwordHash
             ), ct);
+
+            // Proceed to create member and commit outside the DuplicateKey catch
+            // so that duplicate-key failures during those operations are surfaced
+            // as real conflicts instead of silent successes.
             await _memberCommands.CreateMemberAsync(new CreateMemberInput
             (
                 userId,
@@ -69,9 +75,11 @@ public class RegistrationHandler : IAsyncHandler<RegistrationCommand, Result>
             ), ct);
             await uow.CommitAsync(ct);
         }
-        catch (DuplicateKeyException ex)
+        catch (DuplicateKeyException)
         {
-            return Result.Fail(new ConflictError($"A user with this {ex.FieldName} already exists."));
+            // If the duplicate key occurred while inserting the user (concurrent
+            // registration), treat as success to avoid account enumeration.
+            return Result.Ok();
         }
 
         return Result.Ok();

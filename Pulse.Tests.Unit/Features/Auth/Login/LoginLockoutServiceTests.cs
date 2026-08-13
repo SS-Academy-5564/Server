@@ -31,11 +31,12 @@ public class LoginLockoutServiceTests
         Guid userId = Guid.NewGuid();
 
         // Act
-        await _sut.AddFailedAttemptAsync(userId, CancellationToken.None);
+        await _sut.AddFailedAttemptAsync(userId, "127.0.0.1", CancellationToken.None);
 
         // Assert
         _commands.Verify(x => x.AddFailedAttemptAsync(
             userId,
+            "127.0.0.1",
             5,
             15,
             CancellationToken.None), Times.Once);

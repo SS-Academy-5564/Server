@@ -16,6 +16,11 @@ public static class RateLimitSections
     public const string PasswordReset = "RateLimit:PasswordReset";
 
     /// <summary>
+    /// Configuration section for registration rate limiting.
+    /// </summary>
+    public const string Registration = "RateLimit:Registration";
+
+    /// <summary>
     /// Configuration section for refresh token rate limiting.
     /// </summary>
     public const string Refresh = "RateLimit:Refresh";

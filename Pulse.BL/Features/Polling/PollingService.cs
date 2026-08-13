@@ -70,7 +70,7 @@ public class PollingService : IPollingService
             monitorId,
             ct);
 
-        if (monitor is null)
+        if (monitor is null || monitor.OrganizationId != organizationId)
         {
             return Result.Fail(new NotFoundError($"Monitor '{monitorId}' was not found."));
         }

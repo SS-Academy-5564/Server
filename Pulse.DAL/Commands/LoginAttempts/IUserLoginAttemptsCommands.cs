@@ -11,12 +11,14 @@ public interface IUserLoginAttemptsCommands : ICommands
     /// Atomically records a failed attempt and applies lockout at the configured limit.
     /// </summary>
     /// <param name="userId">The user whose failed attempt should be recorded.</param>
+    /// <param name="identifier">The client identifier used to scope lockout state.</param>
     /// <param name="maxFailedAttempts">The maximum attempts allowed before lockout.</param>
     /// <param name="lockoutDurationMinutes">The configured lockout duration in minutes.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
     Task AddFailedAttemptAsync(
         Guid userId,
+        string identifier,
         int maxFailedAttempts,
         int lockoutDurationMinutes,
         CancellationToken ct);
@@ -25,7 +27,8 @@ public interface IUserLoginAttemptsCommands : ICommands
     /// Clears the persisted failed-attempt count and lockout.
     /// </summary>
     /// <param name="userId">The user whose attempt state should be reset.</param>
+    /// <param name="identifier">The client identifier used to scope reset state.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task ResetAttemptsAsync(Guid userId, CancellationToken ct);
+    Task ResetAttemptsAsync(Guid userId, string identifier, CancellationToken ct);
 }

@@ -16,6 +16,7 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
     /// <inheritdoc/>
     public async Task AddFailedAttemptAsync(
         Guid userId,
+        string identifier,
         int maxFailedAttempts,
         int lockoutDurationMinutes,
         CancellationToken ct)
@@ -52,13 +53,14 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
                             THEN @LockedUntil
                             ELSE NULL
                         END
-                WHERE UserId = @UserId;
+                WHERE UserId = @UserId AND Identifier = @Identifier;
 
                 IF @@ROWCOUNT = 0
                 BEGIN
-                    INSERT INTO UserLoginAttempts (UserId, FailedAttempts, LockedUntil)
+                    INSERT INTO UserLoginAttempts (UserId, Identifier, FailedAttempts, LockedUntil)
                     VALUES (
                         @UserId,
+                        @Identifier,
                         1,
                         CASE
                             WHEN @MaxFailedAttempts <= 1 THEN @LockedUntil
@@ -82,6 +84,7 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
                 new
                 {
                     UserId = userId,
+                    Identifier = identifier,
                     MaxFailedAttempts = maxFailedAttempts,
                     LockoutDurationMinutes = lockoutDurationMinutes
                 },
@@ -89,15 +92,15 @@ public class UserLoginAttemptsCommands : IUserLoginAttemptsCommands
     }
 
     /// <inheritdoc/>
-    public async Task ResetAttemptsAsync(Guid userId, CancellationToken ct)
+    public async Task ResetAttemptsAsync(Guid userId, string identifier, CancellationToken ct)
     {
         using IDbConnection connection = _dbConnectionFactory.CreateConnection();
         await connection.ExecuteAsync(
             new CommandDefinition(
                 "UPDATE UserLoginAttempts " +
                 "SET LockedUntil = NULL, FailedAttempts = 0 " +
-                "WHERE UserId = @userId",
-                new { userId },
+                "WHERE UserId = @userId AND Identifier = @identifier",
+                new { userId, identifier },
                 cancellationToken: ct)
         );
     }

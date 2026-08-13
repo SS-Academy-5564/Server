@@ -46,6 +46,40 @@ public class MonitorCommands : IMonitorCommands
     }
 
     ///<inheritdoc/>
+    public async Task<(Guid, Guid)> UpdateAsync(UpdateMonitorInput input, CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
+        const string sql =
+            """
+            UPDATE dbo.Monitors
+            SET
+                Name = @Name,
+                Url = @Url,
+                HttpMethod = (SELECT Id FROM dbo.HttpMethods WHERE Name = @HttpMethod),
+                ResultPath = @ResultPath,
+                StatusId = (SELECT Id FROM dbo.MonitorStatuses WHERE Name = @Status),
+                PollingIntervalSeconds = @PollingIntervalSeconds,
+                PollingTimeoutSeconds = @PollingTimeoutSeconds,
+                CurrentValue = NULL,
+                NextExecutionAt = SYSUTCDATETIME(),
+                LastModifiedAt = SYSUTCDATETIME()
+            OUTPUT
+                INSERTED.Id,
+                INSERTED.OrganizationId
+            WHERE Id = @Id;
+            """;
+
+        return await session.Connection.QuerySingleAsync<(Guid Id, Guid OrganizationId)>(
+            new CommandDefinition(
+                sql,
+                input,
+                transaction: session.Transaction,
+                cancellationToken: ct));
+    }
+
+    ///<inheritdoc/>
     public async Task UpdateAfterPollAsync(
         UpdateMonitorAfterPollInput input,
         IDbSession session,
@@ -67,6 +101,31 @@ public class MonitorCommands : IMonitorCommands
             """;
 
         await session.Connection.ExecuteAsync(
+            new CommandDefinition(
+                sql,
+                input,
+                transaction: session.Transaction,
+                cancellationToken: ct));
+    }
+
+    public async Task<int> UpdateStatusAsync(UpdateMonitorStatusInput input, CancellationToken ct)
+    {
+        IDbSession session = _sessionAccessor.Session
+            ?? throw new InvalidOperationException("No active unit of work.");
+
+        const string sql =
+            """
+            UPDATE dbo.Monitors
+            SET StatusId = (
+                SELECT Id
+                FROM dbo.MonitorStatuses
+                WHERE Name = @Status
+            )
+            WHERE Id = @MonitorId
+              AND OrganizationId = @OrganizationId;
+            """;
+
+        return await session.Connection.ExecuteAsync(
             new CommandDefinition(
                 sql,
                 input,
