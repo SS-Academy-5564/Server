@@ -4,6 +4,7 @@ using FluentResults;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
+using Pulse.BL.Common.Errors;
 using Pulse.BL.Common.Security.Passwords;
 using Pulse.BL.Features.Auth.EmailVerification;
 using Pulse.BL.Features.Auth.Registration;
@@ -13,7 +14,6 @@ using Pulse.DAL.Commands.Members;
 using Pulse.DAL.Commands.Users;
 using Pulse.DAL.Common.Constants;
 using Pulse.DAL.Common.Repository;
-using Pulse.DAL.Exceptions;
 using Pulse.DAL.Queries.Users;
 
 namespace Pulse.Tests.Unit.Features.Auth.Registration;
@@ -76,7 +76,7 @@ public class RegistrationHandlerTests
             .Setup(q => q.EmailExistsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         _userCommands.Verify(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -93,12 +93,13 @@ public class RegistrationHandlerTests
             .Returns("hashed");
         _userCommands
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new DuplicateKeyException("Email"));
+            .ReturnsAsync(new CreateUserResult(CreateUserStatus.DuplicateEmail, null));
 
-        Result result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(ValidCommand(), CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         _memberCommands.Verify(m => m.CreateMemberAsync(It.IsAny<CreateMemberInput>(), It.IsAny<CancellationToken>()), Times.Never);
+        _unitOfWork.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -118,11 +119,12 @@ public class RegistrationHandlerTests
             .Returns(hashedPassword);
         _userCommands
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(userId);
+            .ReturnsAsync(new CreateUserResult(CreateUserStatus.Succeeded, userId));
 
-        Result result = await _handler.HandleAsync(command, CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
+        result.Value.ResendCooldownSeconds.Should().Be(60);
 
         _userCommands.Verify(c => c.CreateUserAsync(
             It.Is<CreateUserInput>(u =>
@@ -179,9 +181,9 @@ public class RegistrationHandlerTests
             .Returns("hashed_password");
         _userCommands
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(userId);
+            .ReturnsAsync(new CreateUserResult(CreateUserStatus.Succeeded, userId));
 
-        Result result = await _handler.HandleAsync(command, CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         Uri.TryCreate(expectedVerificationUrl, UriKind.Absolute, out Uri? verificationUri).Should().BeTrue();
@@ -214,12 +216,12 @@ public class RegistrationHandlerTests
         _passwordHasher.Setup(h => h.HashPassword(command.Password)).Returns("hashed_password");
         _userCommands
             .Setup(c => c.CreateUserAsync(It.IsAny<CreateUserInput>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Guid.NewGuid());
+            .ReturnsAsync(new CreateUserResult(CreateUserStatus.Succeeded, Guid.NewGuid()));
         _emailService
             .Setup(s => s.SendEmailAsync(It.IsAny<SendEmailDto>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Result.Fail("Delivery failed"));
 
-        Result result = await _handler.HandleAsync(command, CancellationToken.None);
+        Result<RegistrationResult> result = await _handler.HandleAsync(command, CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();
         result.Errors.Should().ContainSingle().Which.Should().BeOfType<InternalError>();

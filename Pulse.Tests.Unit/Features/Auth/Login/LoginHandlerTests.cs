@@ -265,14 +265,17 @@ public class LoginHandlerTests
             null);
 
         _userQueriesMock
-            .Setup(x => x.GetByEmailForAuthAsync(email, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetByEmailForAuthAsync(
+                email,
+                It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(userRecord);
         _passwordHasherMock
             .Setup(x => x.VerifyHashedPassword(passwordHash, password))
             .Returns(true);
 
         Result<LoginResult> result = await _sut.HandleAsync(
-            new LoginCommand(email, password),
+            new LoginCommand(email, password, "127.0.0.1"),
             CancellationToken.None);
 
         result.IsFailed.Should().BeTrue();

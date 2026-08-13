@@ -2,7 +2,6 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using Pulse.DAL.Common.Repository;
 using Pulse.DAL.Connection;
-using Pulse.DAL.Exceptions;
 
 namespace Pulse.DAL.Commands.Users;
 
@@ -19,14 +18,14 @@ public class UserCommands : IUserCommands
 
     // change to Task later when we will remove adding user to default organization
     /// <inheritdoc/>
-    public async Task<Guid> CreateUserAsync(CreateUserInput input, CancellationToken ct)
+    public async Task<CreateUserResult> CreateUserAsync(CreateUserInput input, CancellationToken ct)
     {
         IDbSession session = _sessionAccessor.Session
             ?? throw new InvalidOperationException("No active unit of work.");
 
         try
         {
-            return await session.Connection.ExecuteScalarAsync<Guid>(
+            Guid userId = await session.Connection.ExecuteScalarAsync<Guid>(
                 new CommandDefinition(
                     "INSERT INTO Users (Email, FirstName, LastName, PasswordHash, CreatedAt, UpdatedAt) OUTPUT INSERTED.Id VALUES (@Email, @FirstName, @LastName, @PasswordHash, @Now, @Now)",
                     new
@@ -39,10 +38,12 @@ public class UserCommands : IUserCommands
                     },
                     transaction: session.Transaction,
                     cancellationToken: ct));
+
+            return new CreateUserResult(CreateUserStatus.Succeeded, userId);
         }
         catch (SqlException ex) when (ex.Number is 2627 or 2601)
         {
-            throw new DuplicateKeyException("Email");
+            return new CreateUserResult(CreateUserStatus.DuplicateEmail, null);
         }
     }
 

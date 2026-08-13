@@ -1,7 +1,10 @@
+using System.Reflection;
 using FluentAssertions;
 using FluentResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Moq;
+using Pulse.API.Constants;
 using Pulse.API.Features.Auth.EmailVerification;
 using Pulse.API.Responses;
 using Pulse.BL.Common.Errors;
@@ -13,6 +16,9 @@ namespace Pulse.Tests.Unit.Features.Auth.EmailVerification;
 public class EmailVerificationControllerTests
 {
     private readonly Mock<IAsyncHandler<VerifyEmailCommand, Result>> _verifyHandler = new();
+    private readonly Mock<IAsyncHandler<
+        RequestEmailVerificationResendCommand,
+        Result<ResendEmailVerificationResult>>> _requestResendHandler = new();
     private readonly Mock<IAsyncHandler<ResendEmailVerificationCommand, Result<ResendEmailVerificationResult>>>
         _resendHandler = new();
 
@@ -59,7 +65,32 @@ public class EmailVerificationControllerTests
     }
 
     [Fact]
-    public async Task ResendAsync_ExpiredToken_ReturnsCooldownGuidance()
+    public async Task RequestResendAsync_Email_ReturnsGenericCooldownGuidance()
+    {
+        const string email = "user@example.com";
+        _requestResendHandler
+            .Setup(handler => handler.HandleAsync(
+                It.Is<RequestEmailVerificationResendCommand>(command =>
+                    command.Email == email &&
+                    command.Language == "uk"),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Ok(new ResendEmailVerificationResult(60)));
+        EmailVerificationController controller = CreateController();
+
+        IActionResult result = await controller.RequestResendAsync(
+            new RequestEmailVerificationResendRequest(email),
+            CancellationToken.None,
+            "uk-UA,uk;q=0.9,en;q=0.8");
+
+        OkObjectResult okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        ApiResponse<ResendEmailVerificationResult> response = okResult.Value
+            .Should().BeOfType<ApiResponse<ResendEmailVerificationResult>>().Subject;
+        response.Success.Should().BeTrue();
+        response.Data!.ResendCooldownSeconds.Should().Be(60);
+    }
+
+    [Fact]
+    public async Task ResendExpiredAsync_ExpiredToken_ReturnsCooldownGuidance()
     {
         const string token = "expired-token";
         _resendHandler
@@ -71,7 +102,7 @@ public class EmailVerificationControllerTests
             .ReturnsAsync(Result.Ok(new ResendEmailVerificationResult(60)));
         EmailVerificationController controller = CreateController();
 
-        IActionResult result = await controller.ResendAsync(
+        IActionResult result = await controller.ResendExpiredAsync(
             new ResendEmailVerificationRequest(token),
             CancellationToken.None,
             "uk-UA,uk;q=0.9,en;q=0.8");
@@ -81,6 +112,20 @@ public class EmailVerificationControllerTests
             .Should().BeOfType<ApiResponse<ResendEmailVerificationResult>>().Subject;
         response.Success.Should().BeTrue();
         response.Data!.ResendCooldownSeconds.Should().Be(60);
+    }
+
+    [Theory]
+    [InlineData(nameof(EmailVerificationController.RequestResendAsync))]
+    [InlineData(nameof(EmailVerificationController.ResendExpiredAsync))]
+    public void ResendEndpoint_Configuration_UsesEmailVerificationIpRateLimit(string methodName)
+    {
+        MethodInfo method = typeof(EmailVerificationController).GetMethod(methodName)
+            ?? throw new InvalidOperationException($"Method '{methodName}' was not found.");
+
+        EnableRateLimitingAttribute? attribute = method.GetCustomAttribute<EnableRateLimitingAttribute>();
+
+        attribute.Should().NotBeNull();
+        attribute!.PolicyName.Should().Be(RateLimitPolicies.EmailVerificationResend);
     }
 
     public static TheoryData<IError, int, string> TokenFailureCases => new()
@@ -109,5 +154,5 @@ public class EmailVerificationControllerTests
     };
 
     private EmailVerificationController CreateController()
-        => new(_verifyHandler.Object, _resendHandler.Object);
+        => new(_verifyHandler.Object, _requestResendHandler.Object, _resendHandler.Object);
 }

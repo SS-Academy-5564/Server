@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Pulse.API.Features.Auth.Registration;
+using Pulse.API.Responses;
 using Pulse.BL.Common.Handlers;
 using Pulse.BL.Features.Auth.Registration;
 
@@ -11,7 +12,7 @@ namespace Pulse.Tests.Unit.Features.Auth.Registration;
 
 public class RegistrationControllerTests
 {
-    private readonly Mock<IAsyncHandler<RegistrationCommand, Result>> _handler = new();
+    private readonly Mock<IAsyncHandler<RegistrationCommand, Result<RegistrationResult>>> _handler = new();
     private readonly RegistrationController _controller;
 
     public RegistrationControllerTests()
@@ -33,14 +34,17 @@ public class RegistrationControllerTests
             .Setup(handler => handler.HandleAsync(
                 It.Is<RegistrationCommand>(command => command.Language == "uk"),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok());
+            .ReturnsAsync(Result.Ok(new RegistrationResult(60)));
 
         IActionResult result = await _controller.RegisterAsync(
             request,
             CancellationToken.None,
             "en;q=0.5,uk-UA;q=0.9");
 
-        result.Should().BeOfType<OkObjectResult>();
+        OkObjectResult okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        ApiResponse<RegistrationResult> response = okResult.Value
+            .Should().BeOfType<ApiResponse<RegistrationResult>>().Subject;
+        response.Data.Should().Be(new RegistrationResult(60));
         _handler.Verify(handler => handler.HandleAsync(
             It.Is<RegistrationCommand>(command =>
                 command.Email == request.Email &&
@@ -61,7 +65,7 @@ public class RegistrationControllerTests
             .Setup(handler => handler.HandleAsync(
                 It.Is<RegistrationCommand>(command => command.Language == "en"),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Ok());
+            .ReturnsAsync(Result.Ok(new RegistrationResult(60)));
 
         IActionResult result = await _controller.RegisterAsync(
             request,
