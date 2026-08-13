@@ -25,7 +25,7 @@ public sealed class GetMonitorsLookupController : PulseControllerBase
     /// <param name="ct">A cancellation token to observe while waiting for the operation to complete.</param>
     /// <returns>An <see cref="IActionResult"/> representing the result of the operation.</returns>
     [HttpGet("lookup")]
-    public async Task<IActionResult> CreateMonitorAsync(CancellationToken ct)
+    public async Task<IActionResult> GetMonitorsLookupAsync(CancellationToken ct)
     {
         Result<IEnumerable<MonitorLookupResult>> result = await _handler.HandleAsync(ct);
 
