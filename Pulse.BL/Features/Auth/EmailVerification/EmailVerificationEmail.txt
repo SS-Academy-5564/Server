@@ -1,5 +1,8 @@
 Pulse - Verify Your Email Address
 
+{{ if recipient_name }}Hello, {{ recipient_name }}!
+
+{{ end }}
 Confirm your email address to finish setting up your Pulse account.
 
 Verify your email address:

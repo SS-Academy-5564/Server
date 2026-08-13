@@ -139,11 +139,13 @@ public sealed class RegistrationHandler : IAsyncHandler<RegistrationCommand, Res
                 HtmlBody: EmailVerificationEmailBuilder.BuildHtmlBody(
                     verificationUrl,
                     _verificationOptions.TokenLifetimeHours,
-                    command.Language),
+                    command.Language,
+                    command.FirstName),
                 PlainTextBody: EmailVerificationEmailBuilder.BuildPlainTextBody(
                     verificationUrl,
                     _verificationOptions.TokenLifetimeHours,
-                    command.Language),
+                    command.Language,
+                    command.FirstName),
                 ReplyTo: null),
             ct);
 

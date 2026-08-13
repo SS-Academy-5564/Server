@@ -59,40 +59,58 @@ public sealed class EmailVerificationTokenCommands : IEmailVerificationTokenComm
 
             DECLARE @Status INT;
             DECLARE @UserId UNIQUEIDENTIFIER;
+            DECLARE @LockedUserId UNIQUEIDENTIFIER;
+            DECLARE @TokenId UNIQUEIDENTIFIER;
             DECLARE @ExpiresAt DATETIMEOFFSET;
             DECLARE @UsedAt DATETIMEOFFSET;
 
-            SELECT
-                @UserId = UserId,
-                @ExpiresAt = ExpiresAt,
-                @UsedAt = UsedAt
-            FROM EmailVerificationTokens WITH (UPDLOCK, HOLDLOCK)
-            WHERE TokenHash = @TokenHash;
+            SELECT @UserId = UserId
+            FROM EmailVerificationTokens
+            WHERE TokenHash = CAST(@TokenHash AS CHAR(64));
 
             IF @UserId IS NULL
             BEGIN
                 SET @Status = 1;
             END
-            ELSE IF @UsedAt IS NOT NULL
-            BEGIN
-                SET @Status = 3;
-            END
-            ELSE IF @ExpiresAt <= @ConsumedAt
-            BEGIN
-                SET @Status = 2;
-            END
             ELSE
             BEGIN
-                UPDATE EmailVerificationTokens
-                SET UsedAt = @ConsumedAt
-                WHERE TokenHash = @TokenHash;
-
-                UPDATE Users
-                SET EmailVerifiedAt = COALESCE(EmailVerifiedAt, @ConsumedAt),
-                    UpdatedAt = @ConsumedAt
+                SELECT @LockedUserId = Id
+                FROM Users WITH (UPDLOCK, HOLDLOCK)
                 WHERE Id = @UserId;
 
-                SET @Status = 0;
+                SELECT
+                    @TokenId = Id,
+                    @ExpiresAt = ExpiresAt,
+                    @UsedAt = UsedAt
+                FROM EmailVerificationTokens WITH (UPDLOCK, HOLDLOCK)
+                WHERE TokenHash = CAST(@TokenHash AS CHAR(64))
+                    AND UserId = @UserId;
+
+                IF @LockedUserId IS NULL OR @TokenId IS NULL
+                BEGIN
+                    SET @Status = 1;
+                END
+                ELSE IF @UsedAt IS NOT NULL
+                BEGIN
+                    SET @Status = 3;
+                END
+                ELSE IF @ExpiresAt <= @ConsumedAt
+                BEGIN
+                    SET @Status = 2;
+                END
+                ELSE
+                BEGIN
+                    UPDATE EmailVerificationTokens
+                    SET UsedAt = @ConsumedAt
+                    WHERE Id = @TokenId;
+
+                    UPDATE Users
+                    SET EmailVerifiedAt = COALESCE(EmailVerifiedAt, @ConsumedAt),
+                        UpdatedAt = @ConsumedAt
+                    WHERE Id = @UserId;
+
+                    SET @Status = 0;
+                END
             END
 
             COMMIT TRAN;
@@ -119,59 +137,75 @@ public sealed class EmailVerificationTokenCommands : IEmailVerificationTokenComm
         const string sql = """
             DECLARE @Status INT = 1;
             DECLARE @UserId UNIQUEIDENTIFIER;
+            DECLARE @LockedUserId UNIQUEIDENTIFIER;
+            DECLARE @PresentedTokenId UNIQUEIDENTIFIER;
             DECLARE @Email NVARCHAR(256);
             DECLARE @PresentedExpiresAt DATETIMEOFFSET;
-            DECLARE @PresentedCreatedAt DATETIMEOFFSET;
             DECLARE @PresentedUsedAt DATETIMEOFFSET;
             DECLARE @EmailVerifiedAt DATETIMEOFFSET;
             DECLARE @LatestCreatedAt DATETIMEOFFSET;
 
-            SELECT
-                @UserId = tokens.UserId,
-                @Email = users.Email,
-                @PresentedExpiresAt = tokens.ExpiresAt,
-                @PresentedCreatedAt = tokens.CreatedAt,
-                @PresentedUsedAt = tokens.UsedAt,
-                @EmailVerifiedAt = users.EmailVerifiedAt
-            FROM EmailVerificationTokens AS tokens WITH (UPDLOCK, HOLDLOCK)
-            INNER JOIN Users AS users WITH (UPDLOCK, HOLDLOCK) ON users.Id = tokens.UserId
-            WHERE tokens.TokenHash = @PresentedTokenHash;
+            SELECT @UserId = UserId
+            FROM EmailVerificationTokens
+            WHERE TokenHash = CAST(@PresentedTokenHash AS CHAR(64));
 
             IF @UserId IS NULL
             BEGIN
                 SET @Status = 1;
             END
-            ELSE IF @PresentedUsedAt IS NOT NULL OR @EmailVerifiedAt IS NOT NULL
-            BEGIN
-                SET @Status = 3;
-            END
-            ELSE IF @PresentedExpiresAt > @RequestedAt
-            BEGIN
-                SET @Status = 2;
-            END
             ELSE
             BEGIN
-                SELECT @LatestCreatedAt = MAX(CreatedAt)
-                FROM EmailVerificationTokens WITH (UPDLOCK, HOLDLOCK)
-                WHERE UserId = @UserId;
+                SELECT
+                    @LockedUserId = Id,
+                    @Email = Email,
+                    @EmailVerifiedAt = EmailVerifiedAt
+                FROM Users WITH (UPDLOCK, HOLDLOCK)
+                WHERE Id = @UserId;
 
-                IF @LatestCreatedAt > @PresentedCreatedAt
-                    AND DATEADD(SECOND, @ResendCooldownSeconds, @LatestCreatedAt) > @RequestedAt
+                SELECT
+                    @PresentedTokenId = Id,
+                    @PresentedExpiresAt = ExpiresAt,
+                    @PresentedUsedAt = UsedAt
+                FROM EmailVerificationTokens WITH (UPDLOCK, HOLDLOCK)
+                WHERE TokenHash = CAST(@PresentedTokenHash AS CHAR(64))
+                    AND UserId = @UserId;
+
+                IF @LockedUserId IS NULL OR @PresentedTokenId IS NULL
                 BEGIN
-                    SET @Status = 4;
+                    SET @Status = 1;
+                END
+                ELSE IF @PresentedUsedAt IS NOT NULL OR @EmailVerifiedAt IS NOT NULL
+                BEGIN
+                    SET @Status = 3;
+                END
+                ELSE IF @PresentedExpiresAt > @RequestedAt
+                BEGIN
+                    SET @Status = 2;
                 END
                 ELSE
                 BEGIN
-                    UPDATE EmailVerificationTokens
-                    SET UsedAt = @RequestedAt
-                    WHERE UserId = @UserId
-                        AND UsedAt IS NULL
-                        AND ExpiresAt > @RequestedAt;
+                    SELECT @LatestCreatedAt = MAX(CreatedAt)
+                    FROM EmailVerificationTokens WITH (UPDLOCK, HOLDLOCK)
+                    WHERE UserId = @UserId;
 
-                    INSERT INTO EmailVerificationTokens (UserId, TokenHash, ExpiresAt, CreatedAt)
-                    VALUES (@UserId, @ReplacementTokenHash, @ReplacementExpiresAt, @RequestedAt);
+                    IF @LatestCreatedAt IS NOT NULL
+                        AND DATEADD(SECOND, @ResendCooldownSeconds, @LatestCreatedAt) > @RequestedAt
+                    BEGIN
+                        SET @Status = 4;
+                    END
+                    ELSE
+                    BEGIN
+                        UPDATE EmailVerificationTokens
+                        SET UsedAt = @RequestedAt
+                        WHERE UserId = @UserId
+                            AND UsedAt IS NULL
+                            AND ExpiresAt > @RequestedAt;
 
-                    SET @Status = 0;
+                        INSERT INTO EmailVerificationTokens (UserId, TokenHash, ExpiresAt, CreatedAt)
+                        VALUES (@UserId, @ReplacementTokenHash, @ReplacementExpiresAt, @RequestedAt);
+
+                        SET @Status = 0;
+                    END
                 END
             END
 

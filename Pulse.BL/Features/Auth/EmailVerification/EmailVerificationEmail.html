@@ -18,6 +18,11 @@
           <tr>
             <td style="padding:0 40px 40px;">
               <h2 style="margin:0 0 16px;font-size:20px;color:#0F172A;font-weight:600;">Verify your email address</h2>
+              {{ if recipient_name }}
+              <p style="margin:0 0 16px;font-size:16px;color:#0F172A;line-height:1.6;">
+                Hello, <strong>{{ recipient_name }}</strong>!
+              </p>
+              {{ end }}
               <p style="margin:0 0 24px;font-size:16px;color:#64748B;line-height:1.6;">
                 Confirm your email address to finish setting up your Pulse account.
                 This link expires in <strong>{{ token_lifetime_hours }} {{ hour_label }}</strong>.

@@ -155,9 +155,11 @@ public class RegistrationHandlerTests
                 email.Subject == "Verify your Pulse email address" &&
                 email.HtmlBody != null &&
                 email.HtmlBody.Contains("Verify email address") &&
+                email.HtmlBody.Contains("<strong>John</strong>") &&
                 email.HtmlBody.Contains("24 hours") &&
                 email.HtmlBody.Contains(expectedVerificationUrl) &&
                 email.PlainTextBody != null &&
+                email.PlainTextBody.Contains("Hello, John!") &&
                 email.PlainTextBody.Contains("24 hours") &&
                 email.PlainTextBody.Contains(expectedVerificationUrl)),
             It.IsAny<CancellationToken>()), Times.Once);
@@ -195,9 +197,11 @@ public class RegistrationHandlerTests
                 email.Subject == "Підтвердьте адресу електронної пошти Pulse" &&
                 email.HtmlBody != null &&
                 email.HtmlBody.Contains("Підтвердити електронну адресу") &&
+                email.HtmlBody.Contains("<strong>John</strong>") &&
                 email.HtmlBody.Contains("24 години") &&
                 email.HtmlBody.Contains(expectedVerificationUrl) &&
                 email.PlainTextBody != null &&
+                email.PlainTextBody.Contains("Вітаємо, John!") &&
                 email.PlainTextBody.Contains("24 години") &&
                 email.PlainTextBody.Contains(expectedVerificationUrl)),
             It.IsAny<CancellationToken>()), Times.Once);

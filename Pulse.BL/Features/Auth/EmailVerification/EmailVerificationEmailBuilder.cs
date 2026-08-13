@@ -22,17 +22,29 @@ internal static class EmailVerificationEmailBuilder
     internal static string BuildSubject(string language)
         => EmailVerificationEmailSubjectLocalizer.GetSubject(language);
 
-    internal static string BuildHtmlBody(string verificationUrl, int tokenLifetimeHours, string language)
+    internal static string BuildHtmlBody(
+        string verificationUrl,
+        int tokenLifetimeHours,
+        string language,
+        string? recipientName = null)
         => ResolveTemplateSet(language).Html.Render(new
         {
+            recipient_name = string.IsNullOrWhiteSpace(recipientName)
+                ? null
+                : WebUtility.HtmlEncode(recipientName.Trim()),
             verification_url = WebUtility.HtmlEncode(verificationUrl),
             token_lifetime_hours = tokenLifetimeHours,
             hour_label = BuildHourLabel(tokenLifetimeHours, language)
         });
 
-    internal static string BuildPlainTextBody(string verificationUrl, int tokenLifetimeHours, string language)
+    internal static string BuildPlainTextBody(
+        string verificationUrl,
+        int tokenLifetimeHours,
+        string language,
+        string? recipientName = null)
         => ResolveTemplateSet(language).PlainText.Render(new
         {
+            recipient_name = string.IsNullOrWhiteSpace(recipientName) ? null : recipientName.Trim(),
             verification_url = verificationUrl,
             token_lifetime_hours = tokenLifetimeHours,
             hour_label = BuildHourLabel(tokenLifetimeHours, language)

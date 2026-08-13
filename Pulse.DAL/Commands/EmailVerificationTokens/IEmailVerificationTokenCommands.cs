@@ -13,6 +13,8 @@ public interface IEmailVerificationTokenCommands : ICommands
     /// <param name="input">The token data to persist.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when there is no active unit of work.</exception>
     Task CreateAsync(CreateEmailVerificationTokenInput input, CancellationToken ct);
 
     /// <summary>
@@ -22,6 +24,7 @@ public interface IEmailVerificationTokenCommands : ICommands
     /// <param name="consumedAt">The UTC time at which consumption is attempted.</param>
     /// <param name="ct">A token to cancel the operation.</param>
     /// <returns>The outcome that identifies valid, invalid, expired, and already-used tokens.</returns>
+    /// <exception cref="OperationCanceledException">Thrown when the operation is canceled.</exception>
     Task<EmailVerificationTokenConsumeResult> ConsumeAsync(
         string tokenHash,
         DateTimeOffset consumedAt,
