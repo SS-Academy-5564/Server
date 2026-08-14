@@ -37,23 +37,28 @@ public sealed class PollerWorker : BackgroundService
                 IBatchMonitorNotificationService notificationService = scope.ServiceProvider.GetRequiredService<IBatchMonitorNotificationService>();
 
                 Result<IEnumerable<MonitorPollingRecord>> monitors = await pollingService.GetDueEnabledAsync(_options.BatchSize, stoppingToken);
-                if (monitors.IsSuccess)
+                if (monitors.IsFailed)
                 {
-                    ConcurrentBag<MonitorPollResult> monitorPollResults = new();
-
-                    ParallelOptions options = new() { CancellationToken = stoppingToken, MaxDegreeOfParallelism = _options.MaxDegreeOfParallelism };
-
-                    await Parallel.ForEachAsync(monitors.Value, options, async (monitor, ct) =>
-                    {
-                        Result<MonitorPollResult> monitorsResults = await pollingService.ProcessMonitorAsync(monitor, ct);
-                        if (monitorsResults.IsSuccess)
-                        {
-                            monitorPollResults.Add(monitorsResults.Value);
-                        }
-                    });
-
-                    await notificationService.NotifyAsync(monitorPollResults.ToList(), stoppingToken);
+                    continue;
                 }
+
+                ConcurrentBag<MonitorPollResult> monitorPollResults = new();
+
+                ParallelOptions options = new() { CancellationToken = stoppingToken, MaxDegreeOfParallelism = _options.MaxDegreeOfParallelism };
+
+                await Parallel.ForEachAsync(monitors.Value, options, async (monitor, ct) =>
+                {
+                    using IServiceScope monitorScope = _scopeFactory.CreateScope();
+                    IPollingService monitorPollingService = monitorScope.ServiceProvider.GetRequiredService<IPollingService>();
+
+                    Result<MonitorPollResult> monitorsResults = await monitorPollingService.ProcessMonitorAsync(monitor, ct);
+                    if (monitorsResults.IsSuccess)
+                    {
+                        monitorPollResults.Add(monitorsResults.Value);
+                    }
+                });
+
+                await notificationService.NotifyAsync(monitorPollResults.ToList(), stoppingToken);
             }
             catch (OperationCanceledException) when (
                 stoppingToken.IsCancellationRequested)
